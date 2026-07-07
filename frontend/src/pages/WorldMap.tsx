@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react'
-import { geoNaturalEarth1, geoPath } from 'd3-geo'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { geoGraticule10, geoNaturalEarth1, geoPath } from 'd3-geo'
 import * as topojson from 'topojson-client'
 import type { Topology, GeometryCollection } from 'topojson-specification'
 import type { FeatureCollection, Geometry } from 'geojson'
@@ -31,6 +31,24 @@ const MARKET_GEO: Record<string, { lon: number; lat: number; iso: string }> = {
 
 const W = 960
 const H = 500
+const MIN_K = 1
+const MAX_K = 8
+const TOTAL_ACCOUNT_TYPES = 3
+
+/**
+ * Map coloring encodes onboarding completeness:
+ *  full    — active market, all account types onboarded  → solid green
+ *  partial — active market, some account types onboarded → striped green
+ *  draft   — onboarded but nothing active yet            → grey
+ *  available — Amex market not onboarded                 → muted grey, clickable
+ */
+type MarketState = 'full' | 'partial' | 'draft' | 'available'
+
+function stateOf(doc: MarketDocument | undefined): MarketState {
+  if (!doc) return 'available'
+  if (doc.status === 'DRAFT') return 'draft'
+  return doc.profiles.length >= TOTAL_ACCOUNT_TYPES ? 'full' : 'partial'
+}
 
 interface Hover {
   x: number
@@ -48,9 +66,12 @@ export function WorldMap({
 }) {
   const { catalog, markets } = useApp()
   const wrapRef = useRef<HTMLDivElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
   const [hover, setHover] = useState<Hover | null>(null)
+  const [t, setT] = useState({ k: 1, x: 0, y: 0 })
+  const drag = useRef<{ px: number; py: number; x: number; y: number; moved: boolean } | null>(null)
 
-  const { countryPaths, spherePath, projection } = useMemo(() => {
+  const { countryPaths, spherePath, graticulePath, projection } = useMemo(() => {
     const world = worldData as unknown as Topology
     const fc = topojson.feature(
       world,
@@ -70,6 +91,7 @@ export function WorldMap({
         d: path(f) ?? '',
       })),
       spherePath: path({ type: 'Sphere' } as never) ?? '',
+      graticulePath: path(geoGraticule10()) ?? '',
       projection: proj,
     }
   }, [])
@@ -79,14 +101,80 @@ export function WorldMap({
     () => new Map(Object.entries(MARKET_GEO).map(([code, g]) => [g.iso, code])),
     [],
   )
+  const curatedByCode = useMemo(
+    () => new Map((catalog?.markets ?? []).map((m) => [m.code, m])),
+    [catalog],
+  )
 
-  function countryClass(isoId: string): string {
-    const code = isoToCode.get(isoId)
-    if (!code) return 'country'
-    const doc = byCode.get(code)
-    if (!doc) return 'country country-available'
-    return doc.status === 'ACTIVE' ? 'country country-active' : 'country country-draft'
+  /* ---- zoom & pan ---- */
+
+  function clientToView(clientX: number, clientY: number): [number, number] {
+    const rect = svgRef.current!.getBoundingClientRect()
+    return [((clientX - rect.left) / rect.width) * W, ((clientY - rect.top) / rect.height) * H]
   }
+
+  function zoomAt(vx: number, vy: number, factor: number) {
+    setT((prev) => {
+      const k = Math.min(MAX_K, Math.max(MIN_K, prev.k * factor))
+      if (k === prev.k) return prev
+      const x = vx - ((vx - prev.x) * k) / prev.k
+      const y = vy - ((vy - prev.y) * k) / prev.k
+      return k === 1 ? { k: 1, x: 0, y: 0 } : { k, x, y }
+    })
+  }
+
+  function zoomCenter(factor: number) {
+    zoomAt(W / 2, H / 2, factor)
+  }
+
+  // React registers wheel as passive; attach natively so preventDefault works.
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!svg) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const [vx, vy] = clientToView(e.clientX, e.clientY)
+      zoomAt(vx, vy, e.deltaY < 0 ? 1.25 : 0.8)
+    }
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    return () => svg.removeEventListener('wheel', onWheel)
+  }, [])
+
+  function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    drag.current = { px: e.clientX, py: e.clientY, x: t.x, y: t.y, moved: false }
+    svgRef.current?.setPointerCapture(e.pointerId)
+  }
+
+  function onPointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (!drag.current) return
+    const rect = svgRef.current!.getBoundingClientRect()
+    const dx = ((e.clientX - drag.current.px) / rect.width) * W
+    const dy = ((e.clientY - drag.current.py) / rect.height) * H
+    if (Math.abs(e.clientX - drag.current.px) + Math.abs(e.clientY - drag.current.py) > 4) {
+      drag.current.moved = true
+    }
+    setT((prev) => ({ ...prev, x: drag.current!.x + dx, y: drag.current!.y + dy }))
+  }
+
+  function onPointerUp(e: React.PointerEvent<SVGSVGElement>) {
+    svgRef.current?.releasePointerCapture(e.pointerId)
+    // swallow the click that follows a pan
+    if (drag.current?.moved) suppressClick.current = true
+    drag.current = null
+  }
+
+  const suppressClick = useRef(false)
+
+  function handleMarketClick(code: string) {
+    if (suppressClick.current) {
+      suppressClick.current = false
+      return
+    }
+    if (byCode.has(code)) onSelect(code)
+    else onOnboard(code)
+  }
+
+  /* ---- tooltip ---- */
 
   function moveTooltip(e: React.MouseEvent, curated: CuratedMarket) {
     const rect = wrapRef.current?.getBoundingClientRect()
@@ -104,65 +192,120 @@ export function WorldMap({
       <div className="map-wrap" ref={wrapRef}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="map-svg"
+          className={`map-svg ${t.k > 1 ? 'zoomed' : ''}`}
           role="img"
           aria-label="World map of Billpay markets"
+          ref={svgRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerLeave={() => {
+            drag.current = null
+          }}
         >
-          <path d={spherePath} className="ocean" />
-          {countryPaths.map((c, i) => (
-            <path key={`${c.id}-${i}`} d={c.d} className={countryClass(c.id)} />
-          ))}
+          <defs>
+            <radialGradient id="ocean-grad" cx="50%" cy="38%" r="75%">
+              <stop offset="0%" stopColor="#232349" />
+              <stop offset="60%" stopColor="#1b1b38" />
+              <stop offset="100%" stopColor="#15152c" />
+            </radialGradient>
+            {/* striped green: partially onboarded markets */}
+            <pattern
+              id="partial-stripes"
+              width="6"
+              height="6"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(45)"
+            >
+              <rect width="6" height="6" fill="#1e5a44" />
+              <rect width="3" height="6" fill="#2fae6e" />
+            </pattern>
+          </defs>
 
-          {(catalog?.markets ?? []).map((cm) => {
-            const geo = MARKET_GEO[cm.code]
-            if (!geo) return null
-            const pos = projection([geo.lon, geo.lat])
-            if (!pos) return null
-            const doc = byCode.get(cm.code)
-            const state = doc ? (doc.status === 'ACTIVE' ? 'active' : 'draft') : 'available'
-            return (
-              <g
-                key={cm.code}
-                className={`marker marker-${state}`}
-                transform={`translate(${pos[0]}, ${pos[1]})`}
-                tabIndex={0}
-                role="button"
-                aria-label={`${cm.name} — ${doc ? doc.status.toLowerCase() : 'not onboarded'}`}
-                onMouseMove={(e) => moveTooltip(e, cm)}
-                onMouseLeave={() => setHover(null)}
-                onFocus={(e) => {
-                  const rect = wrapRef.current?.getBoundingClientRect()
-                  const g = (e.currentTarget as SVGGElement).getBoundingClientRect()
-                  if (rect)
-                    setHover({
-                      x: g.left - rect.left + g.width / 2,
-                      y: g.top - rect.top,
-                      curated: cm,
-                      doc: doc ?? null,
-                    })
-                }}
-                onBlur={() => setHover(null)}
-                onClick={() => (doc ? onSelect(cm.code) : onOnboard(cm.code))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    doc ? onSelect(cm.code) : onOnboard(cm.code)
-                  }
-                }}
-              >
-                {state === 'active' && <circle className="pulse" r="7" />}
-                <circle className="marker-dot" r={state === 'available' ? 3.5 : 5} />
-              </g>
-            )
-          })}
+          <g transform={`translate(${t.x}, ${t.y}) scale(${t.k})`}>
+            <path d={spherePath} className="ocean" vectorEffect="non-scaling-stroke" />
+            <path d={graticulePath} className="graticule" vectorEffect="non-scaling-stroke" />
+
+            {countryPaths.map((c, i) => {
+              const code = isoToCode.get(c.id)
+              const curated = code ? curatedByCode.get(code) : undefined
+              const state = curated ? stateOf(byCode.get(curated.code)) : null
+              return (
+                <path
+                  key={`${c.id}-${i}`}
+                  d={c.d}
+                  className={`country ${state ? `country-${state} country-market` : ''}`}
+                  vectorEffect="non-scaling-stroke"
+                  onMouseMove={curated ? (e) => moveTooltip(e, curated) : undefined}
+                  onMouseLeave={curated ? () => setHover(null) : undefined}
+                  onClick={curated ? () => handleMarketClick(curated.code) : undefined}
+                />
+              )
+            })}
+
+            {(catalog?.markets ?? []).map((cm) => {
+              const geo = MARKET_GEO[cm.code]
+              if (!geo) return null
+              const pos = projection([geo.lon, geo.lat])
+              if (!pos) return null
+              const state = stateOf(byCode.get(cm.code))
+              return (
+                <g
+                  key={cm.code}
+                  className={`marker marker-${state}`}
+                  transform={`translate(${pos[0]}, ${pos[1]}) scale(${1 / t.k})`}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${cm.name} — ${state === 'available' ? 'not onboarded' : state}`}
+                  onMouseMove={(e) => moveTooltip(e, cm)}
+                  onMouseLeave={() => setHover(null)}
+                  onFocus={(e) => {
+                    const rect = wrapRef.current?.getBoundingClientRect()
+                    const g = (e.currentTarget as SVGGElement).getBoundingClientRect()
+                    if (rect)
+                      setHover({
+                        x: g.left - rect.left + g.width / 2,
+                        y: g.top - rect.top,
+                        curated: cm,
+                        doc: byCode.get(cm.code) ?? null,
+                      })
+                  }}
+                  onBlur={() => setHover(null)}
+                  onClick={() => handleMarketClick(cm.code)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleMarketClick(cm.code)
+                    }
+                  }}
+                >
+                  {(state === 'full' || state === 'partial') && <circle className="pulse" r="7" />}
+                  <circle className="marker-dot" r={state === 'available' ? 3.5 : 5} />
+                </g>
+              )
+            })}
+          </g>
         </svg>
 
-        {hover && (
-          <div
-            className="map-tooltip"
-            style={{ left: hover.x, top: hover.y }}
-            role="tooltip"
+        {/* zoom controls */}
+        <div className="map-zoom" role="group" aria-label="Map zoom">
+          <button onClick={() => zoomCenter(1.5)} aria-label="Zoom in">
+            +
+          </button>
+          <button onClick={() => zoomCenter(1 / 1.5)} aria-label="Zoom out">
+            −
+          </button>
+          <button
+            onClick={() => setT({ k: 1, x: 0, y: 0 })}
+            aria-label="Reset zoom"
+            disabled={t.k === 1}
           >
+            ⌂
+          </button>
+        </div>
+
+        {hover && (
+          <div className="map-tooltip" style={{ left: hover.x, top: hover.y }} role="tooltip">
             <div className="map-tip-head">
               <Flag code={hover.curated.code} size={17} />
               <strong>{hover.curated.name}</strong>
@@ -172,7 +315,12 @@ export function WorldMap({
             </div>
             {hover.doc ? (
               <>
-                <StatusSeal status={hover.doc.status} small />
+                <div className="map-tip-status">
+                  <StatusSeal status={hover.doc.status} small />
+                  <span className="map-tip-completeness">
+                    {hover.doc.profiles.length}/{TOTAL_ACCOUNT_TYPES} account types
+                  </span>
+                </div>
                 <div className="map-tip-profiles">
                   {hover.doc.profiles.map((p) => (
                     <div key={p.accountType} className="map-tip-row">
@@ -189,10 +337,10 @@ export function WorldMap({
                     </div>
                   ))}
                 </div>
-                <div className="map-tip-cta">Click to open details</div>
+                <div className="map-tip-cta">Click the country to open details</div>
               </>
             ) : (
-              <div className="map-tip-cta">Not onboarded — click to start</div>
+              <div className="map-tip-cta">Not onboarded — click the country to start</div>
             )}
           </div>
         )}
@@ -200,14 +348,18 @@ export function WorldMap({
 
       <div className="map-legend" aria-hidden="true">
         <span>
-          <i className="legend-dot legend-active" /> Active market
+          <i className="legend-dot legend-full" /> Fully onboarded
+        </span>
+        <span>
+          <i className="legend-dot legend-partial" /> Partially onboarded
         </span>
         <span>
           <i className="legend-dot legend-draft" /> Draft
         </span>
         <span>
-          <i className="legend-dot legend-available" /> Available to onboard
+          <i className="legend-dot legend-available" /> Available
         </span>
+        <span className="map-legend-hint mono-tag">scroll to zoom · drag to pan</span>
       </div>
     </div>
   )

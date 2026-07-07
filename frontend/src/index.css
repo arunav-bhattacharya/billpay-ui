@@ -1808,31 +1808,63 @@ select:focus {
   display: block;
   width: 100%;
   height: auto;
+  cursor: grab;
+  touch-action: none;
+}
+
+.map-svg:active {
+  cursor: grabbing;
 }
 
 .map-svg .ocean {
-  fill: rgba(255, 255, 255, 0.02);
-  stroke: rgba(255, 255, 255, 0.08);
-  stroke-width: 1;
+  fill: url(#ocean-grad);
+  stroke: rgba(140, 148, 240, 0.28);
+  stroke-width: 1.2;
 }
 
-.map-svg .country {
-  fill: #2a2a4d;
-  stroke: #383864;
+.map-svg .graticule {
+  fill: none;
+  stroke: rgba(140, 148, 240, 0.1);
   stroke-width: 0.5;
-  transition: fill 0.15s ease;
+  pointer-events: none;
 }
 
-.map-svg .country-available {
-  fill: #333360;
+/* clear political boundaries on every country */
+.map-svg .country {
+  fill: #31315b;
+  stroke: #565694;
+  stroke-width: 0.75;
+  transition: fill 0.15s ease, filter 0.15s ease;
+}
+
+/* Amex markets — coloring encodes onboarding completeness */
+.map-svg .country-market {
+  cursor: pointer;
+}
+
+.map-svg .country-full {
+  fill: #27a05f;
+  stroke: #7fe0ae;
+}
+
+.map-svg .country-partial {
+  fill: url(#partial-stripes);
+  stroke: #6fcf9c;
 }
 
 .map-svg .country-draft {
-  fill: #46466f;
+  fill: #5a5f74;
+  stroke: #8a90a8;
 }
 
-.map-svg .country-active {
-  fill: #1e5a44;
+.map-svg .country-available {
+  fill: #454566;
+  stroke: #6c6cae;
+}
+
+.map-svg .country-market:hover {
+  filter: brightness(1.25);
+  stroke: #ffffff;
 }
 
 /* markers */
@@ -1852,9 +1884,15 @@ select:focus {
   r: 7;
 }
 
-.marker-active .marker-dot {
+.marker-full .marker-dot {
   fill: #34d27b;
   stroke: #0f3f2c;
+}
+
+.marker-partial .marker-dot {
+  fill: #2fae6e;
+  stroke: #0f3f2c;
+  stroke-dasharray: 2.4 1.6;
 }
 
 .marker-draft .marker-dot {
@@ -1863,13 +1901,46 @@ select:focus {
 }
 
 .marker-available .marker-dot {
-  fill: transparent;
-  stroke: #8b8ef0;
+  fill: rgba(20, 20, 43, 0.5);
+  stroke: #a3a6f5;
   stroke-dasharray: 2 1.6;
 }
 
 .marker:focus-visible .marker-dot {
   stroke: #fff;
+}
+
+/* zoom controls */
+
+.map-zoom {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.map-zoom button {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(20, 20, 43, 0.75);
+  color: #dfe2ff;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.map-zoom button:hover:not(:disabled) {
+  background: rgba(84, 87, 205, 0.6);
+  border-color: #8b8ef0;
 }
 
 .pulse {
@@ -1921,6 +1992,18 @@ select:focus {
   margin-bottom: 6px;
 }
 
+.map-tip-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-tip-completeness {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .map-tip-profiles {
   margin-top: 8px;
   display: flex;
@@ -1952,8 +2035,9 @@ select:focus {
 .map-legend {
   display: flex;
   gap: 22px;
-  justify-content: center;
-  padding: 10px 0 4px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 4px 4px;
   color: #aeb5dc;
   font-size: 12.5px;
 }
@@ -1965,22 +2049,33 @@ select:focus {
 }
 
 .legend-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
 }
 
-.legend-active {
-  background: #34d27b;
+.legend-full {
+  background: #27a05f;
+}
+
+.legend-partial {
+  background: repeating-linear-gradient(45deg, #2fae6e 0 3px, #1e5a44 3px 6px);
 }
 
 .legend-draft {
-  background: #a7adc2;
+  background: #5a5f74;
+  border: 1px solid #8a90a8;
 }
 
 .legend-available {
-  background: transparent;
-  border: 1.5px dashed #8b8ef0;
+  background: #454566;
+  border: 1px dashed #8b8ef0;
+}
+
+.map-legend-hint {
+  margin-left: auto;
+  color: #7b81ad;
+  font-size: 11px;
 }
 
 .map-detail {
