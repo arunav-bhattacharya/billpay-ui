@@ -45,7 +45,9 @@
   --mast-1: #00112e;
   --mast-2: #00205f;
 
-  --font-body: 'Geist', -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Instrument Sans', -apple-system, sans-serif;
+  --font-body: 'Instrument Sans', -apple-system, 'Segoe UI', sans-serif;
+  /* mono is reserved for code: endpoints and JSON */
   --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
 
   --shadow-1: 0 1px 2px rgba(23, 23, 34, 0.05), 0 4px 16px rgba(23, 23, 34, 0.06);
@@ -79,16 +81,17 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-body);
-  font-weight: 650;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--ink);
   margin: 0;
 }
 
 h1 {
   font-size: 38px;
-  letter-spacing: -0.03em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1.12;
 }
 
@@ -134,7 +137,7 @@ select:focus {
 /* ---------- utility ---------- */
 
 .eyebrow {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.15em;
@@ -144,10 +147,11 @@ select:focus {
 }
 
 .mono-tag {
-  font-family: var(--font-mono);
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--muted);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
 }
 
 .muted {
@@ -330,6 +334,7 @@ select:focus {
 }
 
 .brand-name {
+  font-family: var(--font-display);
   font-size: 23px;
   font-weight: 650;
   letter-spacing: -0.02em;
@@ -339,7 +344,7 @@ select:focus {
 }
 
 .brand-sub {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.22em;
@@ -527,7 +532,7 @@ select:focus {
   border-radius: 50%;
   border: 1.5px solid var(--line-strong);
   background: var(--card);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
   color: var(--muted);
@@ -547,6 +552,7 @@ select:focus {
 }
 
 .acc-label {
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 19px;
   letter-spacing: -0.01em;
@@ -598,7 +604,7 @@ select:focus {
 
 .split-title {
   font-size: 14px;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -652,7 +658,7 @@ select:focus {
 
 .pick-note {
   margin-left: auto;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 10.5px;
   letter-spacing: 0.06em;
   color: var(--teal);
@@ -692,7 +698,8 @@ select:focus {
 }
 
 .account-name {
-  font-weight: 650;
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: 15px;
   letter-spacing: -0.01em;
 }
@@ -746,7 +753,7 @@ select:focus {
 }
 
 .api-cat-count {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 11px;
   color: var(--muted);
   margin-left: auto;
@@ -914,6 +921,11 @@ select:focus {
   max-width: 72ch;
 }
 
+.api-detail-meta .mono-tag {
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+}
+
 .api-detail-meta {
   display: flex;
   align-items: center;
@@ -974,7 +986,7 @@ select:focus {
 .api-pop-implies {
   margin-top: 6px !important;
   color: #7fd6e4;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.04em;
 }
@@ -1041,14 +1053,14 @@ select:focus {
 }
 
 .dim-src {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 10.5px;
   color: var(--muted);
   overflow-wrap: anywhere;
 }
 
 .dim-on-note {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
   color: var(--green);
@@ -1068,7 +1080,7 @@ select:focus {
   gap: 20px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 14px 18px;
+  padding: 18px 22px;
   background: var(--card);
   transition: border-color 0.15s ease, background 0.15s ease;
 }
@@ -1082,8 +1094,12 @@ select:focus {
   flex: 1;
 }
 
+.dim-review-row .dim-name {
+  font-size: 17px;
+}
+
 .yn-mark {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   padding: 1px 8px;
@@ -1100,7 +1116,7 @@ select:focus {
 
 .dim-desc {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   margin: 3px 0 5px;
   max-width: 68ch;
 }
@@ -1119,8 +1135,8 @@ select:focus {
 
 .switch {
   flex: none;
-  width: 44px;
-  height: 24px;
+  width: 54px;
+  height: 30px;
   border-radius: 999px;
   border: 1px solid var(--line-strong);
   background: var(--grey-wash);
@@ -1132,8 +1148,8 @@ select:focus {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #fff;
   border: 1px solid var(--line-strong);
@@ -1146,7 +1162,7 @@ select:focus {
 }
 
 .switch.on .knob {
-  left: 22px;
+  left: 28px;
   border-color: var(--green);
 }
 
@@ -1171,7 +1187,7 @@ select:focus {
 }
 
 .admin-badge {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -1235,19 +1251,14 @@ select:focus {
 
 .review-row {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: 72px;
   flex-wrap: wrap;
-}
-
-.review-block.right {
-  text-align: right;
 }
 
 .review-block h4 {
   margin: 0 0 6px;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.13em;
@@ -1311,16 +1322,99 @@ select:focus {
   color: var(--iris-deep);
 }
 
-.json-view pre {
-  margin: 0;
-  padding: 16px 18px;
+.json-block {
   border-top: 1px solid var(--line);
-  background: var(--mast-1);
-  color: #bcd6f0;
+  background: linear-gradient(170deg, #001536, var(--mast-1) 55%);
+}
+
+.json-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(120, 176, 230, 0.16);
+}
+
+.json-dots {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.json-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.json-dots i:first-child {
+  background: #e0655f;
+}
+
+.json-dots i:nth-child(2) {
+  background: #e5b567;
+}
+
+.json-dots i:nth-child(3) {
+  background: #78c286;
+}
+
+.json-name {
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1.6;
-  overflow-x: auto;
+  color: #9fc4ea;
+}
+
+.json-meta {
+  font-size: 11.5px;
+  color: #5f83ad;
+  margin-left: auto;
+}
+
+.json-copy {
+  border: 1px solid rgba(120, 176, 230, 0.35);
+  background: rgba(120, 176, 230, 0.08);
+  color: #cfe4f8;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 7px;
+  padding: 4px 12px;
+  transition: background 0.15s ease;
+}
+
+.json-copy:hover {
+  background: rgba(0, 111, 207, 0.4);
+}
+
+.json-block pre {
+  margin: 0;
+  padding: 16px 20px;
+  color: #b4cbe8;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  overflow: auto;
+  max-height: 460px;
+}
+
+/* JSON tokens */
+.json-block .jk {
+  color: #7cc0ff;
+}
+
+.json-block .js {
+  color: #9ce8b4;
+}
+
+.json-block .jn {
+  color: #ffce7a;
+}
+
+.json-block .jb {
+  color: #ff9ea1;
+}
+
+.json-block .j0 {
+  color: #c9a5f1;
 }
 
 /* ---------- modal ---------- */
@@ -1379,7 +1473,7 @@ select:focus {
 }
 
 .modal-section {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.13em;
@@ -1525,7 +1619,7 @@ select:focus {
 }
 
 .region-meta {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 10.5px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -1764,7 +1858,7 @@ select:focus {
 .profile-api-cat {
   flex: none;
   width: 118px;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 10.5px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -2035,7 +2129,7 @@ select:focus {
 }
 
 .map-tip-completeness {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 11px;
   color: var(--muted);
 }

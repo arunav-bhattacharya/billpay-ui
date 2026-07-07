@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
-import { CustomDimValueInput, ErrorNote, Flag } from '../components'
+import { CustomDimValueInput, ErrorNote, Flag, JsonView } from '../components'
 import { ACCOUNT_TYPE_LABELS, CATEGORY_LABELS, CATEGORY_ORDER, yn } from '../lib'
 import { DIMENSION_KEYS, EMPTY_DIMENSIONS } from '../types'
 import type {
@@ -764,7 +764,7 @@ function StepReview({
               <span className="mono-tag">{document.market.code}</span>
             </p>
           </div>
-          <div className="review-block right">
+          <div className="review-block">
             <h4>{accountTypes.length > 1 ? 'Account types' : 'Account type'}</h4>
             <p>{accountTypes.map((t) => ACCOUNT_TYPE_LABELS[t]).join(', ')}</p>
           </div>
@@ -806,10 +806,10 @@ function StepReview({
         )}
       </div>
 
-      <details className="json-view">
-        <summary>Market JSON document</summary>
-        <pre>{JSON.stringify(document, null, 2)}</pre>
-      </details>
+      <JsonView
+        data={document}
+        filename={`${document.market.code.toLowerCase()}-market.json`}
+      />
     </div>
   )
 }

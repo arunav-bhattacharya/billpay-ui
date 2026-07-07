@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
-import { CloneDialog, CustomDimValueInput, ErrorNote, Flag, StatusSeal } from '../components'
+import { CloneDialog, CustomDimValueInput, ErrorNote, Flag, JsonView, StatusSeal } from '../components'
 import { ACCOUNT_TYPE_LABELS, CATEGORY_LABELS, CATEGORY_ORDER, yn } from '../lib'
 import type { CustomDimensionDef, CustomDimensionType, MarketDocument, MarketProfile } from '../types'
 
@@ -124,10 +124,7 @@ export function MarketDetailPanel({
 
       {role === 'ADMIN' && <AdminDefsSection market={market} busy={busy} run={run} />}
 
-      <details className="json-view">
-        <summary>Market JSON document</summary>
-        <pre>{JSON.stringify(market, null, 2)}</pre>
-      </details>
+      <JsonView data={market} filename={`${market.market.code.toLowerCase()}-market.json`} />
 
       {showClone && (
         <CloneDialog

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from './api'
 import { useApp } from './AppContext'
@@ -160,6 +160,57 @@ export function CustomDimValueInput({
       onChange={(e) => onChange(e.target.value)}
       aria-label={def.label}
     />
+  )
+}
+
+/* ---------- Rich JSON viewer ---------- */
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+/** Token-colorized JSON: keys, strings, numbers, booleans, null. */
+function highlightJson(json: string): string {
+  return escapeHtml(json).replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+    (match) => {
+      let cls = 'jn'
+      if (match.startsWith('"')) cls = match.endsWith(':') ? 'jk' : 'js'
+      else if (match === 'true' || match === 'false') cls = 'jb'
+      else if (match === 'null') cls = 'j0'
+      return `<span class="${cls}">${match}</span>`
+    },
+  )
+}
+
+export function JsonView({ data, filename }: { data: unknown; filename: string }) {
+  const json = useMemo(() => JSON.stringify(data, null, 2), [data])
+  const html = useMemo(() => highlightJson(json), [json])
+  const [copied, setCopied] = useState(false)
+
+  async function copy() {
+    await navigator.clipboard.writeText(json)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1600)
+  }
+
+  return (
+    <details className="json-view">
+      <summary>Market JSON document</summary>
+      <div className="json-block">
+        <div className="json-head">
+          <span className="json-dots" aria-hidden="true">
+            <i /> <i /> <i />
+          </span>
+          <span className="json-name">{filename}</span>
+          <span className="json-meta">{json.split('\n').length} lines</span>
+          <button className="json-copy" onClick={copy}>
+            {copied ? '✓ Copied' : 'Copy'}
+          </button>
+        </div>
+        <pre dangerouslySetInnerHTML={{ __html: html }} />
+      </div>
+    </details>
   )
 }
 
