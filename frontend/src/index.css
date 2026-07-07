@@ -76,6 +76,7 @@ body {
   font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.55;
+  letter-spacing: 0.014em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -85,16 +86,16 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  font-weight: 600;
+  letter-spacing: 0.012em;
   color: var(--ink);
   margin: 0;
 }
 
 h1 {
   font-size: 36px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: 0.015em;
   line-height: 1.1;
   color: var(--ink);
 }
@@ -198,10 +199,11 @@ select:focus {
   padding: 9px 18px;
   border-radius: 9px;
   border: 1px solid transparent;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   font-size: 14px;
   line-height: 1.3;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease,
     box-shadow 0.15s ease;
 }
@@ -351,8 +353,8 @@ select:focus {
 .brand-name {
   font-family: var(--font-display);
   font-size: 23px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   display: flex;
   flex-direction: column;
   line-height: 1.2;
@@ -431,14 +433,68 @@ select:focus {
   gap: 30px;
   flex-wrap: wrap;
   background:
-    radial-gradient(420px 200px at 4% -20%, rgba(0, 111, 207, 0.14), transparent 70%),
-    radial-gradient(380px 200px at 100% 130%, rgba(14, 138, 158, 0.12), transparent 70%),
-    linear-gradient(135deg, #ffffff 20%, #eef5fd);
-  border: 1px solid var(--iris-border);
+    radial-gradient(460px 220px at 6% -30%, rgba(0, 111, 207, 0.5), transparent 70%),
+    radial-gradient(420px 220px at 96% 140%, rgba(14, 138, 158, 0.35), transparent 70%),
+    linear-gradient(140deg, var(--mast-1), var(--mast-2));
+  border: 1px solid #1c3f6e;
   border-radius: 18px;
   box-shadow: var(--shadow-2);
   padding: 26px 32px;
   margin-bottom: 34px;
+}
+
+.hero h1 {
+  color: #fff;
+}
+
+.hero .donut-track {
+  stroke: rgba(255, 255, 255, 0.14);
+}
+
+.hero .donut-num {
+  fill: #fff;
+}
+
+.hero .donut-sub {
+  fill: #8fb4dd;
+}
+
+.hero .donut-seg.seg-off {
+  stroke: #7d8db0;
+}
+
+.hero .status-legend {
+  color: #a9c7e4;
+}
+
+.hero .status-legend b {
+  color: #fff;
+}
+
+.hero .legend-row:hover,
+.hero .legend-row:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.hero .ldot-off {
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.hero .view-toggle {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.hero .view-toggle button {
+  color: #9cc3e8;
+}
+
+.hero .view-toggle button.on {
+  background: #fff;
+  color: var(--mast-1);
+  box-shadow: none;
 }
 
 .hero-right {
@@ -497,7 +553,7 @@ select:focus {
 
 .donut-num {
   font-size: 21px;
-  font-weight: 800;
+  font-weight: 700;
   fill: var(--ink);
   text-anchor: middle;
   font-family: var(--font-display);
@@ -585,7 +641,7 @@ select:focus {
 
 .status-legend b {
   color: var(--ink);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .ldot {
@@ -712,9 +768,9 @@ select:focus {
 
 .acc-label {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 19px;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
 }
 
 .acc-summary {
@@ -858,9 +914,9 @@ select:focus {
 
 .account-name {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 15px;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
 }
 
 .account-desc {
@@ -887,7 +943,7 @@ select:focus {
   gap: 8px;
   font-size: 17px;
   font-weight: 650;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   padding-bottom: 8px;
   margin: 0 0 10px;
   border-bottom: 1px solid var(--line);
@@ -1017,7 +1073,7 @@ select:focus {
   font-family: var(--font-body);
   font-size: 15.5px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   color: var(--ink);
   overflow-wrap: anywhere;
 }
@@ -1208,7 +1264,7 @@ select:focus {
 .dim-name {
   font-weight: 600;
   font-size: 13.5px;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
 }
 
 .dim-src {
@@ -2010,7 +2066,7 @@ select:focus {
 
 .market-card h3 {
   font-size: 15.5px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.01em;
 }
 
 .profile-rows {
