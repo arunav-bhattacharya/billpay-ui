@@ -548,7 +548,7 @@ select:focus {
 
 .acc-label {
   font-weight: 600;
-  font-size: 17px;
+  font-size: 19px;
   letter-spacing: -0.01em;
 }
 
@@ -1233,6 +1233,18 @@ select:focus {
   gap: 16px;
 }
 
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.review-block.right {
+  text-align: right;
+}
+
 .review-block h4 {
   margin: 0 0 6px;
   font-family: var(--font-mono);
@@ -1598,7 +1610,7 @@ select:focus {
 }
 
 .market-card h3 {
-  font-size: 22px;
+  font-size: 17px;
   letter-spacing: -0.02em;
 }
 

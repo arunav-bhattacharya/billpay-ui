@@ -31,7 +31,7 @@ export function OnboardingPanel({
   const [step, setStep] = useState(0)
   const [maxStep, setMaxStep] = useState(0) // furthest step reached
   const [marketCode, setMarketCode] = useState<string | null>(presetMarket)
-  const [accountType, setAccountType] = useState<AccountType | null>(null)
+  const [accountTypes, setAccountTypes] = useState<AccountType[]>([])
   const [selectedApis, setSelectedApis] = useState<string[]>([])
   const [dims, setDims] = useState<Dimensions>({ ...EMPTY_DIMENSIONS })
   const [newDefs, setNewDefs] = useState<CustomDimensionDef[]>([])
@@ -58,7 +58,9 @@ export function OnboardingPanel({
   const allDefs = [...(existing?.customDimensionDefs ?? []), ...newDefs]
 
   const stepValid = [
-    marketCode !== null && accountType !== null && !takenTypes.includes(accountType!),
+    marketCode !== null &&
+      accountTypes.length > 0 &&
+      accountTypes.every((t) => !takenTypes.includes(t)),
     selectedApis.length > 0,
     true,
     true,
@@ -83,8 +85,10 @@ export function OnboardingPanel({
   function stepSummary(i: number): string {
     switch (i) {
       case 0:
-        return marketCode && accountType
-          ? `${selectedCurated?.name ?? marketCode} · ${ACCOUNT_TYPE_LABELS[accountType]}`
+        return marketCode && accountTypes.length > 0
+          ? `${selectedCurated?.name ?? marketCode} · ${accountTypes
+              .map((t) => ACCOUNT_TYPE_LABELS[t])
+              .join(', ')}`
           : ''
       case 1:
         return selectedApis.length > 0 ? `${selectedApis.length} APIs selected` : ''
@@ -103,22 +107,24 @@ export function OnboardingPanel({
   }
 
   function buildDocument(activate: boolean): MarketDocument {
-    const profile: MarketProfile = {
-      accountType: accountType!,
+    // One profile per selected account type — all carry the same configuration.
+    const customDimensions = Object.fromEntries(
+      Object.entries(customValues).filter(
+        ([k, v]) => v !== '' && allDefs.some((d) => d.key === k),
+      ),
+    )
+    const profiles: MarketProfile[] = accountTypes.map((t) => ({
+      accountType: t,
       status: activate ? 'ACTIVE' : 'DRAFT',
       apis: selectedApis,
       dimensions: dims,
-      customDimensions: Object.fromEntries(
-        Object.entries(customValues).filter(
-          ([k, v]) => v !== '' && allDefs.some((d) => d.key === k),
-        ),
-      ),
-    }
+      customDimensions,
+    }))
     if (existing) {
       return {
         ...existing,
         customDimensionDefs: allDefs,
-        profiles: [...existing.profiles, profile],
+        profiles: [...existing.profiles, ...profiles],
       }
     }
     return {
@@ -130,7 +136,7 @@ export function OnboardingPanel({
       },
       status: 'DRAFT',
       customDimensionDefs: allDefs,
-      profiles: [profile],
+      profiles,
     }
   }
 
@@ -155,7 +161,6 @@ export function OnboardingPanel({
     <section className="onboard-panel" ref={panelRef} aria-label="Onboarding">
       <div className="onboard-head">
         <div>
-          <div className="eyebrow">Onboarding journey</div>
           <h2>
             {existing ? `New account type for ${existing.market.name}` : 'Onboard a market'}
           </h2>
@@ -192,13 +197,17 @@ export function OnboardingPanel({
                       markets={markets}
                       marketCode={marketCode}
                       presetLocked={presetMarket !== null}
-                      accountType={accountType}
+                      accountTypes={accountTypes}
                       takenTypes={takenTypes}
                       onMarket={(c) => {
                         setMarketCode(c)
-                        setAccountType(null)
+                        setAccountTypes([])
                       }}
-                      onAccountType={setAccountType}
+                      onToggleType={(t) =>
+                        setAccountTypes((prev) =>
+                          prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t],
+                        )
+                      }
                     />
                   )}
                   {i === 1 && (
@@ -232,7 +241,7 @@ export function OnboardingPanel({
                   {i === 3 && (
                     <StepReview
                       document={buildDocument(false)}
-                      accountType={accountType!}
+                      accountTypes={accountTypes}
                       selectedApis={selectedApis}
                       dims={dims}
                       customValues={customValues}
@@ -284,18 +293,18 @@ function StepMarket({
   markets,
   marketCode,
   presetLocked,
-  accountType,
+  accountTypes,
   takenTypes,
   onMarket,
-  onAccountType,
+  onToggleType,
 }: {
   markets: MarketDocument[]
   marketCode: string | null
   presetLocked: boolean
-  accountType: AccountType | null
+  accountTypes: AccountType[]
   takenTypes: AccountType[]
   onMarket: (c: string) => void
-  onAccountType: (t: AccountType) => void
+  onToggleType: (t: AccountType) => void
 }) {
   const { catalog } = useApp()
   const [query, setQuery] = useState('')
@@ -348,7 +357,7 @@ function StepMarket({
       </div>
 
       <div className="split-right">
-        <h3 className="split-title">Account type</h3>
+        <h3 className="split-title">Account types — select one or more</h3>
         {!marketCode ? (
           <p className="muted">Choose a market first.</p>
         ) : (
@@ -358,9 +367,10 @@ function StepMarket({
               return (
                 <button
                   key={t.key}
-                  className={`account-cell ${accountType === t.key ? 'sel' : ''}`}
+                  className={`account-cell ${accountTypes.includes(t.key) ? 'sel' : ''}`}
+                  aria-pressed={accountTypes.includes(t.key)}
                   disabled={taken}
-                  onClick={() => onAccountType(t.key)}
+                  onClick={() => onToggleType(t.key)}
                 >
                   <span className="account-name">{t.label}</span>
                   <span className="account-desc">{t.description}</span>
@@ -727,14 +737,14 @@ function AdminCustomDims({
 
 function StepReview({
   document,
-  accountType,
+  accountTypes,
   selectedApis,
   dims,
   customValues,
   allDefs,
 }: {
   document: MarketDocument
-  accountType: AccountType
+  accountTypes: AccountType[]
   selectedApis: string[]
   dims: Dimensions
   customValues: Record<string, string>
@@ -746,16 +756,18 @@ function StepReview({
   return (
     <div>
       <div className="review-grid">
-        <div className="review-block">
-          <h4>Market</h4>
-          <p>
-            <Flag code={document.market.code} size={18} /> {document.market.name || document.market.code}{' '}
-            <span className="mono-tag">{document.market.code}</span>
-          </p>
-        </div>
-        <div className="review-block">
-          <h4>Account type</h4>
-          <p>{ACCOUNT_TYPE_LABELS[accountType]}</p>
+        <div className="review-row">
+          <div className="review-block">
+            <h4>Market</h4>
+            <p>
+              <Flag code={document.market.code} size={18} /> {document.market.name || document.market.code}{' '}
+              <span className="mono-tag">{document.market.code}</span>
+            </p>
+          </div>
+          <div className="review-block right">
+            <h4>{accountTypes.length > 1 ? 'Account types' : 'Account type'}</h4>
+            <p>{accountTypes.map((t) => ACCOUNT_TYPE_LABELS[t]).join(', ')}</p>
+          </div>
         </div>
         <div className="review-block">
           <h4>APIs · {selectedApis.length}</h4>
