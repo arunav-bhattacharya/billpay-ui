@@ -46,10 +46,10 @@
   --mast-2: #00205f;
 
   /* SF Pro Rounded on Apple systems (ui-rounded / local install), Nunito as the
-     rounded web fallback; Sono is the matching soft-rounded mono (code only) */
+     rounded web fallback; SF Mono for code (JSON, endpoints) */
   --font-display: ui-rounded, 'SF Pro Rounded', 'Nunito', -apple-system, sans-serif;
   --font-body: ui-rounded, 'SF Pro Rounded', 'Nunito', -apple-system, sans-serif;
-  --font-mono: 'Sono', ui-monospace, 'SF Mono', monospace;
+  --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, 'Menlo', monospace;
 
   --shadow-1: 0 1px 2px rgba(23, 23, 34, 0.05), 0 4px 16px rgba(23, 23, 34, 0.06);
   --shadow-2: 0 2px 6px rgba(23, 23, 34, 0.08), 0 18px 40px rgba(23, 23, 34, 0.12);
