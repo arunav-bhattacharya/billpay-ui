@@ -35,19 +35,16 @@ export function Ledger() {
       <div className="page-head">
         <div>
           <div className="title-row">
-            <h1>Market Ledger</h1>
+            <h1>Markets</h1>
+            <span className="count-pill">
+              <b>{markets.length}</b> onboarded
+            </span>
             <span className="active-pill">
               <i className="dot dot-active" aria-hidden="true" />
-              {activeMarkets.length} active {activeMarkets.length === 1 ? 'market' : 'markets'}
+              <b>{activeMarkets.length}</b> active
             </span>
           </div>
-          <p className="lede">
-            Every market onboarded onto Billpay, the account-type profiles it runs, and the
-            dimensions each profile carries.
-          </p>
-        </div>
-        <div className="head-controls">
-          <div className="view-toggle" role="group" aria-label="Ledger view">
+          <div className="view-toggle" role="group" aria-label="Markets view">
             <button className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')}>
               Grid
             </button>
@@ -55,12 +52,12 @@ export function Ledger() {
               Map
             </button>
           </div>
-          {!onboarding && (
-            <button className="btn primary lg" onClick={() => openOnboarding(null)}>
-              Onboard market
-            </button>
-          )}
         </div>
+        {!onboarding && (
+          <button className="btn primary lg" onClick={() => openOnboarding(null)}>
+            Onboard market
+          </button>
+        )}
       </div>
 
       <ErrorNote message={loadError} />

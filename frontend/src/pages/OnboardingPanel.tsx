@@ -440,11 +440,11 @@ function StepApis({
                           </span>
                         </button>
                         <button
-                          className="api-details"
+                          className="api-expand"
                           aria-expanded={open}
+                          aria-label={`${spec.name} details`}
                           onClick={() => setOpenApi(open ? null : spec.name)}
                         >
-                          Details
                           <span className={`chevron ${open ? 'up' : ''}`} aria-hidden="true">
                             ▾
                           </span>

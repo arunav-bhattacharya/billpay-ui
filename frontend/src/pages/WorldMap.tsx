@@ -76,6 +76,15 @@ export function WorldMap({
       world,
       world.objects.countries as GeometryCollection,
     ) as unknown as FeatureCollection<Geometry>
+    // France's polygon in world-atlas includes French Guiana (South America);
+    // keep only the European polygons so France doesn't light up off Brazil.
+    for (const f of fc.features) {
+      if (String(f.id) === '250' && f.geometry.type === 'MultiPolygon') {
+        f.geometry.coordinates = f.geometry.coordinates.filter(
+          (poly) => poly[0][0][0] > -20 && poly[0][0][1] > 20,
+        )
+      }
+    }
     const proj = geoNaturalEarth1().fitExtent(
       [
         [6, 6],
@@ -105,11 +114,20 @@ export function WorldMap({
     [catalog],
   )
 
-  /* ---- zoom (no panning — zoom is always anchored to the cursor or center) ---- */
+  /* ---- zoom & pan (pan is clamped so the map never leaves the panel) ---- */
 
   function clientToView(clientX: number, clientY: number): [number, number] {
     const rect = svgRef.current!.getBoundingClientRect()
     return [((clientX - rect.left) / rect.width) * W, ((clientY - rect.top) / rect.height) * H]
+  }
+
+  /** Keep the scaled map covering the viewport: x ∈ [W(1−k), 0], y ∈ [H(1−k), 0]. */
+  function clampT(next: { k: number; x: number; y: number }) {
+    return {
+      k: next.k,
+      x: Math.min(0, Math.max(W * (1 - next.k), next.x)),
+      y: Math.min(0, Math.max(H * (1 - next.k), next.y)),
+    }
   }
 
   function zoomAt(vx: number, vy: number, factor: number) {
@@ -118,12 +136,40 @@ export function WorldMap({
       if (k === prev.k) return prev
       const x = vx - ((vx - prev.x) * k) / prev.k
       const y = vy - ((vy - prev.y) * k) / prev.k
-      return k === 1 ? { k: 1, x: 0, y: 0 } : { k, x, y }
+      return clampT({ k, x, y })
     })
   }
 
   function zoomCenter(factor: number) {
     zoomAt(W / 2, H / 2, factor)
+  }
+
+  const drag = useRef<{ px: number; py: number; x: number; y: number; moved: boolean } | null>(
+    null,
+  )
+  const suppressClick = useRef(false)
+
+  function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    if (t.k === 1) return // nothing to pan at base zoom
+    drag.current = { px: e.clientX, py: e.clientY, x: t.x, y: t.y, moved: false }
+    svgRef.current?.setPointerCapture(e.pointerId)
+  }
+
+  function onPointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (!drag.current) return
+    const rect = svgRef.current!.getBoundingClientRect()
+    const dx = ((e.clientX - drag.current.px) / rect.width) * W
+    const dy = ((e.clientY - drag.current.py) / rect.height) * H
+    if (Math.abs(e.clientX - drag.current.px) + Math.abs(e.clientY - drag.current.py) > 4) {
+      drag.current.moved = true
+    }
+    setT((prev) => clampT({ k: prev.k, x: drag.current!.x + dx, y: drag.current!.y + dy }))
+  }
+
+  function onPointerUp(e: React.PointerEvent<SVGSVGElement>) {
+    svgRef.current?.releasePointerCapture(e.pointerId)
+    if (drag.current?.moved) suppressClick.current = true
+    drag.current = null
   }
 
   // React registers wheel as passive; attach natively so preventDefault works.
@@ -140,6 +186,10 @@ export function WorldMap({
   }, [])
 
   function handleMarketClick(code: string) {
+    if (suppressClick.current) {
+      suppressClick.current = false
+      return
+    }
     if (byCode.has(code)) onSelect(code)
     else onOnboard(code)
   }
@@ -166,6 +216,12 @@ export function WorldMap({
           role="img"
           aria-label="World map of Billpay markets"
           ref={svgRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerLeave={() => {
+            drag.current = null
+          }}
         >
           <defs>
             <radialGradient id="ocean-grad" cx="50%" cy="38%" r="75%">
@@ -323,7 +379,7 @@ export function WorldMap({
         <span>
           <i className="legend-dot legend-available" /> Available
         </span>
-        <span className="map-legend-hint mono-tag">scroll or use + / − to zoom</span>
+        <span className="map-legend-hint mono-tag">scroll to zoom · drag to pan when zoomed</span>
       </div>
     </div>
   )
