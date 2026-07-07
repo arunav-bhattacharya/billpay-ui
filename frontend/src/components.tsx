@@ -2,82 +2,24 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from './api'
 import { useApp } from './AppContext'
-import { flagEmoji, navigate } from './lib'
-import type { LifecycleStatus } from './types'
-
-/* ---------- Guilloché: engraved concentric line-work (the signature) ---------- */
-
-export function Guilloche({ rings = 22, className }: { rings?: number; className?: string }) {
-  return (
-    <svg viewBox="0 0 600 600" className={className} aria-hidden="true">
-      {Array.from({ length: rings }).map((_, i) => (
-        <ellipse
-          key={i}
-          cx={300}
-          cy={300}
-          rx={286}
-          ry={118}
-          transform={`rotate(${(i * 180) / rings} 300 300)`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="0.7"
-        />
-      ))}
-    </svg>
-  )
-}
-
-/* ---------- Status seal ---------- */
-
-export function StatusSeal({ status, small }: { status: LifecycleStatus; small?: boolean }) {
-  const active = status === 'ACTIVE'
-  return (
-    <span className={`seal ${active ? 'seal-active' : 'seal-draft'} ${small ? 'seal-sm' : ''}`}>
-      {active ? (
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" strokeWidth="1" />
-          <circle cx="8" cy="8" r="4" fill="none" stroke="currentColor" strokeWidth="0.8" />
-          <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-        </svg>
-      ) : (
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <circle
-            cx="8" cy="8" r="6.5" fill="none" stroke="currentColor"
-            strokeWidth="1" strokeDasharray="2.5 2.2"
-          />
-        </svg>
-      )}
-      {active ? 'Active' : 'Draft'}
-    </span>
-  )
-}
+import amexLogo from './assets/amex.svg'
+import { ACCOUNT_TYPE_LABELS, flagEmoji } from './lib'
+import type { AccountType, CustomDimensionDef, LifecycleStatus, MarketDocument } from './types'
 
 /* ---------- Masthead ---------- */
 
-export function Masthead({ route }: { route: string }) {
+export function Masthead() {
   const { role, setRole } = useApp()
   return (
     <header className="masthead">
       <div className="masthead-inner">
-        <a className="brand" href="#/">
-          <span className="bluebox" aria-hidden="true">
-            AMERICAN
-            <br />
-            EXPRESS
-          </span>
+        <div className="brand">
+          <img src={amexLogo} alt="American Express" className="brand-logo" />
           <span className="brand-name">
             Billpay
             <span className="brand-sub">Market Onboarding</span>
           </span>
-        </a>
-        <nav className="mast-nav" aria-label="Primary">
-          <a href="#/" className={route === 'dashboard' ? 'active' : ''}>
-            Ledger
-          </a>
-          <a href="#/onboard" className={route === 'onboard' ? 'active' : ''}>
-            Onboard
-          </a>
-        </nav>
+        </div>
         <div className="mast-right">
           <div className="role-switch" role="group" aria-label="Profile">
             <button
@@ -92,8 +34,19 @@ export function Masthead({ route }: { route: string }) {
           </div>
         </div>
       </div>
-      <Guilloche className="mast-guilloche" />
     </header>
+  )
+}
+
+/* ---------- Status pill: active = green, draft = grey ---------- */
+
+export function StatusSeal({ status, small }: { status: LifecycleStatus; small?: boolean }) {
+  const active = status === 'ACTIVE'
+  return (
+    <span className={`seal ${active ? 'seal-active' : 'seal-draft'} ${small ? 'seal-sm' : ''}`}>
+      <i className="seal-dot" aria-hidden="true" />
+      {active ? 'Active' : 'Draft'}
+    </span>
   )
 }
 
@@ -120,6 +73,15 @@ export function ErrorNote({ message }: { message: string | null }) {
   )
 }
 
+/** Shared Escape-to-close behavior for modal & drawer overlays. */
+export function useEscape(onClose: () => void) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+}
+
 /* ---------- Modal ---------- */
 
 export function Modal({
@@ -132,12 +94,10 @@ export function Modal({
   children: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  useEscape(onClose)
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
     ref.current?.focus()
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [])
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
@@ -161,32 +121,84 @@ export function Modal({
   )
 }
 
-/* ---------- Clone dialog (shared by dashboard + detail) ---------- */
+/* ---------- Custom dimension value input (wizard + detail panel) ---------- */
+
+export function CustomDimValueInput({
+  def,
+  value,
+  onChange,
+}: {
+  def: CustomDimensionDef
+  value: string
+  onChange: (v: string) => void
+}) {
+  if (def.type === 'BOOLEAN') {
+    return (
+      <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={def.label}>
+        <option value="">Not set</option>
+        <option value="true">Y</option>
+        <option value="false">N</option>
+      </select>
+    )
+  }
+  if (def.type === 'ENUM') {
+    return (
+      <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={def.label}>
+        <option value="">Not set</option>
+        {def.allowedValues.map((v) => (
+          <option key={v} value={v}>
+            {v}
+          </option>
+        ))}
+      </select>
+    )
+  }
+  return (
+    <input
+      value={value}
+      placeholder="Value"
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={def.label}
+    />
+  )
+}
+
+/* ---------- Clone dialog ---------- */
 
 export function CloneDialog({
-  sourceCode,
+  source,
+  onDone,
   onClose,
 }: {
-  sourceCode: string
+  source: MarketDocument
+  onDone: (targetCode: string) => void
   onClose: () => void
 }) {
   const { catalog, markets, refreshMarkets } = useApp()
   const [target, setTarget] = useState<string | null>(null)
+  const [included, setIncluded] = useState<AccountType[]>(
+    source.profiles.map((p) => p.accountType),
+  )
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const onboarded = new Set(markets.map((m) => m.code))
   const candidates = (catalog?.markets ?? []).filter((m) => !onboarded.has(m.code))
 
+  function toggleType(t: AccountType) {
+    setIncluded((prev) =>
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t],
+    )
+  }
+
   async function doClone() {
-    if (!target) return
+    if (!target || included.length === 0) return
     setBusy(true)
     setError(null)
     try {
-      await api.clone(sourceCode, target)
+      await api.clone(source.code, target, included)
       await refreshMarkets()
-      onClose()
-      navigate(`#/market/${target}`)
+      onDone(target)
     } catch (e) {
       setError((e as Error).message)
       setBusy(false)
@@ -194,11 +206,31 @@ export function CloneDialog({
   }
 
   return (
-    <Modal title={`Clone ${sourceCode} configuration`} onClose={onClose}>
+    <Modal title={`Clone ${source.code} configuration`} onClose={onClose}>
       <p className="modal-lede">
-        Copies every profile, API selection, dimension and custom-dimension definition from{' '}
-        <strong>{sourceCode}</strong>. Cloned profiles start as drafts.
+        Copies the selected profiles — API selections, dimensions and custom-dimension
+        definitions — from <strong>{source.name}</strong>. Cloned profiles start as drafts.
       </p>
+
+      <h3 className="modal-section">Profiles to include</h3>
+      <div className="clone-profiles">
+        {source.profiles.map((p) => (
+          <label key={p.accountType} className="clone-profile">
+            <input
+              type="checkbox"
+              checked={included.includes(p.accountType)}
+              onChange={() => toggleType(p.accountType)}
+            />
+            <span>{ACCOUNT_TYPE_LABELS[p.accountType]}</span>
+            <span className="mono-tag">{p.apis.length} APIs</span>
+          </label>
+        ))}
+      </div>
+      {included.length === 0 && (
+        <p className="hint-warn">Select at least one profile to clone.</p>
+      )}
+
+      <h3 className="modal-section">Target market</h3>
       {candidates.length === 0 ? (
         <p className="muted">Every Amex market is already onboarded.</p>
       ) : (
@@ -223,7 +255,11 @@ export function CloneDialog({
         <button className="btn ghost" onClick={onClose}>
           Cancel
         </button>
-        <button className="btn primary" disabled={!target || busy} onClick={doClone}>
+        <button
+          className="btn primary"
+          disabled={!target || included.length === 0 || busy}
+          onClick={doClone}
+        >
           {busy ? 'Cloning…' : target ? `Clone to ${target}` : 'Clone'}
         </button>
       </div>

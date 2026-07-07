@@ -54,6 +54,10 @@ data class MarketDocument(
     val updatedAt: Instant? = null,
 )
 
-data class CloneRequest(val targetCode: String)
+data class CloneRequest(
+    val targetCode: String,
+    /** Account types to carry over; null or empty means all. */
+    val accountTypes: List<AccountType>? = null,
+)
 
 data class ActivateRequest(val profileId: String? = null)

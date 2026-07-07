@@ -36,6 +36,8 @@ export const REGION_NAMES: Record<string, string> = {
   APAC: 'Asia Pacific',
 }
 
-export function navigate(hash: string) {
-  window.location.hash = hash
+/** Booleans render as Y / N wherever profiles are shown. */
+export function yn(v: boolean | string): string {
+  const b = typeof v === 'string' ? v === 'true' : v
+  return b ? 'Y' : 'N'
 }

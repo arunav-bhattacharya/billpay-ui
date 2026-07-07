@@ -51,7 +51,8 @@ export interface ApiSpec {
   path: string
   summary: string
   description: string
-  implies: DimensionKey[]
+  /** Dimensions this API typically calls for — guidance only, never auto-selected. */
+  suggests: DimensionKey[]
 }
 
 export interface CuratedMarket {

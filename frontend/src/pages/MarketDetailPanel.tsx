@@ -1,30 +1,26 @@
 import { useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
-import { CloneDialog, ErrorNote, Eyebrow, Flag, StatusSeal } from '../components'
-import { CustomDimValueInput } from './Onboarding'
-import { ACCOUNT_TYPE_LABELS, CATEGORY_LABELS, CATEGORY_ORDER, navigate } from '../lib'
+import { CloneDialog, CustomDimValueInput, ErrorNote, Flag, StatusSeal } from '../components'
+import { ACCOUNT_TYPE_LABELS, CATEGORY_LABELS, CATEGORY_ORDER, yn } from '../lib'
 import type { CustomDimensionDef, CustomDimensionType, MarketDocument, MarketProfile } from '../types'
 
-export function MarketDetail({ code }: { code: string }) {
-  const { markets, refreshMarkets, role, loading } = useApp()
+export function MarketDetailPanel({
+  market,
+  onClose,
+  onAddAccountType,
+  onCloned,
+}: {
+  market: MarketDocument
+  onClose: () => void
+  onAddAccountType: (code: string) => void
+  onCloned: (targetCode: string) => void
+}) {
+  const { refreshMarkets, role } = useApp()
   const [showClone, setShowClone] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const market = markets.find((m) => m.code === code)
-
-  if (loading) return <main className="page"><p className="muted">Loading…</p></main>
-  if (!market) {
-    return (
-      <main className="page">
-        <h1>Market not found</h1>
-        <p className="muted">'{code}' is not onboarded.</p>
-        <a className="btn primary" href="#/">Back to ledger</a>
-      </main>
-    )
-  }
 
   async function run(action: () => Promise<unknown>) {
     setBusy(true)
@@ -40,64 +36,58 @@ export function MarketDetail({ code }: { code: string }) {
   }
 
   const canAddType = market.profiles.length < 3
-  const draftProfiles = market.profiles.filter((p) => p.status === 'DRAFT')
+  const draftCount = market.profiles.filter((p) => p.status === 'DRAFT').length
 
   return (
-    <main className="page">
-      <div className="page-head detail-head">
-        <div>
-          <Eyebrow>
-            <a href="#/">Market Ledger</a> / {market.region}
-          </Eyebrow>
-          <h1>
-            <Flag code={market.code} size={30} /> {market.name}
-          </h1>
-          <div className="detail-meta">
-            <span className="mono-tag">{market.code} · {market.currency} · {market.region}</span>
-            <StatusSeal status={market.status} />
-          </div>
+    <div className="detail-panel">
+      <div className="detail-panel-head">
+        <div className="detail-title">
+          <Flag code={market.code} size={26} />
+          <h3>{market.name}</h3>
+          <span className="mono-tag">
+            {market.code} · {market.currency} · {market.region}
+          </span>
+          <StatusSeal status={market.status} />
         </div>
         <div className="detail-actions">
           {canAddType && (
-            <a className="btn ghost" href={`#/onboard?market=${market.code}`}>
+            <button className="btn sm ghost" onClick={() => onAddAccountType(market.code)}>
               + Account type
-            </a>
+            </button>
           )}
-          <button className="btn ghost" onClick={() => setShowClone(true)}>
+          <button className="btn sm ghost" onClick={() => setShowClone(true)}>
             Clone
           </button>
-          {draftProfiles.length > 0 && (
+          {draftCount > 1 && (
             <button
-              className="btn primary"
+              className="btn sm ghost"
               disabled={busy}
               onClick={() => run(() => api.activate(market.code))}
             >
-              Activate all
+              Activate all profiles
             </button>
           )}
+          <button className="icon-btn" onClick={onClose} aria-label="Collapse details">
+            ✕
+          </button>
         </div>
       </div>
 
       <ErrorNote message={error} />
 
-      <section className="profiles-section">
-        <h2 className="section-title">Profiles</h2>
-        <div className="profile-list">
-          {market.profiles.map((p) => (
-            <ProfileCard
-              key={p.id ?? p.accountType}
-              market={market}
-              profile={p}
-              busy={busy}
-              onActivate={() => run(() => api.activate(market.code, p.id))}
-            />
-          ))}
-        </div>
-      </section>
+      <div className="profile-list">
+        {market.profiles.map((p) => (
+          <ProfileCard
+            key={p.id ?? p.accountType}
+            market={market}
+            profile={p}
+            busy={busy}
+            onActivate={() => run(() => api.activate(market.code, p.id))}
+          />
+        ))}
+      </div>
 
-      {role === 'ADMIN' && (
-        <AdminDefsSection market={market} busy={busy} run={run} />
-      )}
+      {role === 'ADMIN' && <AdminDefsSection market={market} busy={busy} run={run} />}
 
       <details className="json-view">
         <summary>Market JSON document</summary>
@@ -114,7 +104,7 @@ export function MarketDetail({ code }: { code: string }) {
               onClick={() =>
                 run(async () => {
                   await api.deleteMarket(market.code)
-                  navigate('#/')
+                  onClose()
                 })
               }
             >
@@ -131,8 +121,17 @@ export function MarketDetail({ code }: { code: string }) {
         )}
       </div>
 
-      {showClone && <CloneDialog sourceCode={market.code} onClose={() => setShowClone(false)} />}
-    </main>
+      {showClone && (
+        <CloneDialog
+          source={market}
+          onClose={() => setShowClone(false)}
+          onDone={(target) => {
+            setShowClone(false)
+            onCloned(target)
+          }}
+        />
+      )}
+    </div>
   )
 }
 
@@ -161,7 +160,7 @@ function ProfileCard({
   return (
     <article className="profile-card">
       <div className="profile-card-head">
-        <h3>{ACCOUNT_TYPE_LABELS[profile.accountType]}</h3>
+        <h4>{ACCOUNT_TYPE_LABELS[profile.accountType]}</h4>
         <StatusSeal status={profile.status} small />
         {profile.status === 'DRAFT' && (
           <button className="btn sm primary" disabled={busy} onClick={onActivate}>
@@ -174,17 +173,17 @@ function ProfileCard({
         {dims.map((d) => (
           <span
             key={d.key}
-            className={`chip ${profile.dimensions[d.key] ? 'chip-active' : 'chip-off'}`}
+            className={`chip ${profile.dimensions[d.key] ? 'chip-yes' : 'chip-off'}`}
             title={d.description}
           >
-            {d.label}: {profile.dimensions[d.key] ? 'yes' : 'no'}
+            {d.label}: {yn(profile.dimensions[d.key])}
           </span>
         ))}
         {customEntries.map(([k, v]) => {
           const def = market.customDimensionDefs.find((d) => d.key === k)
           return (
             <span key={k} className="chip chip-custom" title={def?.description ?? k}>
-              {def?.label ?? k}: {v}
+              {def?.label ?? k}: {def?.type === 'BOOLEAN' ? yn(v) : v}
             </span>
           )
         })}
@@ -193,7 +192,9 @@ function ProfileCard({
       <div className="profile-apis">
         {byCategory.map(({ cat, apis }) => (
           <div key={cat} className="profile-api-group">
-            <span className="profile-api-cat">{CATEGORY_LABELS[cat]}</span>
+            <span className={`profile-api-cat cat-${cat.toLowerCase()}`}>
+              {CATEGORY_LABELS[cat]}
+            </span>
             <div className="review-chips">
               {apis.map((a) => (
                 <span key={a.name} className="chip" title={a.summary}>
@@ -268,7 +269,9 @@ function AdminDefsSection({
             ...p,
             customDimensions:
               value === ''
-                ? Object.fromEntries(Object.entries(p.customDimensions).filter(([k]) => k !== defKey))
+                ? Object.fromEntries(
+                    Object.entries(p.customDimensions).filter(([k]) => k !== defKey),
+                  )
                 : { ...p.customDimensions, [defKey]: value },
           }
         : p,
@@ -279,7 +282,7 @@ function AdminDefsSection({
   return (
     <section className="admin-dims">
       <div className="admin-dims-head">
-        <h3>Custom dimensions</h3>
+        <h4>Custom dimensions</h4>
         <span className="admin-badge">Admin</span>
       </div>
       <p className="step-hint">

@@ -1,4 +1,4 @@
-import type { Catalog, MarketDocument } from './types'
+import type { AccountType, Catalog, MarketDocument } from './types'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -34,9 +34,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ profileId: profileId ?? null }),
     }),
-  clone: (code: string, targetCode: string) =>
+  clone: (code: string, targetCode: string, accountTypes?: AccountType[]) =>
     request<MarketDocument>(`/api/markets/${code}/clone`, {
       method: 'POST',
-      body: JSON.stringify({ targetCode }),
+      body: JSON.stringify({ targetCode, accountTypes: accountTypes ?? null }),
     }),
 }

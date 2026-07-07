@@ -2,6 +2,7 @@ package com.amex.billpay.onboarding.service
 
 import com.amex.billpay.onboarding.catalog.Catalog
 import com.amex.billpay.onboarding.entity.MarketEntity
+import com.amex.billpay.onboarding.model.AccountType
 import com.amex.billpay.onboarding.model.LifecycleStatus
 import com.amex.billpay.onboarding.model.MarketConfig
 import com.amex.billpay.onboarding.model.MarketDocument
@@ -117,7 +118,7 @@ class MarketService(private val objectMapper: ObjectMapper) {
     }
 
     @Transactional
-    fun clone(sourceCode: String, targetCode: String): MarketDocument {
+    fun clone(sourceCode: String, targetCode: String, accountTypes: List<AccountType>? = null): MarketDocument {
         val source = requireEntity(sourceCode)
         val target = targetCode.uppercase()
         if (MarketEntity.findByCode(target) != null) {
@@ -127,9 +128,17 @@ class MarketService(private val objectMapper: ObjectMapper) {
             ?: throw WebApplicationException("'$target' is not a recognized Amex market", Response.Status.BAD_REQUEST)
 
         val config = objectMapper.readValue(source.configJson, MarketConfig::class.java)
+        // Only the selected account types come along (null/empty = all).
+        val wanted = accountTypes?.toSet() ?: emptySet()
+        val selected = config.profiles.filter { wanted.isEmpty() || it.accountType in wanted }
+        if (selected.isEmpty()) {
+            throw WebApplicationException(
+                "None of the requested account types exist in '$sourceCode'", Response.Status.BAD_REQUEST
+            )
+        }
         // Cloned profiles get fresh ids and start over as drafts.
         val cloned = config.copy(
-            profiles = config.profiles.map {
+            profiles = selected.map {
                 it.copy(id = UUID.randomUUID().toString(), status = LifecycleStatus.DRAFT)
             }
         )

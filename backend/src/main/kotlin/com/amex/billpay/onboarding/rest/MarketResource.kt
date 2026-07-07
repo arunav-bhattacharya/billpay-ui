@@ -51,5 +51,7 @@ class MarketResource(private val service: MarketService) {
     @POST
     @Path("/{code}/clone")
     fun clone(@PathParam("code") code: String, request: CloneRequest): Response =
-        Response.status(Response.Status.CREATED).entity(service.clone(code, request.targetCode)).build()
+        Response.status(Response.Status.CREATED)
+            .entity(service.clone(code, request.targetCode, request.accountTypes))
+            .build()
 }

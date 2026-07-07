@@ -5,8 +5,8 @@ enum class ApiCategory { CORE, COMPOSITE, EVENT_HANDLER }
 /**
  * One-Data API specification.
  *
- * [implies] lists the dimension flags that selecting this API turns on
- * ("APIs drive dimensions").
+ * [suggests] lists the dimension flags this API typically calls for — shown as
+ * guidance in the UI; dimensions are always selected manually.
  */
 data class ApiSpec(
     val name: String,
@@ -15,7 +15,7 @@ data class ApiSpec(
     val path: String,
     val summary: String,
     val description: String,
-    val implies: List<String> = emptyList(),
+    val suggests: List<String> = emptyList(),
 )
 
 data class CuratedMarket(
@@ -104,8 +104,8 @@ object Catalog {
             method = "POST", path = "/payments/intent",
             summary = "Register an intent that becomes a payment on bank confirmation.",
             description = "Registers a payment intent that converts to a payment once the customer's bank " +
-                "confirms in realtime. Selecting it implies the market clears in realtime.",
-            implies = listOf("requiresRealtimeClearing"),
+                "confirms in realtime. Markets selecting it typically clear in realtime.",
+            suggests = listOf("requiresRealtimeClearing"),
         ),
 
         // ---- Composite ----
@@ -115,9 +115,9 @@ object Catalog {
             method = "POST", path = "/payment-installments",
             summary = "A payment plus a future installment plan in one call.",
             description = "Creates a payment together with a future installment plan in a single call. " +
-                "Standing installment authorizations must be verified, so selecting it implies " +
+                "Standing installment authorizations must be verified, so it typically calls for " +
                 "mandate authorization.",
-            implies = listOf("requiresMandateAuthorization"),
+            suggests = listOf("requiresMandateAuthorization"),
         ),
         ApiSpec(
             name = "CreateBillpayTransactionFromAccountsReceivable.v1",
@@ -125,8 +125,8 @@ object Catalog {
             method = "POST", path = "/payments",
             summary = "Payment originated by the Accounts Receivable platform.",
             description = "Accepts future-dated payments originated by the Accounts Receivable platform. " +
-                "Because AR is the system of record for these, selecting it implies AR posting.",
-            implies = listOf("requiresArPosting"),
+                "AR is the system of record for these, so AR posting is the usual companion.",
+            suggests = listOf("requiresArPosting"),
         ),
 
         // ---- Event Handlers ----
@@ -137,7 +137,7 @@ object Catalog {
             summary = "Brings in money-movement events from the clearing rail — returns and settlement.",
             description = "Consumes money-movement events (returns, settlement) from the MR/M3 clearing " +
                 "rail. Required when the market clears payments in realtime.",
-            implies = listOf("requiresRealtimeClearing"),
+            suggests = listOf("requiresRealtimeClearing"),
         ),
         ApiSpec(
             name = "AccountsReceivableTransactionEventHandler.v1",
@@ -145,8 +145,8 @@ object Catalog {
             method = "EVENT", path = "GAR platform",
             summary = "Consume posting events from the Accounts Receivable (GAR) system.",
             description = "Consumes posting confirmations from the GAR Accounts Receivable system so " +
-                "Billpay can track cardmember debt updates. Selecting it implies AR posting.",
-            implies = listOf("requiresArPosting"),
+                "Billpay can track cardmember debt updates. Markets consuming it typically post to AR.",
+            suggests = listOf("requiresArPosting"),
         ),
         ApiSpec(
             name = "OpentoBuyUpdatePaymentEventHandler.v1",
