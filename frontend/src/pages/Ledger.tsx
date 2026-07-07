@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react'
 import { useApp } from '../AppContext'
-import { ErrorNote, Eyebrow, Flag, StatusSeal } from '../components'
+import { ErrorNote, Flag, StatusSeal } from '../components'
 import { ACCOUNT_TYPE_LABELS, DIMENSION_SHORT, REGION_NAMES, REGION_ORDER, yn } from '../lib'
 import { DIMENSION_KEYS } from '../types'
 import type { MarketDocument } from '../types'
@@ -14,11 +14,6 @@ export function Ledger() {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const activeMarkets = markets.filter((m) => m.status === 'ACTIVE')
-  const profileCount = markets.reduce((n, m) => n + m.profiles.length, 0)
-  const draftProfiles = markets.reduce(
-    (n, m) => n + m.profiles.filter((p) => p.status === 'DRAFT').length,
-    0,
-  )
   const regions = REGION_ORDER.filter((r) => markets.some((m) => m.region === r))
 
   function openOnboarding(presetMarket: string | null) {
@@ -29,8 +24,13 @@ export function Ledger() {
     <main className="page">
       <div className="page-head">
         <div>
-          <Eyebrow>Global footprint</Eyebrow>
-          <h1>Market Ledger</h1>
+          <div className="title-row">
+            <h1>Market Ledger</h1>
+            <span className="active-pill">
+              <i className="dot dot-active" aria-hidden="true" />
+              {activeMarkets.length} active {activeMarkets.length === 1 ? 'market' : 'markets'}
+            </span>
+          </div>
           <p className="lede">
             Every market onboarded onto Billpay, the account-type profiles it runs, and the
             dimensions each profile carries.
@@ -44,25 +44,6 @@ export function Ledger() {
       </div>
 
       <ErrorNote message={loadError} />
-
-      <div className="stat-strip">
-        <div className="stat">
-          <span className="stat-num">{activeMarkets.length}</span>
-          <span className="stat-label">Active markets</span>
-        </div>
-        <div className="stat">
-          <span className="stat-num">{profileCount}</span>
-          <span className="stat-label">Account-type profiles</span>
-        </div>
-        <div className="stat">
-          <span className="stat-num">{draftProfiles}</span>
-          <span className="stat-label">Draft profiles</span>
-        </div>
-        <div className="stat">
-          <span className="stat-num">{regions.length}</span>
-          <span className="stat-label">Regions covered</span>
-        </div>
-      </div>
 
       {onboarding && (
         <OnboardingPanel
@@ -136,7 +117,7 @@ function MarketCard({
 }) {
   return (
     <article
-      className={`market-card ${expanded ? 'expanded' : ''}`}
+      className={`market-card st-${market.status.toLowerCase()} ${expanded ? 'expanded' : ''}`}
       onClick={onToggle}
       role="button"
       tabIndex={0}

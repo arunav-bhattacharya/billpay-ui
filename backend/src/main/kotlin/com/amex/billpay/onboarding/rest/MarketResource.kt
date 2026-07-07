@@ -1,6 +1,5 @@
 package com.amex.billpay.onboarding.rest
 
-import com.amex.billpay.onboarding.model.ActivateRequest
 import com.amex.billpay.onboarding.model.CloneRequest
 import com.amex.billpay.onboarding.model.MarketDocument
 import com.amex.billpay.onboarding.service.MarketService
@@ -45,8 +44,22 @@ class MarketResource(private val service: MarketService) {
 
     @POST
     @Path("/{code}/activate")
-    fun activate(@PathParam("code") code: String, request: ActivateRequest?): MarketDocument =
-        service.activate(code, request?.profileId)
+    fun activateAll(@PathParam("code") code: String): MarketDocument =
+        service.activate(code, null)
+
+    @POST
+    @Path("/{code}/profiles/{profileId}/activate")
+    fun activateProfile(
+        @PathParam("code") code: String,
+        @PathParam("profileId") profileId: String,
+    ): MarketDocument = service.activate(code, profileId)
+
+    @DELETE
+    @Path("/{code}/profiles/{profileId}")
+    fun deleteProfile(
+        @PathParam("code") code: String,
+        @PathParam("profileId") profileId: String,
+    ): MarketDocument = service.deleteProfile(code, profileId)
 
     @POST
     @Path("/{code}/clone")

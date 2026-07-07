@@ -59,5 +59,3 @@ data class CloneRequest(
     /** Account types to carry over; null or empty means all. */
     val accountTypes: List<AccountType>? = null,
 )
-
-data class ActivateRequest(val profileId: String? = null)

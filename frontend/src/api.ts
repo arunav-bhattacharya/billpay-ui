@@ -29,11 +29,14 @@ export const api = {
     request<MarketDocument>(`/api/markets/${code}`, { method: 'PUT', body: JSON.stringify(doc) }),
   deleteMarket: (code: string) =>
     request<void>(`/api/markets/${code}`, { method: 'DELETE' }),
-  activate: (code: string, profileId?: string) =>
-    request<MarketDocument>(`/api/markets/${code}/activate`, {
+  activateAll: (code: string) =>
+    request<MarketDocument>(`/api/markets/${code}/activate`, { method: 'POST' }),
+  activateProfile: (code: string, profileId: string) =>
+    request<MarketDocument>(`/api/markets/${code}/profiles/${profileId}/activate`, {
       method: 'POST',
-      body: JSON.stringify({ profileId: profileId ?? null }),
     }),
+  deleteProfile: (code: string, profileId: string) =>
+    request<MarketDocument>(`/api/markets/${code}/profiles/${profileId}`, { method: 'DELETE' }),
   clone: (code: string, targetCode: string, accountTypes?: AccountType[]) =>
     request<MarketDocument>(`/api/markets/${code}/clone`, {
       method: 'POST',

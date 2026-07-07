@@ -18,7 +18,7 @@ export function MarketDetailPanel({
 }) {
   const { refreshMarkets, role } = useApp()
   const [showClone, setShowClone] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmDeleteMarket, setConfirmDeleteMarket] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -62,27 +62,62 @@ export function MarketDetailPanel({
             <button
               className="btn sm ghost"
               disabled={busy}
-              onClick={() => run(() => api.activate(market.code))}
+              onClick={() => run(() => api.activateAll(market.code))}
             >
               Activate all profiles
             </button>
           )}
+          <button
+            className="btn sm ghost delete"
+            disabled={busy}
+            onClick={() => setConfirmDeleteMarket(true)}
+          >
+            Delete
+          </button>
           <button className="icon-btn" onClick={onClose} aria-label="Collapse details">
             ✕
           </button>
         </div>
       </div>
 
+      {confirmDeleteMarket && (
+        <div className="confirm-bar" role="alertdialog" aria-label="Confirm market removal">
+          <span>
+            Remove <strong>{market.name}</strong> and all {market.profiles.length} of its
+            profiles?
+          </span>
+          <button
+            className="btn sm danger"
+            disabled={busy}
+            onClick={() =>
+              run(async () => {
+                await api.deleteMarket(market.code)
+                onClose()
+              })
+            }
+          >
+            Yes, remove market
+          </button>
+          <button className="btn sm ghost" onClick={() => setConfirmDeleteMarket(false)}>
+            Cancel
+          </button>
+        </div>
+      )}
+
       <ErrorNote message={error} />
 
       <div className="profile-list">
+        {market.profiles.length === 0 && (
+          <p className="muted">No profiles yet — add an account type to get started.</p>
+        )}
         {market.profiles.map((p) => (
           <ProfileCard
             key={p.id ?? p.accountType}
             market={market}
             profile={p}
             busy={busy}
-            onActivate={() => run(() => api.activate(market.code, p.id))}
+            onActivate={() => p.id && run(() => api.activateProfile(market.code, p.id!))}
+            onDelete={() => p.id && run(() => api.deleteProfile(market.code, p.id!))}
           />
         ))}
       </div>
@@ -93,33 +128,6 @@ export function MarketDetailPanel({
         <summary>Market JSON document</summary>
         <pre>{JSON.stringify(market, null, 2)}</pre>
       </details>
-
-      <div className="danger-zone">
-        {confirmDelete ? (
-          <>
-            <span>Remove {market.name} and all its profiles?</span>
-            <button
-              className="btn sm danger"
-              disabled={busy}
-              onClick={() =>
-                run(async () => {
-                  await api.deleteMarket(market.code)
-                  onClose()
-                })
-              }
-            >
-              Yes, remove market
-            </button>
-            <button className="btn sm ghost" onClick={() => setConfirmDelete(false)}>
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button className="link-btn danger" onClick={() => setConfirmDelete(true)}>
-            Remove this market…
-          </button>
-        )}
-      </div>
 
       {showClone && (
         <CloneDialog
@@ -140,13 +148,16 @@ function ProfileCard({
   profile,
   busy,
   onActivate,
+  onDelete,
 }: {
   market: MarketDocument
   profile: MarketProfile
   busy: boolean
   onActivate: () => void
+  onDelete: () => void
 }) {
   const { catalog } = useApp()
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const byCategory = CATEGORY_ORDER.map((cat) => ({
     cat,
     apis: (catalog?.apis ?? []).filter(
@@ -162,12 +173,42 @@ function ProfileCard({
       <div className="profile-card-head">
         <h4>{ACCOUNT_TYPE_LABELS[profile.accountType]}</h4>
         <StatusSeal status={profile.status} small />
+        <span className="spacer" />
         {profile.status === 'DRAFT' && (
           <button className="btn sm primary" disabled={busy} onClick={onActivate}>
             Activate
           </button>
         )}
+        <button
+          className="btn sm ghost delete"
+          disabled={busy}
+          onClick={() => setConfirmDelete(true)}
+        >
+          Delete
+        </button>
       </div>
+
+      {confirmDelete && (
+        <div className="confirm-bar" role="alertdialog" aria-label="Confirm profile removal">
+          <span>
+            Remove the <strong>{ACCOUNT_TYPE_LABELS[profile.accountType]}</strong> profile from{' '}
+            {market.name}?
+          </span>
+          <button
+            className="btn sm danger"
+            disabled={busy}
+            onClick={() => {
+              setConfirmDelete(false)
+              onDelete()
+            }}
+          >
+            Yes, remove profile
+          </button>
+          <button className="btn sm ghost" onClick={() => setConfirmDelete(false)}>
+            Cancel
+          </button>
+        </div>
+      )}
 
       <div className="profile-dims">
         {dims.map((d) => (

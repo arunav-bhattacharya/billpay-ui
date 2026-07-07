@@ -117,6 +117,20 @@ class MarketService(private val objectMapper: ObjectMapper) {
         return toDocument(entity)
     }
 
+    /** Remove a single account-type profile; the market itself stays. */
+    @Transactional
+    fun deleteProfile(code: String, profileId: String): MarketDocument {
+        val entity = requireEntity(code)
+        val config = objectMapper.readValue(entity.configJson, MarketConfig::class.java)
+        if (config.profiles.none { it.id == profileId }) {
+            throw WebApplicationException("Profile '$profileId' not found in market '$code'", Response.Status.NOT_FOUND)
+        }
+        val profiles = config.profiles.filterNot { it.id == profileId }
+        entity.configJson = objectMapper.writeValueAsString(config.copy(profiles = profiles))
+        entity.updatedAt = Instant.now()
+        return toDocument(entity)
+    }
+
     @Transactional
     fun clone(sourceCode: String, targetCode: String, accountTypes: List<AccountType>? = null): MarketDocument {
         val source = requireEntity(sourceCode)

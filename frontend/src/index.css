@@ -56,7 +56,11 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(900px 420px at 8% -6%, rgba(84, 87, 205, 0.07), transparent 60%),
+    radial-gradient(700px 380px at 96% -4%, rgba(14, 138, 158, 0.06), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
@@ -188,13 +192,14 @@ select:focus {
 }
 
 .btn.primary {
-  background: var(--iris);
+  background: linear-gradient(180deg, #6366e0, var(--iris) 55%, var(--iris-deep));
   color: #fff;
-  box-shadow: 0 1px 2px rgba(84, 87, 205, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 6px rgba(84, 87, 205, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .btn.primary:hover:not(:disabled) {
-  background: var(--iris-deep);
+  background: linear-gradient(180deg, #585cd8, var(--iris-deep) 60%, #393c9e);
+  box-shadow: 0 3px 10px rgba(84, 87, 205, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .btn.ghost {
@@ -211,6 +216,16 @@ select:focus {
 .btn.danger {
   background: var(--red);
   color: #fff;
+}
+
+.btn.ghost.delete {
+  color: var(--red);
+}
+
+.btn.ghost.delete:hover:not(:disabled) {
+  border-color: var(--red);
+  background: var(--red-wash);
+  color: var(--red);
 }
 
 .btn.sm {
@@ -370,62 +385,48 @@ select:focus {
   font-size: 13px;
 }
 
-/* ---------- stat strip ---------- */
+/* ---------- title row & active count ---------- */
 
-.stat-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
-  margin-bottom: 30px;
-  overflow: hidden;
-}
-
-.stat {
-  position: relative;
-  padding: 20px 26px;
+.title-row {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
-.stat + .stat {
-  border-left: 1px solid var(--line);
-}
-
-.stat::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--iris), var(--teal));
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.stat:hover::before {
-  opacity: 1;
-}
-
-.stat-num {
-  font-size: 32px;
-  font-weight: 650;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  color: var(--ink);
+.active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green);
+  background: var(--green-wash);
+  border: 1px solid var(--green-border);
+  border-radius: 999px;
+  padding: 5px 14px;
   font-variant-numeric: tabular-nums;
 }
 
-.stat-label {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
+/* ---------- inline confirm bar ---------- */
+
+.confirm-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: var(--red-wash);
+  border: 1px solid #ecc9c9;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.confirm-bar span {
+  flex: 1;
+  min-width: 200px;
 }
 
 /* ---------- onboarding panel (accordion) ---------- */
@@ -1473,11 +1474,21 @@ select:focus {
 
 .region-head {
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  border-bottom: 1px solid var(--line-strong);
+  align-items: center;
+  gap: 12px;
   padding-bottom: 10px;
   margin-bottom: 20px;
+  position: relative;
+}
+
+.region-head::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--line-strong), var(--line) 45%, transparent);
 }
 
 .region-head h2 {
@@ -1486,10 +1497,14 @@ select:focus {
 
 .region-meta {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 12px;
 }
 
 .market-grid {
@@ -1499,16 +1514,36 @@ select:focus {
 }
 
 .market-card {
+  position: relative;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow-1);
-  padding: 18px 20px 14px;
+  padding: 20px 20px 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   cursor: pointer;
+  overflow: hidden;
   transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+/* status ribbon along the top edge */
+.market-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 3px;
+}
+
+.market-card.st-active::before {
+  background: linear-gradient(90deg, var(--green), #4dbd85 60%, transparent);
+}
+
+.market-card.st-draft::before {
+  background: linear-gradient(90deg, var(--line-strong), transparent);
 }
 
 .market-card:hover {
@@ -1527,6 +1562,18 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.market-card-top .flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, var(--bg), #ececf4);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 #fff;
 }
 
 .market-card-top .seal {
@@ -1598,7 +1645,9 @@ select:focus {
 
 .detail-panel {
   grid-column: 1 / -1;
-  background: var(--card);
+  background:
+    linear-gradient(180deg, var(--iris-wash), transparent 90px),
+    var(--card);
   border: 1px solid var(--iris-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-2);
@@ -1668,10 +1717,6 @@ select:focus {
   font-size: 16px;
 }
 
-.profile-card-head .btn {
-  margin-left: auto;
-}
-
 .profile-dims {
   display: flex;
   flex-wrap: wrap;
@@ -1707,15 +1752,6 @@ select:focus {
 
 .profile-api-cat.cat-event_handler {
   color: var(--teal);
-}
-
-.danger-zone {
-  margin-top: 22px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--muted);
-  font-size: 14px;
 }
 
 /* ---------- empty state / flag ---------- */
@@ -1754,19 +1790,6 @@ select:focus {
 
   .acc-body {
     padding-left: 26px;
-  }
-
-  .stat-strip {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .stat:nth-child(3) {
-    border-left: none;
-    border-top: 1px solid var(--line);
-  }
-
-  .stat:nth-child(4) {
-    border-top: 1px solid var(--line);
   }
 
   .masthead-inner {
