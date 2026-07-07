@@ -428,18 +428,23 @@ select:focus {
 
 .hero {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  gap: 30px;
+  gap: 96px;
   flex-wrap: wrap;
   background:
-    radial-gradient(460px 220px at 6% -30%, rgba(0, 111, 207, 0.5), transparent 70%),
-    radial-gradient(420px 220px at 96% 140%, rgba(14, 138, 158, 0.35), transparent 70%),
-    linear-gradient(140deg, var(--mast-1), var(--mast-2));
-  border: 1px solid #1c3f6e;
+    radial-gradient(520px 260px at 10% -30%, rgba(0, 111, 207, 0.6), transparent 70%),
+    radial-gradient(460px 240px at 92% 140%, rgba(14, 138, 158, 0.45), transparent 70%),
+    radial-gradient(380px 200px at 50% -40%, rgba(84, 120, 220, 0.35), transparent 70%),
+    radial-gradient(320px 180px at 30% 130%, rgba(26, 127, 75, 0.22), transparent 70%),
+    linear-gradient(140deg, #001030, #002a70 55%, #00348a);
+  border: 1px solid #2a5590;
   border-radius: 18px;
-  box-shadow: var(--shadow-2);
-  padding: 26px 32px;
+  box-shadow:
+    0 0 0 1px rgba(0, 111, 207, 0.25),
+    0 10px 44px rgba(0, 47, 130, 0.4),
+    0 2px 90px rgba(0, 111, 207, 0.28);
+  padding: 30px 40px;
   margin-bottom: 34px;
 }
 
@@ -500,8 +505,8 @@ select:focus {
 .hero-right {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
+  align-items: center;
+  gap: 26px;
 }
 
 .title-row {
