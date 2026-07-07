@@ -10,7 +10,7 @@ import { WorldMap } from './WorldMap'
 
 /** The whole app on one page: stats, onboarding panel, region ledger with inline detail. */
 export function Ledger() {
-  const { markets, loading, loadError } = useApp()
+  const { markets, loading, loadError, catalog } = useApp()
   const [onboarding, setOnboarding] = useState<{ presetMarket: string | null } | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [view, setView] = useState<'grid' | 'map'>('grid')
@@ -36,13 +36,31 @@ export function Ledger() {
         <div>
           <div className="title-row">
             <h1>Markets</h1>
-            <span className="count-pill">
-              <b>{markets.length}</b> onboarded
-            </span>
-            <span className="active-pill">
-              <i className="dot dot-active" aria-hidden="true" />
-              <b>{activeMarkets.length}</b> active
-            </span>
+            {/* One tick per Amex market: green = active, amber = draft, hollow = available */}
+            <div className="market-ticker" aria-label="Market status overview">
+              <div className="ticker-row">
+                {(catalog?.markets ?? []).map((cm) => {
+                  const doc = markets.find((m) => m.market.code === cm.code)
+                  const state = doc ? (doc.status === 'ACTIVE' ? 'active' : 'draft') : 'off'
+                  return (
+                    <i
+                      key={cm.code}
+                      className={`tick tick-${state}`}
+                      title={`${cm.name} — ${doc ? doc.status.toLowerCase() : 'not onboarded'}`}
+                    />
+                  )
+                })}
+              </div>
+              <div className="ticker-caption">
+                <b className="tc-active">{activeMarkets.length} active</b>
+                <span className="tc-sep">·</span>
+                <b className="tc-draft">{markets.length - activeMarkets.length} draft</b>
+                <span className="tc-sep">·</span>
+                <span className="tc-off">
+                  {(catalog?.markets.length ?? 0) - markets.length} available
+                </span>
+              </div>
+            </div>
           </div>
           <div className="view-toggle" role="group" aria-label="Markets view">
             <button className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')}>
@@ -108,9 +126,13 @@ export function Ledger() {
             <section key={region} className="region-section">
               <div className="region-head">
                 <h2>{REGION_NAMES[region] ?? region}</h2>
-                <span className="region-meta">
-                  {region} · {regionMarkets.length}{' '}
-                  {regionMarkets.length === 1 ? 'market' : 'markets'}
+                <span className="region-stat">
+                  <span className="rs-seg rs-onb">
+                    {regionMarkets.length} onboarded
+                  </span>
+                  <span className="rs-seg rs-act">
+                    {regionMarkets.filter((m) => m.status === 'ACTIVE').length} active
+                  </span>
                 </span>
               </div>
               <div className="market-grid">

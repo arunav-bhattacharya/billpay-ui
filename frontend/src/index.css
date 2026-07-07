@@ -45,8 +45,8 @@
   --mast-1: #00112e;
   --mast-2: #00205f;
 
-  --font-display: 'Bricolage Grotesque', 'Instrument Sans', -apple-system, sans-serif;
-  --font-body: 'Instrument Sans', -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Cabinet Grotesk', 'Switzer', -apple-system, sans-serif;
+  --font-body: 'Switzer', -apple-system, 'Segoe UI', sans-serif;
   /* mono is reserved for code: endpoints and JSON */
   --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
 
@@ -82,17 +82,17 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   color: var(--ink);
   margin: 0;
 }
 
 h1 {
-  font-size: 38px;
-  font-weight: 700;
+  font-size: 42px;
+  font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1.12;
+  line-height: 1.08;
 }
 
 a {
@@ -336,7 +336,7 @@ select:focus {
 .brand-name {
   font-family: var(--font-display);
   font-size: 23px;
-  font-weight: 650;
+  font-weight: 700;
   letter-spacing: -0.02em;
   display: flex;
   flex-direction: column;
@@ -412,40 +412,75 @@ select:focus {
 .title-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 26px;
   flex-wrap: wrap;
 }
 
-.count-pill {
-  display: inline-flex;
-  align-items: center;
+.market-ticker {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  font-size: 14px;
-  color: var(--muted);
+  padding: 10px 16px;
   background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-1);
+}
+
+.ticker-row {
+  display: flex;
+  gap: 4px;
+}
+
+.tick {
+  width: 13px;
+  height: 24px;
+  border-radius: 4px;
+  transition: transform 0.12s ease;
+}
+
+.tick:hover {
+  transform: translateY(-2px);
+}
+
+.tick-active {
+  background: linear-gradient(180deg, #35b877, var(--green));
+  box-shadow: 0 1px 4px rgba(26, 127, 75, 0.4);
+}
+
+.tick-draft {
+  background: linear-gradient(180deg, #f4ca66, #dfa41f);
+  box-shadow: 0 1px 4px rgba(163, 123, 10, 0.35);
+}
+
+.tick-off {
+  background: var(--grey-wash);
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  padding: 5px 14px;
-  font-variant-numeric: tabular-nums;
 }
 
-.count-pill b {
-  color: var(--ink);
-  font-weight: 650;
-}
-
-.active-pill {
-  display: inline-flex;
-  align-items: center;
+.ticker-caption {
+  display: flex;
   gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--green);
-  background: var(--green-wash);
-  border: 1px solid var(--green-border);
-  border-radius: 999px;
-  padding: 5px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+
+.ticker-caption b {
+  font-weight: 700;
+}
+
+.tc-active {
+  color: var(--green);
+}
+
+.tc-draft {
+  color: var(--amber);
+}
+
+.tc-sep {
+  color: var(--line-strong);
 }
 
 /* ---------- inline confirm bar ---------- */
@@ -553,7 +588,7 @@ select:focus {
 
 .acc-label {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 19px;
   letter-spacing: -0.01em;
 }
@@ -699,7 +734,7 @@ select:focus {
 
 .account-name {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 15px;
   letter-spacing: -0.01em;
 }
@@ -1618,16 +1653,30 @@ select:focus {
   font-size: 23px;
 }
 
-.region-meta {
-  font-family: var(--font-body);
-  font-size: 10.5px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted);
-  background: var(--card);
-  border: 1px solid var(--line);
+.region-stat {
+  display: inline-flex;
   border-radius: 999px;
-  padding: 3px 12px;
+  overflow: hidden;
+  border: 1px solid var(--iris-border);
+  box-shadow: var(--shadow-1);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.rs-seg {
+  padding: 4px 14px;
+}
+
+.rs-onb {
+  background: var(--iris-wash);
+  color: var(--iris-deep);
+}
+
+.rs-act {
+  background: var(--green-wash);
+  color: var(--green);
+  border-left: 1px solid var(--green-border);
 }
 
 .market-grid {
@@ -1762,6 +1811,16 @@ select:focus {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--iris-deep);
+}
+
+.card-open-hint::after {
+  content: ' →';
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.market-card:hover .card-open-hint::after {
+  transform: translateX(3px);
 }
 
 /* ---------- inline detail panel (spans the grid) ---------- */
