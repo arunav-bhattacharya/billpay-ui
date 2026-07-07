@@ -3,7 +3,13 @@ import { api } from '../api'
 import { useApp } from '../AppContext'
 import { CloneDialog, CustomDimValueInput, ErrorNote, Flag, JsonView, StatusSeal } from '../components'
 import { ACCOUNT_TYPE_LABELS, CATEGORY_LABELS, CATEGORY_ORDER, yn } from '../lib'
-import type { CustomDimensionDef, CustomDimensionType, MarketDocument, MarketProfile } from '../types'
+import type {
+  CustomDimensionDef,
+  CustomDimensionType,
+  Dimensions,
+  MarketDocument,
+  MarketProfile,
+} from '../types'
 
 export function MarketDetailPanel({
   market,
@@ -116,6 +122,7 @@ export function MarketDetailPanel({
             market={market}
             profile={p}
             busy={busy}
+            run={run}
             onActivate={() => p.id && run(() => api.activateProfile(market.market.code, p.id!))}
             onDelete={() => p.id && run(() => api.deleteProfile(market.market.code, p.id!))}
           />
@@ -144,17 +151,20 @@ function ProfileCard({
   market,
   profile,
   busy,
+  run,
   onActivate,
   onDelete,
 }: {
   market: MarketDocument
   profile: MarketProfile
   busy: boolean
+  run: (a: () => Promise<unknown>) => Promise<void>
   onActivate: () => void
   onDelete: () => void
 }) {
   const { catalog } = useApp()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editing, setEditing] = useState(false)
   const byCategory = CATEGORY_ORDER.map((cat) => ({
     cat,
     apis: (catalog?.apis ?? []).filter(
@@ -164,6 +174,29 @@ function ProfileCard({
 
   const dims = catalog?.dimensions ?? []
   const customEntries = Object.entries(profile.customDimensions)
+
+  if (editing) {
+    return (
+      <article className="profile-card editing">
+        <div className="profile-card-head">
+          <h4>{ACCOUNT_TYPE_LABELS[profile.accountType]}</h4>
+          <StatusSeal status={profile.status} small />
+          <span className="mono-tag">editing</span>
+        </div>
+        <ProfileEditor
+          market={market}
+          profile={profile}
+          busy={busy}
+          onCancel={() => setEditing(false)}
+          onSave={async (updated) => {
+            const profiles = market.profiles.map((p) => (p.id === profile.id ? updated : p))
+            await run(() => api.updateMarket(market.market.code, { ...market, profiles }))
+            setEditing(false)
+          }}
+        />
+      </article>
+    )
+  }
 
   return (
     <article className="profile-card">
@@ -176,6 +209,9 @@ function ProfileCard({
             Activate
           </button>
         )}
+        <button className="btn sm ghost" disabled={busy} onClick={() => setEditing(true)}>
+          Edit
+        </button>
         <button
           className="btn sm ghost delete"
           disabled={busy}
@@ -244,6 +280,124 @@ function ProfileCard({
         ))}
       </div>
     </article>
+  )
+}
+
+/* ---------- Inline profile editor: APIs, dimensions, custom values ---------- */
+
+function ProfileEditor({
+  market,
+  profile,
+  busy,
+  onCancel,
+  onSave,
+}: {
+  market: MarketDocument
+  profile: MarketProfile
+  busy: boolean
+  onCancel: () => void
+  onSave: (updated: MarketProfile) => void
+}) {
+  const { catalog, role } = useApp()
+  const [apis, setApis] = useState<string[]>(profile.apis)
+  const [dims, setDims] = useState<Dimensions>({ ...profile.dimensions })
+  const [customValues, setCustomValues] = useState<Record<string, string>>({
+    ...profile.customDimensions,
+  })
+
+  function toggleApi(name: string) {
+    setApis((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]))
+  }
+
+  const canSave = apis.length > 0
+
+  return (
+    <div className="profile-editor">
+      <div className="pe-section">
+        <h5>APIs</h5>
+        <div className="pe-api-groups">
+          {CATEGORY_ORDER.map((cat) => (
+            <div key={cat} className="pe-api-group">
+              <span className={`pe-cat cat-${cat.toLowerCase()}`}>{CATEGORY_LABELS[cat]}</span>
+              {(catalog?.apis ?? [])
+                .filter((a) => a.category === cat)
+                .map((a) => (
+                  <label key={a.name} className="pe-api" title={a.summary}>
+                    <input
+                      type="checkbox"
+                      checked={apis.includes(a.name)}
+                      onChange={() => toggleApi(a.name)}
+                    />
+                    <span>{a.name}</span>
+                  </label>
+                ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="pe-section">
+        <h5>Dimensions</h5>
+        <div className="pe-dims">
+          {(catalog?.dimensions ?? []).map((d) => (
+            <label key={d.key} className="pe-dim" title={d.description}>
+              <span>{d.label}</span>
+              <button
+                className={`switch sm ${dims[d.key] ? 'on' : ''}`}
+                role="switch"
+                aria-checked={dims[d.key]}
+                aria-label={d.label}
+                onClick={() => setDims({ ...dims, [d.key]: !dims[d.key] })}
+              >
+                <span className="knob" />
+              </button>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {market.customDimensionDefs.length > 0 && role === 'ADMIN' && (
+        <div className="pe-section">
+          <h5>Custom dimensions</h5>
+          <div className="custom-dim-values">
+            {market.customDimensionDefs.map((def) => (
+              <label key={def.key} className="custom-dim-value">
+                <span>{def.label}</span>
+                <CustomDimValueInput
+                  def={def}
+                  value={customValues[def.key] ?? ''}
+                  onChange={(v) => setCustomValues({ ...customValues, [def.key]: v })}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!canSave && <p className="hint-warn">Select at least one API.</p>}
+
+      <div className="pe-actions">
+        <button className="btn sm ghost" disabled={busy} onClick={onCancel}>
+          Cancel
+        </button>
+        <button
+          className="btn sm primary"
+          disabled={busy || !canSave}
+          onClick={() =>
+            onSave({
+              ...profile,
+              apis,
+              dimensions: dims,
+              customDimensions: Object.fromEntries(
+                Object.entries(customValues).filter(([, v]) => v !== ''),
+              ),
+            })
+          }
+        >
+          {busy ? 'Saving…' : 'Save changes'}
+        </button>
+      </div>
+    </div>
   )
 }
 

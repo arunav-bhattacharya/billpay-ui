@@ -36,31 +36,11 @@ export function Ledger() {
         <div>
           <div className="title-row">
             <h1>Markets</h1>
-            {/* One tick per Amex market: green = active, amber = draft, hollow = available */}
-            <div className="market-ticker" aria-label="Market status overview">
-              <div className="ticker-row">
-                {(catalog?.markets ?? []).map((cm) => {
-                  const doc = markets.find((m) => m.market.code === cm.code)
-                  const state = doc ? (doc.status === 'ACTIVE' ? 'active' : 'draft') : 'off'
-                  return (
-                    <i
-                      key={cm.code}
-                      className={`tick tick-${state}`}
-                      title={`${cm.name} — ${doc ? doc.status.toLowerCase() : 'not onboarded'}`}
-                    />
-                  )
-                })}
-              </div>
-              <div className="ticker-caption">
-                <b className="tc-active">{activeMarkets.length} active</b>
-                <span className="tc-sep">·</span>
-                <b className="tc-draft">{markets.length - activeMarkets.length} draft</b>
-                <span className="tc-sep">·</span>
-                <span className="tc-off">
-                  {(catalog?.markets.length ?? 0) - markets.length} available
-                </span>
-              </div>
-            </div>
+            <StatusOverview
+              active={activeMarkets.length}
+              draft={markets.length - activeMarkets.length}
+              available={(catalog?.markets.length ?? 0) - markets.length}
+            />
           </div>
           <div className="view-toggle" role="group" aria-label="Markets view">
             <button className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')}>
@@ -159,6 +139,41 @@ export function Ledger() {
         })
       )}
     </main>
+  )
+}
+
+/** Slim proportional status bar with a dotted legend — quiet, readable at a glance. */
+function StatusOverview({
+  active,
+  draft,
+  available,
+}: {
+  active: number
+  draft: number
+  available: number
+}) {
+  return (
+    <div className="status-overview" aria-label="Market status overview">
+      <div className="status-bar" role="presentation">
+        {active > 0 && <span className="sb-seg sb-active" style={{ flexGrow: active }} />}
+        {draft > 0 && <span className="sb-seg sb-draft" style={{ flexGrow: draft }} />}
+        {available > 0 && <span className="sb-seg sb-off" style={{ flexGrow: available }} />}
+      </div>
+      <div className="status-legend">
+        <span>
+          <i className="ldot ldot-active" aria-hidden="true" />
+          <b>{active}</b> active
+        </span>
+        <span>
+          <i className="ldot ldot-draft" aria-hidden="true" />
+          <b>{draft}</b> draft
+        </span>
+        <span>
+          <i className="ldot ldot-off" aria-hidden="true" />
+          <b>{available}</b> available
+        </span>
+      </div>
+    </div>
   )
 }
 
