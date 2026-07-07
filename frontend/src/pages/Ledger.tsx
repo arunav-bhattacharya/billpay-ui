@@ -6,12 +6,14 @@ import { DIMENSION_KEYS } from '../types'
 import type { MarketDocument } from '../types'
 import { MarketDetailPanel } from './MarketDetailPanel'
 import { OnboardingPanel } from './OnboardingPanel'
+import { WorldMap } from './WorldMap'
 
 /** The whole app on one page: stats, onboarding panel, region ledger with inline detail. */
 export function Ledger() {
   const { markets, loading, loadError } = useApp()
   const [onboarding, setOnboarding] = useState<{ presetMarket: string | null } | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [view, setView] = useState<'grid' | 'map'>('grid')
 
   const activeMarkets = markets.filter((m) => m.status === 'ACTIVE')
   const regions = REGION_ORDER.filter((r) => markets.some((m) => m.region === r))
@@ -36,11 +38,21 @@ export function Ledger() {
             dimensions each profile carries.
           </p>
         </div>
-        {!onboarding && (
-          <button className="btn primary lg" onClick={() => openOnboarding(null)}>
-            Onboard market
-          </button>
-        )}
+        <div className="head-controls">
+          <div className="view-toggle" role="group" aria-label="Ledger view">
+            <button className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')}>
+              Grid
+            </button>
+            <button className={view === 'map' ? 'on' : ''} onClick={() => setView('map')}>
+              Map
+            </button>
+          </div>
+          {!onboarding && (
+            <button className="btn primary lg" onClick={() => openOnboarding(null)}>
+              Onboard market
+            </button>
+          )}
+        </div>
       </div>
 
       <ErrorNote message={loadError} />
@@ -57,7 +69,24 @@ export function Ledger() {
         />
       )}
 
-      {loading ? (
+      {view === 'map' ? (
+        <>
+          <WorldMap
+            onSelect={(code) => setExpanded(expanded === code ? null : code)}
+            onOnboard={(code) => openOnboarding(code)}
+          />
+          {expanded && markets.some((m) => m.code === expanded) && (
+            <div className="map-detail">
+              <MarketDetailPanel
+                market={markets.find((m) => m.code === expanded)!}
+                onClose={() => setExpanded(null)}
+                onAddAccountType={(code) => openOnboarding(code)}
+                onCloned={(target) => setExpanded(target)}
+              />
+            </div>
+          )}
+        </>
+      ) : loading ? (
         <p className="muted">Loading markets…</p>
       ) : markets.length === 0 ? (
         <div className="empty-state">
