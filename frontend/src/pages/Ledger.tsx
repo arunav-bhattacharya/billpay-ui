@@ -17,6 +17,10 @@ export function Ledger() {
   const mapDetailRef = useRef<HTMLDivElement>(null)
 
   const activeMarkets = markets.filter((m) => m.status === 'ACTIVE')
+  const draftMarkets = markets.filter((m) => m.status === 'DRAFT')
+  const availableMarkets = (catalog?.markets ?? []).filter(
+    (cm) => !markets.some((m) => m.market.code === cm.code),
+  )
   const regions = REGION_ORDER.filter((r) => markets.some((m) => m.market.region === r))
 
   // In map view the edit panel lives below the map — bring it into view on selection.
@@ -34,14 +38,14 @@ export function Ledger() {
     <main className="page">
       <div className="page-head">
         <div>
-          <div className="title-row">
-            <h1>Markets</h1>
-            <StatusOverview
-              active={activeMarkets.length}
-              draft={markets.length - activeMarkets.length}
-              available={(catalog?.markets.length ?? 0) - markets.length}
-            />
-          </div>
+          <h1>Markets</h1>
+          <StatusOverview
+            active={activeMarkets.map((m) => ({ code: m.market.code, name: m.market.name }))}
+            draft={draftMarkets.map((m) => ({ code: m.market.code, name: m.market.name }))}
+            available={availableMarkets.map((m) => ({ code: m.code, name: m.name }))}
+          />
+        </div>
+        <div className="head-controls">
           <div className="view-toggle" role="group" aria-label="Markets view">
             <button className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')}>
               Grid
@@ -50,12 +54,12 @@ export function Ledger() {
               Map
             </button>
           </div>
+          {!onboarding && (
+            <button className="btn primary lg" onClick={() => openOnboarding(null)}>
+              Onboard market
+            </button>
+          )}
         </div>
-        {!onboarding && (
-          <button className="btn primary lg" onClick={() => openOnboarding(null)}>
-            Onboard market
-          </button>
-        )}
       </div>
 
       <ErrorNote message={loadError} />
@@ -142,23 +146,29 @@ export function Ledger() {
   )
 }
 
-/** Circular progress: active / draft / yet-to-onboard shares of the Amex market list. */
+interface MarketRef {
+  code: string
+  name: string
+}
+
+/** Circular progress: active / draft / yet-to-onboard shares of the Amex market list.
+ *  Hovering a legend row reveals which countries are in that state. */
 function StatusOverview({
   active,
   draft,
   available,
 }: {
-  active: number
-  draft: number
-  available: number
+  active: MarketRef[]
+  draft: MarketRef[]
+  available: MarketRef[]
 }) {
-  const total = active + draft + available || 1
+  const total = active.length + draft.length + available.length || 1
   const R = 30
   const C = 2 * Math.PI * R
   const segments = [
-    { n: active, cls: 'seg-active' },
-    { n: draft, cls: 'seg-draft' },
-    { n: available, cls: 'seg-off' },
+    { n: active.length, cls: 'seg-active' },
+    { n: draft.length, cls: 'seg-draft' },
+    { n: available.length, cls: 'seg-off' },
   ].filter((s) => s.n > 0)
   const gap = segments.length > 1 ? 2.5 : 0
 
@@ -174,10 +184,16 @@ function StatusOverview({
     return arc
   })
 
+  const rows: { dot: string; count: number; label: string; list: MarketRef[] }[] = [
+    { dot: 'ldot-active', count: active.length, label: 'active', list: active },
+    { dot: 'ldot-draft', count: draft.length, label: 'draft', list: draft },
+    { dot: 'ldot-off', count: available.length, label: 'to onboard', list: available },
+  ]
+
   return (
     <div
       className="status-overview"
-      aria-label={`${active} active, ${draft} draft, ${available} yet to onboard`}
+      aria-label={`${active.length} active, ${draft.length} draft, ${available.length} yet to onboard`}
     >
       <svg viewBox="0 0 80 80" className="donut" aria-hidden="true">
         <circle className="donut-track" cx="40" cy="40" r={R} />
@@ -195,25 +211,28 @@ function StatusOverview({
           ))}
         </g>
         <text x="40" y="39" className="donut-num">
-          {active}
+          {active.length}
         </text>
         <text x="40" y="53" className="donut-sub">
           active
         </text>
       </svg>
       <div className="status-legend">
-        <span>
-          <i className="ldot ldot-active" aria-hidden="true" />
-          <b>{active}</b> active
-        </span>
-        <span>
-          <i className="ldot ldot-draft" aria-hidden="true" />
-          <b>{draft}</b> draft
-        </span>
-        <span>
-          <i className="ldot ldot-off" aria-hidden="true" />
-          <b>{available}</b> to onboard
-        </span>
+        {rows.map((r) => (
+          <span key={r.label} className="legend-row" tabIndex={0}>
+            <i className={`ldot ${r.dot}`} aria-hidden="true" />
+            <b>{r.count}</b> {r.label}
+            {r.list.length > 0 && (
+              <span className="legend-pop" role="tooltip">
+                {r.list.map((m) => (
+                  <span key={m.code} className="legend-pop-row">
+                    <Flag code={m.code} size={15} /> {m.name}
+                  </span>
+                ))}
+              </span>
+            )}
+          </span>
+        ))}
       </div>
     </div>
   )
