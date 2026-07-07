@@ -255,7 +255,11 @@ export function OnboardingPanel({
                       </button>
                     ) : (
                       <>
-                        <button className="btn ghost" disabled={saving} onClick={() => save(false)}>
+                        <button
+                          className="btn ghost draft"
+                          disabled={saving}
+                          onClick={() => save(false)}
+                        >
                           Save as draft
                         </button>
                         <button className="btn primary" disabled={saving} onClick={() => save(true)}>

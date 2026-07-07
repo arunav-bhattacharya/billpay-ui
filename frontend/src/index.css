@@ -24,6 +24,12 @@
   --green-wash: #e3f6ec;
   --green-border: #bfe8d2;
 
+  /* draft = amber */
+  --amber: #a37b0a;
+  --amber-bright: #f2c14e;
+  --amber-wash: #fdf4dc;
+  --amber-border: #ecd9a3;
+
   --grey: #5b6272;
   --grey-wash: #edeff4;
   --grey-border: #d8dbe4;
@@ -217,6 +223,16 @@ select:focus {
 .btn.danger {
   background: var(--red);
   color: #fff;
+}
+
+.btn.ghost.draft {
+  color: var(--amber);
+}
+
+.btn.ghost.draft:hover:not(:disabled) {
+  border-color: var(--amber-bright);
+  background: var(--amber-wash);
+  color: var(--amber);
 }
 
 .btn.ghost.delete {
@@ -1442,9 +1458,9 @@ select:focus {
 }
 
 .seal-draft {
-  color: var(--grey);
-  background: var(--grey-wash);
-  border: 1px solid var(--grey-border);
+  color: var(--amber);
+  background: var(--amber-wash);
+  border: 1px solid var(--amber-border);
 }
 
 .seal-sm {
@@ -1529,7 +1545,7 @@ select:focus {
 }
 
 .market-card.st-draft::before {
-  background: linear-gradient(90deg, var(--line-strong), transparent);
+  background: linear-gradient(90deg, var(--amber-bright), #e8d9a8 60%, transparent);
 }
 
 .market-card:hover {
@@ -1600,8 +1616,8 @@ select:focus {
 }
 
 .dot-draft {
-  background: var(--grey);
-  box-shadow: 0 0 0 3px var(--grey-wash);
+  background: var(--amber-bright);
+  box-shadow: 0 0 0 3px var(--amber-wash);
 }
 
 .profile-row-name {
@@ -1834,13 +1850,13 @@ select:focus {
 }
 
 .map-svg .country-draft {
-  fill: #5a5f74;
-  stroke: #8a90a8;
+  fill: #cfa227;
+  stroke: #f0cd6e;
 }
 
 .map-svg .country-available {
-  fill: #27507f;
-  stroke: #5b8fc7;
+  fill: #8b93a5;
+  stroke: #c6cdd9;
 }
 
 .map-svg .country-market:hover {
@@ -1877,13 +1893,13 @@ select:focus {
 }
 
 .marker-draft .marker-dot {
-  fill: #a7adc2;
-  stroke: #4a4f63;
+  fill: var(--amber-bright);
+  stroke: #6b520e;
 }
 
 .marker-available .marker-dot {
-  fill: rgba(0, 17, 46, 0.5);
-  stroke: #7db8ec;
+  fill: rgba(255, 255, 255, 0.18);
+  stroke: #d6dce8;
   stroke-dasharray: 2 1.6;
 }
 
@@ -2044,13 +2060,13 @@ select:focus {
 }
 
 .legend-draft {
-  background: #5a5f74;
-  border: 1px solid #8a90a8;
+  background: var(--amber-bright);
+  border: 1px solid #b28a12;
 }
 
 .legend-available {
-  background: #27507f;
-  border: 1px dashed #7db8ec;
+  background: #8b93a5;
+  border: 1px dashed #d6dce8;
 }
 
 .map-legend-hint {
