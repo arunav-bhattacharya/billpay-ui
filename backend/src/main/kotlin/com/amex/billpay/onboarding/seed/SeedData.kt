@@ -7,6 +7,7 @@ import com.amex.billpay.onboarding.model.CustomDimensionType
 import com.amex.billpay.onboarding.model.Dimensions
 import com.amex.billpay.onboarding.model.LifecycleStatus
 import com.amex.billpay.onboarding.model.MarketDocument
+import com.amex.billpay.onboarding.model.MarketInfo
 import com.amex.billpay.onboarding.model.MarketProfile
 import com.amex.billpay.onboarding.service.MarketService
 import io.quarkus.logging.Log
@@ -25,7 +26,7 @@ class SeedData(private val service: MarketService) {
 
         service.create(
             MarketDocument(
-                code = "US",
+                market = MarketInfo(code = "US"),
                 customDimensionDefs = listOf(
                     CustomDimensionDef(
                         key = "settlementWindow",
@@ -67,7 +68,7 @@ class SeedData(private val service: MarketService) {
 
         service.create(
             MarketDocument(
-                code = "GB",
+                market = MarketInfo(code = "GB"),
                 profiles = listOf(
                     MarketProfile(
                         accountType = AccountType.CONSUMER,
@@ -85,7 +86,7 @@ class SeedData(private val service: MarketService) {
 
         service.create(
             MarketDocument(
-                code = "JP",
+                market = MarketInfo(code = "JP"),
                 profiles = listOf(
                     MarketProfile(
                         accountType = AccountType.CONSUMER,

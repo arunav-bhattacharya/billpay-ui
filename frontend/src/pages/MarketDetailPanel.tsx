@@ -42,16 +42,16 @@ export function MarketDetailPanel({
     <div className="detail-panel">
       <div className="detail-panel-head">
         <div className="detail-title">
-          <Flag code={market.code} size={26} />
-          <h3>{market.name}</h3>
+          <Flag code={market.market.code} size={26} />
+          <h3>{market.market.name}</h3>
           <span className="mono-tag">
-            {market.code} · {market.currency} · {market.region}
+            {market.market.code} · {market.market.currency} · {market.market.region}
           </span>
           <StatusSeal status={market.status} />
         </div>
         <div className="detail-actions">
           {canAddType && (
-            <button className="btn sm ghost" onClick={() => onAddAccountType(market.code)}>
+            <button className="btn sm ghost" onClick={() => onAddAccountType(market.market.code)}>
               + Account type
             </button>
           )}
@@ -62,7 +62,7 @@ export function MarketDetailPanel({
             <button
               className="btn sm ghost"
               disabled={busy}
-              onClick={() => run(() => api.activateAll(market.code))}
+              onClick={() => run(() => api.activateAll(market.market.code))}
             >
               Activate all profiles
             </button>
@@ -83,7 +83,7 @@ export function MarketDetailPanel({
       {confirmDeleteMarket && (
         <div className="confirm-bar" role="alertdialog" aria-label="Confirm market removal">
           <span>
-            Remove <strong>{market.name}</strong> and all {market.profiles.length} of its
+            Remove <strong>{market.market.name}</strong> and all {market.profiles.length} of its
             profiles?
           </span>
           <button
@@ -91,7 +91,7 @@ export function MarketDetailPanel({
             disabled={busy}
             onClick={() =>
               run(async () => {
-                await api.deleteMarket(market.code)
+                await api.deleteMarket(market.market.code)
                 onClose()
               })
             }
@@ -116,8 +116,8 @@ export function MarketDetailPanel({
             market={market}
             profile={p}
             busy={busy}
-            onActivate={() => p.id && run(() => api.activateProfile(market.code, p.id!))}
-            onDelete={() => p.id && run(() => api.deleteProfile(market.code, p.id!))}
+            onActivate={() => p.id && run(() => api.activateProfile(market.market.code, p.id!))}
+            onDelete={() => p.id && run(() => api.deleteProfile(market.market.code, p.id!))}
           />
         ))}
       </div>
@@ -192,7 +192,7 @@ function ProfileCard({
         <div className="confirm-bar" role="alertdialog" aria-label="Confirm profile removal">
           <span>
             Remove the <strong>{ACCOUNT_TYPE_LABELS[profile.accountType]}</strong> profile from{' '}
-            {market.name}?
+            {market.market.name}?
           </span>
           <button
             className="btn sm danger"
@@ -276,7 +276,7 @@ function AdminDefsSection({
         })
       : market.profiles
     return run(() =>
-      api.updateMarket(market.code, { ...market, customDimensionDefs: defs, profiles }),
+      api.updateMarket(market.market.code, { ...market, customDimensionDefs: defs, profiles }),
     )
   }
 
@@ -317,7 +317,7 @@ function AdminDefsSection({
           }
         : p,
     )
-    run(() => api.updateMarket(market.code, { ...market, profiles }))
+    run(() => api.updateMarket(market.market.code, { ...market, profiles }))
   }
 
   return (
@@ -327,7 +327,7 @@ function AdminDefsSection({
         <span className="admin-badge">Admin</span>
       </div>
       <p className="step-hint">
-        Hidden from operators. Definitions apply to {market.name}; values are per profile.
+        Hidden from operators. Definitions apply to {market.market.name}; values are per profile.
       </p>
 
       {market.customDimensionDefs.length === 0 && (

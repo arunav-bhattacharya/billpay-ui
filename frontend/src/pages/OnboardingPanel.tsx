@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
-import { CustomDimValueInput, ErrorNote, Flag, useEscape } from '../components'
+import { CustomDimValueInput, ErrorNote, Flag } from '../components'
 import { ACCOUNT_TYPE_LABELS, CATEGORY_LABELS, CATEGORY_ORDER, yn } from '../lib'
 import { DIMENSION_KEYS, EMPTY_DIMENSIONS } from '../types'
 import type {
   AccountType,
-  ApiSpec,
   CustomDimensionDef,
   CustomDimensionType,
   DimensionKey,
@@ -37,11 +36,10 @@ export function OnboardingPanel({
   const [dims, setDims] = useState<Dimensions>({ ...EMPTY_DIMENSIONS })
   const [newDefs, setNewDefs] = useState<CustomDimensionDef[]>([])
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
-  const [drawerApi, setDrawerApi] = useState<ApiSpec | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  const existing = markets.find((m) => m.code === marketCode) ?? null
+  const existing = markets.find((m) => m.market.code === marketCode) ?? null
   const takenTypes = existing?.profiles.map((p) => p.accountType) ?? []
   const selectedCurated = (catalog?.markets ?? []).find((m) => m.code === marketCode) ?? null
 
@@ -124,10 +122,12 @@ export function OnboardingPanel({
       }
     }
     return {
-      code: marketCode!,
-      name: selectedCurated?.name ?? '',
-      currency: selectedCurated?.currency ?? '',
-      region: selectedCurated?.region ?? '',
+      market: {
+        code: marketCode!,
+        name: selectedCurated?.name ?? '',
+        currency: selectedCurated?.currency ?? '',
+        region: selectedCurated?.region ?? '',
+      },
       status: 'DRAFT',
       customDimensionDefs: allDefs,
       profiles: [profile],
@@ -139,7 +139,7 @@ export function OnboardingPanel({
     setSaveError(null)
     try {
       const doc = buildDocument(activate)
-      if (existing) await api.updateMarket(existing.code, doc)
+      if (existing) await api.updateMarket(existing.market.code, doc)
       else await api.createMarket(doc)
       await refreshMarkets()
       onDone(marketCode!)
@@ -157,7 +157,7 @@ export function OnboardingPanel({
         <div>
           <div className="eyebrow">Onboarding journey</div>
           <h2>
-            {existing ? `New account type for ${existing.name}` : 'Onboard a market'}
+            {existing ? `New account type for ${existing.market.name}` : 'Onboard a market'}
           </h2>
         </div>
         <button className="icon-btn" onClick={onClose} aria-label="Close onboarding">
@@ -214,7 +214,6 @@ export function OnboardingPanel({
                             : [...prev, name],
                         )
                       }
-                      onDetails={setDrawerApi}
                     />
                   )}
                   {i === 2 && (
@@ -271,8 +270,6 @@ export function OnboardingPanel({
           )
         })}
       </div>
-
-      {drawerApi && <ApiDrawer spec={drawerApi} onClose={() => setDrawerApi(null)} />}
     </section>
   )
 }
@@ -298,7 +295,7 @@ function StepMarket({
 }) {
   const { catalog } = useApp()
   const [query, setQuery] = useState('')
-  const onboarded = new Map(markets.map((m) => [m.code, m]))
+  const onboarded = new Map(markets.map((m) => [m.market.code, m]))
   const shown = (catalog?.markets ?? []).filter(
     (m) =>
       m.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -384,23 +381,23 @@ function StepApis({
   dims,
   setDims,
   onToggle,
-  onDetails,
 }: {
   selectedApis: string[]
   suggestedBy: Map<DimensionKey, string[]>
   dims: Dimensions
   setDims: (d: Dimensions) => void
   onToggle: (name: string) => void
-  onDetails: (spec: ApiSpec) => void
 }) {
   const { catalog } = useApp()
+  const [openApi, setOpenApi] = useState<string | null>(null)
   if (!catalog) return null
   return (
     <div className="apis-layout">
       <div className="apis-list">
         <p className="step-hint">
-          Hover an API for a summary; open <em>Details</em> for the full contract. APIs may
-          <strong> suggest</strong> dimensions — nothing is selected for you.
+          Hover an API for a summary; expand <em>Details</em> for the full contract and a link
+          to the spec. APIs may <strong>suggest</strong> dimensions — nothing is selected for
+          you.
         </p>
         {CATEGORY_ORDER.map((cat) => (
           <div key={cat} className="api-category">
@@ -418,38 +415,76 @@ function StepApis({
                 .filter((a) => a.category === cat)
                 .map((spec) => {
                   const sel = selectedApis.includes(spec.name)
+                  const open = openApi === spec.name
                   return (
                     <div
                       key={spec.name}
-                      className={`api-card cat-${cat.toLowerCase()} ${sel ? 'sel' : ''}`}
+                      className={`api-card cat-${cat.toLowerCase()} ${sel ? 'sel' : ''} ${open ? 'open' : ''}`}
                     >
-                      <button
-                        className="api-main"
-                        aria-pressed={sel}
-                        onClick={() => onToggle(spec.name)}
-                      >
-                        <span className="api-check" aria-hidden="true">
-                          {sel ? '✓' : ''}
-                        </span>
-                        <span className="api-name">{spec.name}</span>
-                        <span className="api-endpoint">
-                          <b>{spec.method}</b> {spec.path}
-                        </span>
-                      </button>
-                      <button className="api-details" onClick={() => onDetails(spec)}>
-                        Details
-                      </button>
-                      <div className="api-pop" role="tooltip">
-                        <p>{spec.summary}</p>
-                        {spec.suggests.length > 0 && (
-                          <p className="api-pop-implies">
-                            Suggests{' '}
-                            {spec.suggests
-                              .map((d) => catalog.dimensions.find((x) => x.key === d)?.label ?? d)
-                              .join(', ')}
-                          </p>
-                        )}
+                      <div className="api-row">
+                        <button
+                          className="api-main"
+                          aria-pressed={sel}
+                          onClick={() => onToggle(spec.name)}
+                        >
+                          <span className="api-check" aria-hidden="true">
+                            {sel ? '✓' : ''}
+                          </span>
+                          <span className="api-name">{spec.name}</span>
+                          <span className="api-endpoint">
+                            <b>{spec.method}</b> {spec.path}
+                          </span>
+                        </button>
+                        <button
+                          className="api-details"
+                          aria-expanded={open}
+                          onClick={() => setOpenApi(open ? null : spec.name)}
+                        >
+                          Details
+                          <span className={`chevron ${open ? 'up' : ''}`} aria-hidden="true">
+                            ▾
+                          </span>
+                        </button>
+                        <div className="api-pop" role="tooltip">
+                          <p>{spec.summary}</p>
+                          {spec.suggests.length > 0 && (
+                            <p className="api-pop-implies">
+                              Suggests{' '}
+                              {spec.suggests
+                                .map((d) => catalog.dimensions.find((x) => x.key === d)?.label ?? d)
+                                .join(', ')}
+                            </p>
+                          )}
+                        </div>
                       </div>
+
+                      {open && (
+                        <div className="api-detail-body">
+                          <p className="api-detail-summary">{spec.summary}</p>
+                          <p className="api-detail-desc">{spec.description}</p>
+                          <div className="api-detail-meta">
+                            <span className="mono-tag">
+                              {spec.method} {spec.path}
+                            </span>
+                            {spec.suggests.map((k) => {
+                              const meta = catalog.dimensions.find((d) => d.key === k)
+                              return (
+                                <span key={k} className="chip chip-yes" title={meta?.description}>
+                                  suggests {meta?.label ?? k}
+                                </span>
+                              )
+                            })}
+                          </div>
+                          <a
+                            className="api-spec-link"
+                            href={spec.specUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View API spec ↗
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -710,8 +745,8 @@ function StepReview({
         <div className="review-block">
           <h4>Market</h4>
           <p>
-            <Flag code={document.code} size={18} /> {document.name || document.code}{' '}
-            <span className="mono-tag">{document.code}</span>
+            <Flag code={document.market.code} size={18} /> {document.market.name || document.market.code}{' '}
+            <span className="mono-tag">{document.market.code}</span>
           </p>
         </div>
         <div className="review-block">
@@ -759,59 +794,6 @@ function StepReview({
         <summary>Market JSON document</summary>
         <pre>{JSON.stringify(document, null, 2)}</pre>
       </details>
-    </div>
-  )
-}
-
-/* ================= API detail drawer (Esc closes) ================= */
-
-function ApiDrawer({ spec, onClose }: { spec: ApiSpec; onClose: () => void }) {
-  const { catalog } = useApp()
-  const ref = useRef<HTMLElement>(null)
-  useEscape(onClose)
-  useEffect(() => {
-    ref.current?.focus()
-  }, [])
-  return (
-    <div className="drawer-backdrop" onClick={onClose}>
-      <aside
-        className="drawer"
-        role="dialog"
-        aria-label={`${spec.name} details`}
-        tabIndex={-1}
-        ref={ref}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="drawer-head">
-          <div>
-            <div className="eyebrow">{CATEGORY_LABELS[spec.category]}</div>
-            <h2>{spec.name}</h2>
-          </div>
-          <button className="icon-btn" onClick={onClose} aria-label="Close details">
-            ✕
-          </button>
-        </div>
-        <div className="drawer-endpoint mono-tag">
-          {spec.method} {spec.path}
-        </div>
-        <p className="drawer-summary">{spec.summary}</p>
-        <p className="drawer-desc">{spec.description}</p>
-        <h3>Suggested dimensions</h3>
-        {spec.suggests.length === 0 ? (
-          <p className="muted">This API suggests no dimension flags.</p>
-        ) : (
-          spec.suggests.map((k) => {
-            const meta = catalog?.dimensions.find((d) => d.key === k)
-            return (
-              <div key={k} className="drawer-implies">
-                <span className="chip chip-yes">{meta?.label ?? k}</span>
-                <p>{meta?.description}</p>
-              </div>
-            )
-          })
-        )}
-        <p className="drawer-esc-hint mono-tag">esc to close</p>
-      </aside>
     </div>
   )
 }

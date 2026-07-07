@@ -14,10 +14,11 @@
   --line: #e3e4ee;
   --line-strong: #c9cbdc;
 
-  --iris: #5457cd;
-  --iris-deep: #4245b8;
-  --iris-wash: #eeeefb;
-  --iris-border: #ccccf2;
+  /* primary = Amex Bright Blue */
+  --iris: #006fcf;
+  --iris-deep: #0055a8;
+  --iris-wash: #e7f2fc;
+  --iris-border: #b9d9f5;
 
   --green: #1a7f4b;
   --green-wash: #e3f6ec;
@@ -35,8 +36,8 @@
   --red: #c03434;
   --red-wash: #faecec;
 
-  --mast-1: #14142b;
-  --mast-2: #1d1d3e;
+  --mast-1: #00112e;
+  --mast-2: #00205f;
 
   --font-body: 'Geist', -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
@@ -57,7 +58,7 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(900px 420px at 8% -6%, rgba(84, 87, 205, 0.07), transparent 60%),
+    radial-gradient(900px 420px at 8% -6%, rgba(0, 111, 207, 0.08), transparent 60%),
     radial-gradient(700px 380px at 96% -4%, rgba(14, 138, 158, 0.06), transparent 60%),
     var(--bg);
   background-attachment: fixed;
@@ -192,14 +193,14 @@ select:focus {
 }
 
 .btn.primary {
-  background: linear-gradient(180deg, #6366e0, var(--iris) 55%, var(--iris-deep));
+  background: linear-gradient(180deg, #2b8fe0, var(--iris) 55%, var(--iris-deep));
   color: #fff;
-  box-shadow: 0 2px 6px rgba(84, 87, 205, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  box-shadow: 0 2px 6px rgba(0, 111, 207, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .btn.primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #585cd8, var(--iris-deep) 60%, #393c9e);
-  box-shadow: 0 3px 10px rgba(84, 87, 205, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  background: linear-gradient(180deg, #1a82d8, var(--iris-deep) 60%, #00417f);
+  box-shadow: 0 3px 10px rgba(0, 111, 207, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .btn.ghost {
@@ -282,7 +283,7 @@ select:focus {
 .masthead {
   position: relative;
   background:
-    radial-gradient(520px 260px at 18% -40%, rgba(84, 87, 205, 0.5), transparent 70%),
+    radial-gradient(520px 260px at 18% -40%, rgba(0, 111, 207, 0.55), transparent 70%),
     radial-gradient(420px 220px at 78% -30%, rgba(14, 138, 158, 0.35), transparent 70%),
     linear-gradient(150deg, var(--mast-1), var(--mast-2));
   color: #fff;
@@ -327,7 +328,7 @@ select:focus {
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #9aa3d8;
+  color: #8fb4dd;
 }
 
 .mast-right {
@@ -345,7 +346,7 @@ select:focus {
 .role-switch button {
   border: none;
   background: none;
-  color: #aeb5dc;
+  color: #a9c7e4;
   font-size: 12.5px;
   font-weight: 600;
   padding: 5px 14px;
@@ -726,11 +727,17 @@ select:focus {
 .api-card {
   position: relative;
   display: flex;
-  align-items: stretch;
+  flex-direction: column;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--card);
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.api-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
 }
 
 .api-card::before {
@@ -807,9 +814,10 @@ select:focus {
 
 .api-name {
   grid-area: name;
-  font-family: var(--font-mono);
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: 14px;
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--ink);
   overflow-wrap: anywhere;
 }
@@ -827,6 +835,9 @@ select:focus {
 }
 
 .api-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: none;
   background: none;
   border-left: 1px solid var(--line);
@@ -840,6 +851,60 @@ select:focus {
 .api-details:hover {
   color: var(--iris-deep);
   background: var(--iris-wash);
+}
+
+.api-details .chevron {
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.api-details .chevron.up {
+  transform: rotate(180deg);
+}
+
+/* collapsible details under the row */
+
+.api-detail-body {
+  border-top: 1px solid var(--line);
+  padding: 12px 16px 14px 52px;
+  font-size: 13px;
+  background: linear-gradient(180deg, var(--bg), transparent 40px);
+  border-radius: 0 0 10px 10px;
+}
+
+.api-detail-summary {
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.api-detail-desc {
+  color: var(--muted);
+  margin: 0 0 10px;
+  max-width: 72ch;
+}
+
+.api-detail-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.api-spec-link {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.api-spec-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* the hover popover is redundant while the card is expanded */
+.api-card.open .api-pop {
+  display: none;
 }
 
 /* hover popover */
@@ -877,7 +942,7 @@ select:focus {
 
 .api-pop-implies {
   margin-top: 6px !important;
-  color: #8fd8e4;
+  color: #7fd6e4;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -1208,16 +1273,15 @@ select:focus {
   padding: 16px 18px;
   border-top: 1px solid var(--line);
   background: var(--mast-1);
-  color: #c8cdf0;
+  color: #bcd6f0;
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.6;
   overflow-x: auto;
 }
 
-/* ---------- API drawer ---------- */
+/* ---------- modal ---------- */
 
-.drawer-backdrop,
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1226,84 +1290,6 @@ select:focus {
   z-index: 100;
   display: flex;
 }
-
-.drawer {
-  position: relative;
-  margin-left: auto;
-  width: min(430px, 92vw);
-  height: 100%;
-  background: var(--card);
-  box-shadow: -12px 0 40px rgba(15, 15, 32, 0.3);
-  padding: 28px 30px;
-  overflow-y: auto;
-  animation: drawer-in 0.22s ease;
-}
-
-@keyframes drawer-in {
-  from {
-    transform: translateX(40px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.drawer-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.drawer-head h2 {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.drawer-endpoint {
-  display: inline-block;
-  margin: 14px 0 4px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 6px 10px;
-}
-
-.drawer-summary {
-  font-weight: 600;
-  margin: 14px 0 4px;
-}
-
-.drawer-desc {
-  color: var(--muted);
-  margin: 0 0 20px;
-}
-
-.drawer h3 {
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-
-.drawer-implies {
-  margin-bottom: 10px;
-}
-
-.drawer-implies p {
-  font-size: 12.5px;
-  color: var(--muted);
-  margin: 6px 0 0;
-}
-
-.drawer-esc-hint {
-  margin-top: 26px;
-  opacity: 0.7;
-}
-
-/* ---------- modal ---------- */
 
 .modal-backdrop {
   align-items: center;
@@ -1784,17 +1770,17 @@ select:focus {
 .view-toggle button.on {
   background: var(--iris);
   color: #fff;
-  box-shadow: 0 1px 4px rgba(84, 87, 205, 0.4);
+  box-shadow: 0 1px 4px rgba(0, 111, 207, 0.4);
 }
 
 /* ---------- world map ---------- */
 
 .map-panel {
   background:
-    radial-gradient(700px 320px at 12% -10%, rgba(84, 87, 205, 0.28), transparent 65%),
+    radial-gradient(700px 320px at 12% -10%, rgba(0, 111, 207, 0.3), transparent 65%),
     radial-gradient(600px 300px at 90% -8%, rgba(14, 138, 158, 0.22), transparent 65%),
     linear-gradient(165deg, var(--mast-1), var(--mast-2));
-  border: 1px solid #2c2c52;
+  border: 1px solid #1c3f6e;
   border-radius: var(--radius);
   box-shadow: var(--shadow-2);
   padding: 18px 18px 12px;
@@ -1808,31 +1794,26 @@ select:focus {
   display: block;
   width: 100%;
   height: auto;
-  cursor: grab;
   touch-action: none;
-}
-
-.map-svg:active {
-  cursor: grabbing;
 }
 
 .map-svg .ocean {
   fill: url(#ocean-grad);
-  stroke: rgba(140, 148, 240, 0.28);
+  stroke: rgba(120, 176, 230, 0.3);
   stroke-width: 1.2;
 }
 
 .map-svg .graticule {
   fill: none;
-  stroke: rgba(140, 148, 240, 0.1);
+  stroke: rgba(120, 176, 230, 0.12);
   stroke-width: 0.5;
   pointer-events: none;
 }
 
 /* clear political boundaries on every country */
 .map-svg .country {
-  fill: #31315b;
-  stroke: #565694;
+  fill: #16355e;
+  stroke: #3f6ea8;
   stroke-width: 0.75;
   transition: fill 0.15s ease, filter 0.15s ease;
 }
@@ -1858,8 +1839,8 @@ select:focus {
 }
 
 .map-svg .country-available {
-  fill: #454566;
-  stroke: #6c6cae;
+  fill: #27507f;
+  stroke: #5b8fc7;
 }
 
 .map-svg .country-market:hover {
@@ -1901,8 +1882,8 @@ select:focus {
 }
 
 .marker-available .marker-dot {
-  fill: rgba(20, 20, 43, 0.5);
-  stroke: #a3a6f5;
+  fill: rgba(0, 17, 46, 0.5);
+  stroke: #7db8ec;
   stroke-dasharray: 2 1.6;
 }
 
@@ -1926,8 +1907,8 @@ select:focus {
   height: 32px;
   border-radius: 9px;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(20, 20, 43, 0.75);
-  color: #dfe2ff;
+  background: rgba(0, 17, 46, 0.75);
+  color: #d9eaf9;
   font-size: 16px;
   font-weight: 600;
   line-height: 1;
@@ -1939,8 +1920,8 @@ select:focus {
 }
 
 .map-zoom button:hover:not(:disabled) {
-  background: rgba(84, 87, 205, 0.6);
-  border-color: #8b8ef0;
+  background: rgba(0, 111, 207, 0.6);
+  border-color: #66aae0;
 }
 
 .pulse {
@@ -2038,7 +2019,7 @@ select:focus {
   align-items: center;
   flex-wrap: wrap;
   padding: 12px 4px 4px;
-  color: #aeb5dc;
+  color: #a9c7e4;
   font-size: 12.5px;
 }
 
@@ -2068,13 +2049,13 @@ select:focus {
 }
 
 .legend-available {
-  background: #454566;
-  border: 1px dashed #8b8ef0;
+  background: #27507f;
+  border: 1px dashed #7db8ec;
 }
 
 .map-legend-hint {
   margin-left: auto;
-  color: #7b81ad;
+  color: #6f9cc8;
   font-size: 11px;
 }
 

@@ -182,7 +182,7 @@ export function CloneDialog({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const onboarded = new Set(markets.map((m) => m.code))
+  const onboarded = new Set(markets.map((m) => m.market.code))
   const candidates = (catalog?.markets ?? []).filter((m) => !onboarded.has(m.code))
 
   function toggleType(t: AccountType) {
@@ -196,7 +196,7 @@ export function CloneDialog({
     setBusy(true)
     setError(null)
     try {
-      await api.clone(source.code, target, included)
+      await api.clone(source.market.code, target, included)
       await refreshMarkets()
       onDone(target)
     } catch (e) {
@@ -206,10 +206,11 @@ export function CloneDialog({
   }
 
   return (
-    <Modal title={`Clone ${source.code} configuration`} onClose={onClose}>
+    <Modal title={`Clone ${source.market.code} configuration`} onClose={onClose}>
       <p className="modal-lede">
         Copies the selected profiles — API selections, dimensions and custom-dimension
-        definitions — from <strong>{source.name}</strong>. Cloned profiles start as drafts.
+        definitions — from <strong>{source.market.name}</strong>. Cloned profiles start as
+        drafts.
       </p>
 
       <h3 className="modal-section">Profiles to include</h3>

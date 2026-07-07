@@ -32,11 +32,16 @@ export interface MarketProfile {
   customDimensions: Record<string, string>
 }
 
-export interface MarketDocument {
+/** Country-specific attributes, grouped under `market` in the document. */
+export interface MarketInfo {
   code: string
   name: string
   currency: string
   region: string
+}
+
+export interface MarketDocument {
+  market: MarketInfo
   status: LifecycleStatus
   customDimensionDefs: CustomDimensionDef[]
   profiles: MarketProfile[]
@@ -53,6 +58,8 @@ export interface ApiSpec {
   description: string
   /** Dimensions this API typically calls for — guidance only, never auto-selected. */
   suggests: DimensionKey[]
+  /** Deep link into the One-Data API spec book. */
+  specUrl: string
 }
 
 export interface CuratedMarket {

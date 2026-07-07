@@ -16,7 +16,12 @@ data class ApiSpec(
     val summary: String,
     val description: String,
     val suggests: List<String> = emptyList(),
-)
+) {
+    /** Deep link into the One-Data API spec book. */
+    val specUrl: String
+        get() = "https://arunav-bhattacharya.github.io/billpay-book/docs/build/api-spec/one-data#" +
+            name.lowercase().filter { it.isLetterOrDigit() }
+}
 
 data class CuratedMarket(
     val code: String,

@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useApp } from '../AppContext'
 import { ErrorNote, Flag, StatusSeal } from '../components'
 import { ACCOUNT_TYPE_LABELS, DIMENSION_SHORT, REGION_NAMES, REGION_ORDER, yn } from '../lib'
@@ -14,9 +14,17 @@ export function Ledger() {
   const [onboarding, setOnboarding] = useState<{ presetMarket: string | null } | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [view, setView] = useState<'grid' | 'map'>('grid')
+  const mapDetailRef = useRef<HTMLDivElement>(null)
 
   const activeMarkets = markets.filter((m) => m.status === 'ACTIVE')
-  const regions = REGION_ORDER.filter((r) => markets.some((m) => m.region === r))
+  const regions = REGION_ORDER.filter((r) => markets.some((m) => m.market.region === r))
+
+  // In map view the edit panel lives below the map — bring it into view on selection.
+  useEffect(() => {
+    if (view === 'map' && expanded) {
+      mapDetailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [view, expanded])
 
   function openOnboarding(presetMarket: string | null) {
     setOnboarding({ presetMarket })
@@ -75,10 +83,10 @@ export function Ledger() {
             onSelect={(code) => setExpanded(expanded === code ? null : code)}
             onOnboard={(code) => openOnboarding(code)}
           />
-          {expanded && markets.some((m) => m.code === expanded) && (
-            <div className="map-detail">
+          {expanded && markets.some((m) => m.market.code === expanded) && (
+            <div className="map-detail" ref={mapDetailRef}>
               <MarketDetailPanel
-                market={markets.find((m) => m.code === expanded)!}
+                market={markets.find((m) => m.market.code === expanded)!}
                 onClose={() => setExpanded(null)}
                 onAddAccountType={(code) => openOnboarding(code)}
                 onCloned={(target) => setExpanded(target)}
@@ -98,7 +106,7 @@ export function Ledger() {
         </div>
       ) : (
         regions.map((region) => {
-          const regionMarkets = markets.filter((m) => m.region === region)
+          const regionMarkets = markets.filter((m) => m.market.region === region)
           return (
             <section key={region} className="region-section">
               <div className="region-head">
@@ -110,13 +118,13 @@ export function Ledger() {
               </div>
               <div className="market-grid">
                 {regionMarkets.map((m) => (
-                  <Fragment key={m.code}>
+                  <Fragment key={m.market.code}>
                     <MarketCard
                       market={m}
-                      expanded={expanded === m.code}
-                      onToggle={() => setExpanded(expanded === m.code ? null : m.code)}
+                      expanded={expanded === m.market.code}
+                      onToggle={() => setExpanded(expanded === m.market.code ? null : m.market.code)}
                     />
-                    {expanded === m.code && (
+                    {expanded === m.market.code && (
                       <MarketDetailPanel
                         market={m}
                         onClose={() => setExpanded(null)}
@@ -159,13 +167,13 @@ function MarketCard({
       }}
     >
       <div className="market-card-top">
-        <Flag code={market.code} size={24} />
+        <Flag code={market.market.code} size={24} />
         <span className="mono-tag">
-          {market.code} · {market.currency}
+          {market.market.code} · {market.market.currency}
         </span>
         <StatusSeal status={market.status} small />
       </div>
-      <h3>{market.name}</h3>
+      <h3>{market.market.name}</h3>
 
       {/* Each account type carries its own dimensions — shown per profile. */}
       <div className="profile-rows">

@@ -9,7 +9,6 @@ export default function App() {
       <Ledger />
       <footer className="footer">
         <span>Billpay · Market Onboarding</span>
-        <span className="mono-tag">One-Data platform · internal tool</span>
       </footer>
     </AppProvider>
   )

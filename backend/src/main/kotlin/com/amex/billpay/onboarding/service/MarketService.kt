@@ -6,6 +6,7 @@ import com.amex.billpay.onboarding.model.AccountType
 import com.amex.billpay.onboarding.model.LifecycleStatus
 import com.amex.billpay.onboarding.model.MarketConfig
 import com.amex.billpay.onboarding.model.MarketDocument
+import com.amex.billpay.onboarding.model.MarketInfo
 import com.amex.billpay.onboarding.model.MarketProfile
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.enterprise.context.ApplicationScoped
@@ -23,10 +24,12 @@ class MarketService(private val objectMapper: ObjectMapper) {
     fun toDocument(entity: MarketEntity): MarketDocument {
         val config = objectMapper.readValue(entity.configJson, MarketConfig::class.java)
         return MarketDocument(
-            code = entity.code,
-            name = entity.name,
-            currency = entity.currency,
-            region = entity.region,
+            market = MarketInfo(
+                code = entity.code,
+                name = entity.name,
+                currency = entity.currency,
+                region = entity.region,
+            ),
             status = deriveStatus(config.profiles),
             customDimensionDefs = config.customDimensionDefs,
             profiles = config.profiles,
@@ -50,7 +53,7 @@ class MarketService(private val objectMapper: ObjectMapper) {
     // ---- queries ----
 
     fun listAll(): List<MarketDocument> =
-        MarketEntity.listAll().map { toDocument(it) }.sortedBy { it.code }
+        MarketEntity.listAll().map { toDocument(it) }.sortedBy { it.market.code }
 
     fun getByCode(code: String): MarketDocument =
         toDocument(requireEntity(code))
@@ -63,7 +66,7 @@ class MarketService(private val objectMapper: ObjectMapper) {
 
     @Transactional
     fun create(document: MarketDocument): MarketDocument {
-        val code = document.code.uppercase()
+        val code = document.market.code.uppercase()
         if (MarketEntity.findByCode(code) != null) {
             throw WebApplicationException("Market '$code' is already onboarded", Response.Status.CONFLICT)
         }
@@ -74,9 +77,9 @@ class MarketService(private val objectMapper: ObjectMapper) {
         val now = Instant.now()
         val entity = MarketEntity().apply {
             this.code = code
-            this.name = document.name.ifBlank { curated.name }
-            this.currency = document.currency.ifBlank { curated.currency }
-            this.region = document.region.ifBlank { curated.region }
+            this.name = document.market.name.ifBlank { curated.name }
+            this.currency = document.market.currency.ifBlank { curated.currency }
+            this.region = document.market.region.ifBlank { curated.region }
             this.configJson = writeConfig(document)
             this.createdAt = now
             this.updatedAt = now
@@ -89,9 +92,9 @@ class MarketService(private val objectMapper: ObjectMapper) {
     fun update(code: String, document: MarketDocument): MarketDocument {
         val entity = requireEntity(code)
         validate(document)
-        entity.name = document.name.ifBlank { entity.name }
-        entity.currency = document.currency.ifBlank { entity.currency }
-        entity.region = document.region.ifBlank { entity.region }
+        entity.name = document.market.name.ifBlank { entity.name }
+        entity.currency = document.market.currency.ifBlank { entity.currency }
+        entity.region = document.market.region.ifBlank { entity.region }
         entity.configJson = writeConfig(document)
         entity.updatedAt = Instant.now()
         return toDocument(entity)

@@ -41,12 +41,17 @@ data class MarketConfig(
     val profiles: List<MarketProfile> = emptyList(),
 )
 
-/** Full market document exchanged with the UI. Market status is derived from its profiles. */
-data class MarketDocument(
+/** Country-specific attributes, grouped under `market` in the document. */
+data class MarketInfo(
     val code: String,
     val name: String = "",
     val currency: String = "",
     val region: String = "",
+)
+
+/** Full market document exchanged with the UI. Market status is derived from its profiles. */
+data class MarketDocument(
+    val market: MarketInfo,
     val status: LifecycleStatus = LifecycleStatus.DRAFT,
     val customDimensionDefs: List<CustomDimensionDef> = emptyList(),
     val profiles: List<MarketProfile> = emptyList(),

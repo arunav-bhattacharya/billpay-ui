@@ -69,7 +69,6 @@ export function WorldMap({
   const svgRef = useRef<SVGSVGElement>(null)
   const [hover, setHover] = useState<Hover | null>(null)
   const [t, setT] = useState({ k: 1, x: 0, y: 0 })
-  const drag = useRef<{ px: number; py: number; x: number; y: number; moved: boolean } | null>(null)
 
   const { countryPaths, spherePath, graticulePath, projection } = useMemo(() => {
     const world = worldData as unknown as Topology
@@ -96,7 +95,7 @@ export function WorldMap({
     }
   }, [])
 
-  const byCode = useMemo(() => new Map(markets.map((m) => [m.code, m])), [markets])
+  const byCode = useMemo(() => new Map(markets.map((m) => [m.market.code, m])), [markets])
   const isoToCode = useMemo(
     () => new Map(Object.entries(MARKET_GEO).map(([code, g]) => [g.iso, code])),
     [],
@@ -106,7 +105,7 @@ export function WorldMap({
     [catalog],
   )
 
-  /* ---- zoom & pan ---- */
+  /* ---- zoom (no panning — zoom is always anchored to the cursor or center) ---- */
 
   function clientToView(clientX: number, clientY: number): [number, number] {
     const rect = svgRef.current!.getBoundingClientRect()
@@ -140,36 +139,7 @@ export function WorldMap({
     return () => svg.removeEventListener('wheel', onWheel)
   }, [])
 
-  function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
-    drag.current = { px: e.clientX, py: e.clientY, x: t.x, y: t.y, moved: false }
-    svgRef.current?.setPointerCapture(e.pointerId)
-  }
-
-  function onPointerMove(e: React.PointerEvent<SVGSVGElement>) {
-    if (!drag.current) return
-    const rect = svgRef.current!.getBoundingClientRect()
-    const dx = ((e.clientX - drag.current.px) / rect.width) * W
-    const dy = ((e.clientY - drag.current.py) / rect.height) * H
-    if (Math.abs(e.clientX - drag.current.px) + Math.abs(e.clientY - drag.current.py) > 4) {
-      drag.current.moved = true
-    }
-    setT((prev) => ({ ...prev, x: drag.current!.x + dx, y: drag.current!.y + dy }))
-  }
-
-  function onPointerUp(e: React.PointerEvent<SVGSVGElement>) {
-    svgRef.current?.releasePointerCapture(e.pointerId)
-    // swallow the click that follows a pan
-    if (drag.current?.moved) suppressClick.current = true
-    drag.current = null
-  }
-
-  const suppressClick = useRef(false)
-
   function handleMarketClick(code: string) {
-    if (suppressClick.current) {
-      suppressClick.current = false
-      return
-    }
     if (byCode.has(code)) onSelect(code)
     else onOnboard(code)
   }
@@ -196,18 +166,12 @@ export function WorldMap({
           role="img"
           aria-label="World map of Billpay markets"
           ref={svgRef}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerLeave={() => {
-            drag.current = null
-          }}
         >
           <defs>
             <radialGradient id="ocean-grad" cx="50%" cy="38%" r="75%">
-              <stop offset="0%" stopColor="#232349" />
-              <stop offset="60%" stopColor="#1b1b38" />
-              <stop offset="100%" stopColor="#15152c" />
+              <stop offset="0%" stopColor="#0c2d5e" />
+              <stop offset="60%" stopColor="#07204a" />
+              <stop offset="100%" stopColor="#041638" />
             </radialGradient>
             {/* striped green: partially onboarded markets */}
             <pattern
@@ -359,7 +323,7 @@ export function WorldMap({
         <span>
           <i className="legend-dot legend-available" /> Available
         </span>
-        <span className="map-legend-hint mono-tag">scroll to zoom · drag to pan</span>
+        <span className="map-legend-hint mono-tag">scroll or use + / − to zoom</span>
       </div>
     </div>
   )
