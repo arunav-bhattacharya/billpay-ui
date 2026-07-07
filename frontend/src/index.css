@@ -45,10 +45,11 @@
   --mast-1: #00112e;
   --mast-2: #00205f;
 
-  --font-display: 'Montserrat', -apple-system, 'Segoe UI', sans-serif;
-  --font-body: 'Montserrat', -apple-system, 'Segoe UI', sans-serif;
-  /* mono is reserved for code: endpoints and JSON */
-  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
+  /* SF Pro Rounded on Apple systems (ui-rounded / local install), Nunito as the
+     rounded web fallback; Sono is the matching soft-rounded mono (code only) */
+  --font-display: ui-rounded, 'SF Pro Rounded', 'Nunito', -apple-system, sans-serif;
+  --font-body: ui-rounded, 'SF Pro Rounded', 'Nunito', -apple-system, sans-serif;
+  --font-mono: 'Sono', ui-monospace, 'SF Mono', monospace;
 
   --shadow-1: 0 1px 2px rgba(23, 23, 34, 0.05), 0 4px 16px rgba(23, 23, 34, 0.06);
   --shadow-2: 0 2px 6px rgba(23, 23, 34, 0.08), 0 18px 40px rgba(23, 23, 34, 0.12);
@@ -66,15 +67,15 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(900px 420px at 8% -6%, rgba(0, 111, 207, 0.13), transparent 60%),
-    radial-gradient(700px 380px at 96% -4%, rgba(14, 138, 158, 0.1), transparent 60%),
-    radial-gradient(600px 400px at 50% 108%, rgba(26, 127, 75, 0.05), transparent 60%),
-    var(--bg);
+    radial-gradient(900px 420px at 8% -6%, rgba(0, 111, 207, 0.14), transparent 60%),
+    radial-gradient(700px 380px at 96% -4%, rgba(14, 138, 158, 0.12), transparent 60%),
+    radial-gradient(700px 460px at 50% 112%, rgba(26, 127, 75, 0.07), transparent 65%),
+    linear-gradient(180deg, #e9f1fb 0%, var(--bg) 420px);
   background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 14.5px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -91,15 +92,11 @@ h4 {
 }
 
 h1 {
-  font-size: 38px;
+  font-size: 36px;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.1;
-  background: linear-gradient(115deg, var(--ink) 30%, var(--iris-deep) 85%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  width: fit-content;
+  color: var(--ink);
 }
 
 a {
@@ -425,7 +422,31 @@ select:focus {
   font-size: 13px;
 }
 
-/* ---------- title row & active count ---------- */
+/* ---------- hero ---------- */
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  background:
+    radial-gradient(420px 200px at 4% -20%, rgba(0, 111, 207, 0.14), transparent 70%),
+    radial-gradient(380px 200px at 100% 130%, rgba(14, 138, 158, 0.12), transparent 70%),
+    linear-gradient(135deg, #ffffff 20%, #eef5fd);
+  border: 1px solid var(--iris-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-2);
+  padding: 26px 32px;
+  margin-bottom: 34px;
+}
+
+.hero-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
 
 .title-row {
   display: flex;
@@ -1332,8 +1353,12 @@ select:focus {
 
 .pe-api-groups {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.pe-api-group {
+  min-width: 0;
 }
 
 .pe-cat {
@@ -1357,17 +1382,25 @@ select:focus {
 
 .pe-api {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   font-size: 13.5px;
-  padding: 3px 0;
+  line-height: 1.4;
+  padding: 4px 0;
   cursor: pointer;
+}
+
+.pe-api span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .pe-api input {
   accent-color: var(--iris);
   width: 15px;
   height: 15px;
+  flex: none;
+  margin-top: 2px;
 }
 
 .pe-dims {
@@ -1538,6 +1571,29 @@ select:focus {
 .chip.chip-off {
   color: var(--muted);
   background: transparent;
+}
+
+.chip.chip-grad {
+  border: 1px solid transparent;
+  font-weight: 600;
+}
+
+.chip.chip-grad.cat-core {
+  background: linear-gradient(135deg, #e2f0fd, #c7e2fa);
+  border-color: #aed4f4;
+  color: var(--iris-deep);
+}
+
+.chip.chip-grad.cat-composite {
+  background: linear-gradient(135deg, #fbefe4, #f6ddc4);
+  border-color: #ecc9a4;
+  color: #92511f;
+}
+
+.chip.chip-grad.cat-event_handler {
+  background: linear-gradient(135deg, #e0f4f8, #c8ebf1);
+  border-color: #a8dbe5;
+  color: #086678;
 }
 
 .chip.chip-custom {
@@ -1887,20 +1943,20 @@ select:focus {
 
 .market-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .market-card {
   position: relative;
-  background: linear-gradient(180deg, #ffffff, #f8fafd);
+  background: linear-gradient(160deg, #ffffff 30%, #eef4fc);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow-1);
-  padding: 20px 20px 14px;
+  padding: 14px 16px 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
   overflow: hidden;
   transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
@@ -1928,12 +1984,24 @@ select:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(160deg, var(--bg), #ececf4);
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(160deg, #fff, #e8eef8);
   border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 #fff;
+  flex: none;
+}
+
+.mc-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.mc-id .mono-tag {
+  font-size: 11.5px;
 }
 
 .market-card-top .seal {
@@ -1941,7 +2009,7 @@ select:focus {
 }
 
 .market-card h3 {
-  font-size: 17px;
+  font-size: 15.5px;
   letter-spacing: -0.02em;
 }
 
@@ -1955,7 +2023,7 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 8px 2px;
+  padding: 6px 2px;
 }
 
 .profile-row + .profile-row {
@@ -1992,7 +2060,7 @@ select:focus {
 
 .market-card-foot {
   border-top: 1px solid var(--line);
-  padding-top: 10px;
+  padding-top: 8px;
   margin-top: 2px;
 }
 
@@ -2071,7 +2139,7 @@ select:focus {
 }
 
 .profile-card {
-  background: var(--bg);
+  background: linear-gradient(165deg, #fbfcfe, #f0f5fc);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 16px 20px;
@@ -2131,10 +2199,6 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.title-row + .view-toggle {
-  margin-top: 14px;
 }
 
 .view-toggle {

@@ -36,8 +36,8 @@ export function Ledger() {
 
   return (
     <main className="page">
-      <div className="page-head">
-        <div>
+      <section className="hero">
+        <div className="hero-left">
           <h1>Markets</h1>
           <StatusOverview
             active={activeMarkets.map((m) => ({ code: m.market.code, name: m.market.name }))}
@@ -45,7 +45,7 @@ export function Ledger() {
             available={availableMarkets.map((m) => ({ code: m.code, name: m.name }))}
           />
         </div>
-        <div className="head-controls">
+        <div className="hero-right">
           <div className="view-toggle" role="group" aria-label="Markets view">
             <button className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')}>
               Grid
@@ -60,7 +60,7 @@ export function Ledger() {
             </button>
           )}
         </div>
-      </div>
+      </section>
 
       <ErrorNote message={loadError} />
 
@@ -187,13 +187,13 @@ function StatusOverview({
   const rows: { dot: string; count: number; label: string; list: MarketRef[] }[] = [
     { dot: 'ldot-active', count: active.length, label: 'active', list: active },
     { dot: 'ldot-draft', count: draft.length, label: 'draft', list: draft },
-    { dot: 'ldot-off', count: available.length, label: 'to onboard', list: available },
+    { dot: 'ldot-off', count: available.length, label: 'pending', list: available },
   ]
 
   return (
     <div
       className="status-overview"
-      aria-label={`${active.length} active, ${draft.length} draft, ${available.length} yet to onboard`}
+      aria-label={`${active.length} active, ${draft.length} draft, ${available.length} pending`}
     >
       <svg viewBox="0 0 80 80" className="donut" aria-hidden="true">
         <circle className="donut-track" cx="40" cy="40" r={R} />
@@ -262,13 +262,15 @@ function MarketCard({
       }}
     >
       <div className="market-card-top">
-        <Flag code={market.market.code} size={24} />
-        <span className="mono-tag">
-          {market.market.code} · {market.market.currency}
-        </span>
+        <Flag code={market.market.code} size={22} />
+        <div className="mc-id">
+          <h3>{market.market.name}</h3>
+          <span className="mono-tag">
+            {market.market.code} · {market.market.currency}
+          </span>
+        </div>
         <StatusSeal status={market.status} small />
       </div>
-      <h3>{market.market.name}</h3>
 
       {/* Each account type carries its own dimensions — shown per profile. */}
       <div className="profile-rows">
@@ -284,7 +286,7 @@ function MarketCard({
       </div>
 
       <div className="market-card-foot">
-        <span className="card-open-hint">{expanded ? 'Collapse' : 'Open details'}</span>
+        <span className="card-open-hint">{expanded ? 'Collapse' : 'Details'}</span>
       </div>
     </article>
   )

@@ -271,7 +271,11 @@ function ProfileCard({
             </span>
             <div className="review-chips">
               {apis.map((a) => (
-                <span key={a.name} className="chip" title={a.summary}>
+                <span
+                  key={a.name}
+                  className={`chip chip-grad cat-${cat.toLowerCase()}`}
+                  title={a.summary}
+                >
                   {a.name}
                 </span>
               ))}

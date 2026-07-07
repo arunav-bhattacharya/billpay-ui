@@ -276,7 +276,7 @@ export function WorldMap({
                   transform={`translate(${pos[0]}, ${pos[1]}) scale(${1 / t.k})`}
                   tabIndex={0}
                   role="button"
-                  aria-label={`${cm.name} — ${state === 'available' ? 'not onboarded' : state}`}
+                  aria-label={`${cm.name} — ${state === 'available' ? 'pending' : state}`}
                   onMouseMove={(e) => moveTooltip(e, cm)}
                   onMouseLeave={() => setHover(null)}
                   onFocus={(e) => {
@@ -360,7 +360,7 @@ export function WorldMap({
                 <div className="map-tip-cta">Click the country to open details</div>
               </>
             ) : (
-              <div className="map-tip-cta">Not onboarded — click the country to start</div>
+              <div className="map-tip-cta">Pending — click the country to start onboarding</div>
             )}
           </div>
         )}
@@ -377,7 +377,7 @@ export function WorldMap({
           <i className="legend-dot legend-draft" /> Draft
         </span>
         <span>
-          <i className="legend-dot legend-available" /> Available
+          <i className="legend-dot legend-available" /> Pending
         </span>
         <span className="map-legend-hint mono-tag">scroll to zoom · drag to pan when zoomed</span>
       </div>
