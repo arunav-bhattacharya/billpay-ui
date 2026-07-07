@@ -428,9 +428,9 @@ select:focus {
 
 .hero {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 96px;
+  gap: 40px;
   flex-wrap: wrap;
   background:
     radial-gradient(520px 260px at 10% -30%, rgba(0, 111, 207, 0.6), transparent 70%),
@@ -444,7 +444,7 @@ select:focus {
     0 0 0 1px rgba(0, 111, 207, 0.25),
     0 10px 44px rgba(0, 47, 130, 0.4),
     0 2px 90px rgba(0, 111, 207, 0.28);
-  padding: 30px 40px;
+  padding: 30px 96px;
   margin-bottom: 34px;
 }
 
