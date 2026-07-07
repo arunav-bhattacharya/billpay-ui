@@ -142,7 +142,7 @@ export function Ledger() {
   )
 }
 
-/** Slim proportional status bar with a dotted legend — quiet, readable at a glance. */
+/** Circular progress: active / draft / yet-to-onboard shares of the Amex market list. */
 function StatusOverview({
   active,
   draft,
@@ -152,13 +152,55 @@ function StatusOverview({
   draft: number
   available: number
 }) {
+  const total = active + draft + available || 1
+  const R = 30
+  const C = 2 * Math.PI * R
+  const segments = [
+    { n: active, cls: 'seg-active' },
+    { n: draft, cls: 'seg-draft' },
+    { n: available, cls: 'seg-off' },
+  ].filter((s) => s.n > 0)
+  const gap = segments.length > 1 ? 2.5 : 0
+
+  let acc = 0
+  const arcs = segments.map((s) => {
+    const share = (s.n / total) * C
+    const arc = {
+      cls: s.cls,
+      dasharray: `${Math.max(share - gap, 1)} ${C}`,
+      dashoffset: -acc,
+    }
+    acc += share
+    return arc
+  })
+
   return (
-    <div className="status-overview" aria-label="Market status overview">
-      <div className="status-bar" role="presentation">
-        {active > 0 && <span className="sb-seg sb-active" style={{ flexGrow: active }} />}
-        {draft > 0 && <span className="sb-seg sb-draft" style={{ flexGrow: draft }} />}
-        {available > 0 && <span className="sb-seg sb-off" style={{ flexGrow: available }} />}
-      </div>
+    <div
+      className="status-overview"
+      aria-label={`${active} active, ${draft} draft, ${available} yet to onboard`}
+    >
+      <svg viewBox="0 0 80 80" className="donut" aria-hidden="true">
+        <circle className="donut-track" cx="40" cy="40" r={R} />
+        <g transform="rotate(-90 40 40)">
+          {arcs.map((a, i) => (
+            <circle
+              key={i}
+              className={`donut-seg ${a.cls}`}
+              cx="40"
+              cy="40"
+              r={R}
+              strokeDasharray={a.dasharray}
+              strokeDashoffset={a.dashoffset}
+            />
+          ))}
+        </g>
+        <text x="40" y="39" className="donut-num">
+          {active}
+        </text>
+        <text x="40" y="53" className="donut-sub">
+          active
+        </text>
+      </svg>
       <div className="status-legend">
         <span>
           <i className="ldot ldot-active" aria-hidden="true" />
@@ -170,7 +212,7 @@ function StatusOverview({
         </span>
         <span>
           <i className="ldot ldot-off" aria-hidden="true" />
-          <b>{available}</b> available
+          <b>{available}</b> to onboard
         </span>
       </div>
     </div>
