@@ -2417,15 +2417,10 @@ select:focus {
   color: var(--ink);
 }
 
-.api-dir-endpoint {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
+.api-dir-summary {
+  font-family: var(--font-body);
+  font-size: 14px;
   color: var(--muted);
-}
-
-.api-dir-endpoint b {
-  color: var(--iris-deep);
-  font-weight: 550;
 }
 
 .api-dir-count {
