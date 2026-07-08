@@ -19,15 +19,15 @@ import { WorldMap } from './WorldMap'
 const VIEW_CAPTIONS: Record<'grid' | 'map' | 'apis', { label: string; text: string }> = {
   grid: {
     label: 'Market View',
-    text: 'Every market on Billpay, region by region. Open a card to look inside.',
+    text: 'A list of all onboarded markets. Pick a card to view more details',
   },
   map: {
     label: 'World View',
-    text: 'The same story on a map — watch the world turn green.',
+    text: 'Same story on a map. On a mission to turn the world green.',
   },
   apis: {
     label: 'API View',
-    text: 'Start from an API and see which markets are using it.',
+    text: 'Provides a view of all APIs and the markets onboarded on each.',
   },
 }
 
@@ -87,7 +87,7 @@ export function Ledger() {
           )}
         </div>
         <p className="view-caption" aria-live="polite">
-          <strong>{VIEW_CAPTIONS[view].label}:</strong> {VIEW_CAPTIONS[view].text}
+          <strong>{VIEW_CAPTIONS[view].label}</strong>{VIEW_CAPTIONS[view].text}
         </p>
       </section>
 

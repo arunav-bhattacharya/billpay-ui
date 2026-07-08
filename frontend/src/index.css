@@ -284,6 +284,60 @@ select:focus {
   border-radius: 8px;
 }
 
+/* ---------- square icon action buttons (edit / clone / delete) ---------- */
+
+.act-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+
+.act-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.act-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.act-btn:disabled {
+  opacity: 0.45;
+}
+
+.act-btn.act-blue {
+  color: var(--iris-deep);
+  border-color: var(--iris-border);
+  background: linear-gradient(180deg, #ffffff, var(--iris-wash));
+  box-shadow: 0 1px 2px rgba(0, 60, 130, 0.1), inset 0 1px 0 #fff;
+}
+
+.act-btn.act-blue:hover:not(:disabled) {
+  border-color: var(--iris);
+  background: linear-gradient(180deg, #ffffff, #d6e8fb);
+  box-shadow: 0 2px 6px rgba(0, 80, 160, 0.2), inset 0 1px 0 #fff;
+}
+
+.act-btn.act-red {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 30%, #fff);
+  background: linear-gradient(180deg, #ffffff, var(--red-wash));
+  box-shadow: 0 1px 2px rgba(170, 30, 40, 0.08), inset 0 1px 0 #fff;
+}
+
+.act-btn.act-red:hover:not(:disabled) {
+  border-color: var(--red);
+  background: linear-gradient(180deg, #ffffff, #fbdfe0);
+  box-shadow: 0 2px 6px rgba(170, 30, 40, 0.18), inset 0 1px 0 #fff;
+}
+
 .icon-btn:hover {
   color: var(--ink);
   background: var(--grey-wash);
@@ -354,7 +408,7 @@ select:focus {
    "MARKET ONBOARDING" bottoms out with it */
 .brand-name {
   font-family: var(--font-display);
-  font-size: 27px;
+  font-size: 24px;
   font-weight: 550;
   letter-spacing: 0.01em;
   display: flex;
@@ -366,7 +420,7 @@ select:focus {
 
 .brand-sub {
   font-family: var(--font-body);
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -447,10 +501,10 @@ select:focus {
   border: 1px solid #2a5590;
   border-radius: 18px;
   box-shadow:
-    0 0 0 1px rgba(0, 111, 207, 0.16),
-    0 8px 32px rgba(0, 47, 130, 0.28),
-    0 2px 56px rgba(0, 111, 207, 0.16);
-  padding: 30px 96px;
+    0 0 0 1px rgba(0, 111, 207, 0.1),
+    0 6px 20px rgba(0, 47, 130, 0.16),
+    0 2px 32px rgba(0, 111, 207, 0.08);
+  padding: 30px 52px;
   margin-bottom: 34px;
 }
 
@@ -523,10 +577,10 @@ select:focus {
 .view-caption {
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 40px;
+  transform: translateX(-50%);
   margin: 0;
-  max-width: 38ch;
+  max-width: 40ch;
   text-align: center;
   font-size: 17.5px;
   line-height: 1.6;
@@ -534,6 +588,9 @@ select:focus {
 }
 
 .view-caption strong {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 21px;
   color: #dce8fa;
   font-weight: 600;
 }
@@ -1595,7 +1652,13 @@ select:focus {
 .review-grid {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
+}
+
+/* Hairline dividers so each section reads as its own block, not one crowded column */
+.review-grid > * + * {
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
 }
 
 .review-row {
@@ -1606,7 +1669,7 @@ select:focus {
 }
 
 .review-block h4 {
-  margin: 0 0 6px;
+  margin: 0 0 10px;
   font-family: var(--font-body);
   font-size: 11px;
   font-weight: 550;
@@ -1622,7 +1685,7 @@ select:focus {
 .review-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .chip {
@@ -1631,7 +1694,7 @@ select:focus {
   gap: 6px;
   font-size: 12px;
   font-weight: 500;
-  padding: 3px 10px;
+  padding: 4px 11px;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--bg);
@@ -2055,7 +2118,7 @@ select:focus {
 
 .market-card {
   position: relative;
-  background: linear-gradient(160deg, #ffffff 30%, #eef4fc);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6)) 12%, #ffffff 65%);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow-1);
@@ -2068,8 +2131,10 @@ select:focus {
   transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
 }
 
-/* region accent rail — same hue as the region heading mark and API-view chips */
-.market-card::before {
+/* region accent rail — same hue as the region heading mark and API-view chips.
+   Collapsed cards only: the expanded "tab" reuses ::before/::after for its
+   shoulder fillets, and its solid wash already carries the region color. */
+.market-card:not(.expanded)::before {
   content: '';
   position: absolute;
   left: 0;
@@ -2086,10 +2151,63 @@ select:focus {
   border-color: var(--line-strong);
 }
 
+/* Expanded card fuses with the detail panel below it: it becomes the "tab"
+   of a folder — squared bottom, open bottom edge, same border as the panel —
+   while the panel pulls up over the grid gap to meet it (see .detail-panel). */
 .market-card.expanded {
-  border-color: var(--iris);
-  box-shadow: 0 0 0 3px var(--iris-wash), var(--shadow-1);
-  transform: none;
+  z-index: 1;
+  overflow: visible;
+  background: color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6));
+  border-color: var(--rg-border, var(--iris-border));
+  /* bottom border matches the wash (not transparent): no corner-miter notch,
+     and it paints over the panel's top border inside the overlap */
+  border-bottom-color: color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6));
+  border-radius: 16px 16px 0 0;
+  /* same elevation as the panel so the merged silhouette has one uniform glow;
+     clipped just past the bottom edge so none of it spills onto the panel */
+  box-shadow: var(--shadow-2);
+  clip-path: inset(-64px -64px 0 -64px);
+  /* sink the tab a full row gap + 2px overlap with the panel: the panel keeps
+     the grid's normal 16px clearance from neighbouring cards and the seam
+     (panel top border) is fully buried under the tab */
+  transform: translateY(18px);
+}
+
+/* Concave shoulder fillets: a quarter-arc of tab material that curves the
+   tab's side border into the panel's top border instead of a hard L.
+   MarketDetailPanel measures each side and sets shoulder-l / shoulder-r —
+   a side that is flush with the panel's edge gets no fillet. */
+.market-card.expanded.shoulder-l::before,
+.market-card.expanded.shoulder-r::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  width: 13px;
+  height: 13px;
+  background: var(--fillet);
+  opacity: 1;
+}
+
+.market-card.expanded.shoulder-l::before {
+  right: 100%;
+  --fillet: radial-gradient(
+    circle at 0 0,
+    transparent 10.5px,
+    var(--rg-border, var(--iris-border)) 11px,
+    var(--rg-border, var(--iris-border)) 12px,
+    color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6)) 12.5px
+  );
+}
+
+.market-card.expanded.shoulder-r::after {
+  left: 100%;
+  --fillet: radial-gradient(
+    circle at 100% 0,
+    transparent 10.5px,
+    var(--rg-border, var(--iris-border)) 11px,
+    var(--rg-border, var(--iris-border)) 12px,
+    color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6)) 12.5px
+  );
 }
 
 .market-card-top {
@@ -2188,14 +2306,32 @@ select:focus {
   color: var(--iris-deep);
 }
 
+/* tailless chevron drawn with borders — identical geometry in both states */
 .card-open-hint::after {
-  content: ' →';
+  content: '';
   display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  border-radius: 1px;
+  transform: rotate(45deg); /* points down */
+  vertical-align: 2px;
   transition: transform 0.15s ease;
 }
 
 .market-card:hover .card-open-hint::after {
-  transform: translateX(3px);
+  transform: translateY(2px) rotate(45deg);
+}
+
+.market-card.expanded .card-open-hint::after {
+  transform: rotate(-135deg); /* points up */
+  vertical-align: -2px;
+}
+
+.market-card.expanded:hover .card-open-hint::after {
+  transform: translateY(-2px) rotate(-135deg);
 }
 
 /* ---------- inline detail panel (spans the grid) ---------- */
@@ -2203,13 +2339,30 @@ select:focus {
 .detail-panel {
   grid-column: 1 / -1;
   background:
-    linear-gradient(180deg, var(--iris-wash), transparent 90px),
+    linear-gradient(180deg, color-mix(in srgb, var(--rg-wash, var(--iris-wash)) 86%, var(--rg, var(--iris))), transparent 130px),
     var(--card);
-  border: 1px solid var(--iris-border);
+  border: 1px solid var(--rg-border, var(--iris-border));
   border-radius: var(--radius);
   box-shadow: var(--shadow-2);
   padding: 22px 26px;
   animation: panel-in 0.2s ease;
+}
+
+/* In the grid, the expanded card sinks 17px (transform) onto the panel below:
+   1px overlap fuses them, and the panel's top edge keeps the full 16px row
+   gap from the other cards. The tab above already names the market, so the
+   panel drops its own title row. */
+.market-grid .detail-panel {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.market-grid .detail-panel .detail-title {
+  display: none;
+}
+
+.market-grid .detail-panel .detail-actions {
+  margin-left: auto;
 }
 
 @keyframes panel-in {
@@ -2258,7 +2411,8 @@ select:focus {
 
 .profile-card {
   background: linear-gradient(165deg, #fbfcfe, #f0f5fc);
-  border: 1px solid var(--line);
+  /* deeper, region-toned border so each account type reads as its own block */
+  border: 1.5px solid color-mix(in srgb, var(--rg-border, #cdd9e8) 65%, var(--rg, #8aa6c8));
   border-radius: 10px;
   padding: 16px 20px;
 }

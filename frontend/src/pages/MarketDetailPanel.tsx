@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
 import { CloneDialog, CustomDimValueInput, ErrorNote, Flag, JsonView, StatusSeal } from '../components'
 import { ACCOUNT_TYPE_LABELS, CATEGORY_LABELS, CATEGORY_ORDER, yn } from '../lib'
 import type {
+  AccountType,
   CustomDimensionDef,
   CustomDimensionType,
   Dimensions,
@@ -23,7 +24,29 @@ export function MarketDetailPanel({
   onCloned: (targetCode: string) => void
 }) {
   const { refreshMarkets, role } = useApp()
+  const panelRef = useRef<HTMLDivElement>(null)
   const [showClone, setShowClone] = useState(false)
+
+  // The expanded card fuses with this panel as a folder tab. Tell the card
+  // which sides have a "shoulder" (panel extends past the tab) so CSS can
+  // draw a rounded fillet there — a flush side must stay a straight edge.
+  useLayoutEffect(() => {
+    const panel = panelRef.current
+    const card = panel?.previousElementSibling
+    if (!panel || !(card instanceof HTMLElement) || !card.classList.contains('market-card')) return
+    const place = () => {
+      const c = card.getBoundingClientRect()
+      const p = panel.getBoundingClientRect()
+      card.classList.toggle('shoulder-l', c.left - p.left > 2)
+      card.classList.toggle('shoulder-r', p.right - c.right > 2)
+    }
+    place()
+    window.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('resize', place)
+      card.classList.remove('shoulder-l', 'shoulder-r')
+    }
+  }, [])
   const [confirmDeleteMarket, setConfirmDeleteMarket] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +68,7 @@ export function MarketDetailPanel({
   const draftCount = market.profiles.filter((p) => p.status === 'DRAFT').length
 
   return (
-    <div className="detail-panel">
+    <div ref={panelRef} className={`detail-panel region-${market.market.region.toLowerCase()}`}>
       <div className="detail-panel-head">
         <div className="detail-title">
           <Flag code={market.market.code} size={26} />
@@ -61,8 +84,13 @@ export function MarketDetailPanel({
               + Account type
             </button>
           )}
-          <button className="btn sm ghost" onClick={() => setShowClone(true)}>
-            Clone
+          <button
+            className="act-btn act-blue"
+            title="Clone this market's setup to another market"
+            aria-label="Clone market"
+            onClick={() => setShowClone(true)}
+          >
+            <CopyIcon />
           </button>
           {draftCount > 1 && (
             <button
@@ -74,11 +102,13 @@ export function MarketDetailPanel({
             </button>
           )}
           <button
-            className="btn sm ghost delete"
+            className="act-btn act-red"
+            title="Delete market"
+            aria-label="Delete market"
             disabled={busy}
             onClick={() => setConfirmDeleteMarket(true)}
           >
-            Delete
+            <TrashIcon />
           </button>
           <button className="icon-btn" onClick={onClose} aria-label="Collapse details">
             ✕
@@ -164,7 +194,34 @@ function ProfileCard({
 }) {
   const { catalog } = useApp()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showCloneTargets, setShowCloneTargets] = useState(false)
   const [editing, setEditing] = useState(false)
+
+  // Account types this profile could be cloned to: allowed for the market
+  // and not already carrying a profile.
+  const curated = catalog?.markets.find((m) => m.code === market.market.code)
+  const allowedTypes: AccountType[] =
+    curated?.allowedAccountTypes?.length
+      ? curated.allowedAccountTypes
+      : (catalog?.accountTypes ?? []).map((t) => t.key)
+  const cloneTargets = allowedTypes.filter(
+    (t) => !market.profiles.some((p) => p.accountType === t),
+  )
+
+  function cloneTo(target: AccountType) {
+    setShowCloneTargets(false)
+    const copy: MarketProfile = {
+      accountType: target,
+      status: 'DRAFT',
+      apis: [...profile.apis],
+      dimensions: { ...profile.dimensions },
+      customDimensions: { ...profile.customDimensions },
+    }
+    run(() =>
+      api.updateMarket(market.market.code, { ...market, profiles: [...market.profiles, copy] }),
+    )
+  }
+
   const byCategory = CATEGORY_ORDER.map((cat) => ({
     cat,
     apis: (catalog?.apis ?? []).filter(
@@ -209,17 +266,52 @@ function ProfileCard({
             Activate
           </button>
         )}
-        <button className="btn sm ghost" disabled={busy} onClick={() => setEditing(true)}>
-          Edit
-        </button>
         <button
-          className="btn sm ghost delete"
+          className="act-btn act-blue"
+          title="Edit profile"
+          aria-label={`Edit ${ACCOUNT_TYPE_LABELS[profile.accountType]} profile`}
+          disabled={busy}
+          onClick={() => setEditing(true)}
+        >
+          <PencilIcon />
+        </button>
+        {cloneTargets.length > 0 && (
+          <button
+            className="act-btn act-blue"
+            title="Clone to another account type"
+            aria-label={`Clone ${ACCOUNT_TYPE_LABELS[profile.accountType]} profile to another account type`}
+            disabled={busy}
+            onClick={() => setShowCloneTargets((v) => !v)}
+          >
+            <CopyIcon />
+          </button>
+        )}
+        <button
+          className="act-btn act-red"
+          title="Delete profile"
+          aria-label={`Delete ${ACCOUNT_TYPE_LABELS[profile.accountType]} profile`}
           disabled={busy}
           onClick={() => setConfirmDelete(true)}
         >
-          Delete
+          <TrashIcon />
         </button>
       </div>
+
+      {showCloneTargets && (
+        <div className="confirm-bar" role="dialog" aria-label="Clone profile to another account type">
+          <span>
+            Copy the <strong>{ACCOUNT_TYPE_LABELS[profile.accountType]}</strong> setup to:
+          </span>
+          {cloneTargets.map((t) => (
+            <button key={t} className="btn sm primary" disabled={busy} onClick={() => cloneTo(t)}>
+              {ACCOUNT_TYPE_LABELS[t]}
+            </button>
+          ))}
+          <button className="btn sm ghost" onClick={() => setShowCloneTargets(false)}>
+            Cancel
+          </button>
+        </div>
+      )}
 
       {confirmDelete && (
         <div className="confirm-bar" role="alertdialog" aria-label="Confirm profile removal">
@@ -284,6 +376,36 @@ function ProfileCard({
         ))}
       </div>
     </article>
+  )
+}
+
+/* ---------- action icons ---------- */
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+    </svg>
+  )
+}
+
+function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
   )
 }
 
