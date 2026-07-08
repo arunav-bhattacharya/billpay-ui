@@ -45,10 +45,10 @@
   --mast-1: #00112e;
   --mast-2: #00205f;
 
-  /* SF Pro Rounded on Apple systems (ui-rounded / local install), Nunito as the
-     rounded web fallback; SF Mono for code (JSON, endpoints) */
-  --font-display: ui-rounded, 'SF Pro Rounded', 'Nunito', -apple-system, sans-serif;
-  --font-body: ui-rounded, 'SF Pro Rounded', 'Nunito', -apple-system, sans-serif;
+  /* SF Pro on Apple systems (-apple-system / local install), Nunito as the
+     web fallback; SF Mono for code (JSON, endpoints) */
+  --font-display: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Nunito', sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'SF Pro Display', 'Nunito', sans-serif;
   --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, 'Menlo', monospace;
 
   --shadow-1: 0 1px 2px rgba(23, 23, 34, 0.05), 0 4px 16px rgba(23, 23, 34, 0.06);
