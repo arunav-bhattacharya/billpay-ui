@@ -344,12 +344,14 @@ select:focus {
 }
 
 .brand-logo {
-  width: 44px;
-  height: 44px;
+  width: 50px;
+  height: 50px;
   border-radius: 6px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
+/* wordmark spans the logo's full height: "Billpay" tops out with the logo,
+   "MARKET ONBOARDING" bottoms out with it */
 .brand-name {
   font-family: var(--font-display);
   font-size: 23px;
@@ -357,7 +359,9 @@ select:focus {
   letter-spacing: 0.01em;
   display: flex;
   flex-direction: column;
-  line-height: 1.2;
+  justify-content: space-between;
+  height: 50px;
+  line-height: 1;
 }
 
 .brand-sub {
@@ -367,6 +371,7 @@ select:focus {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: #8fb4dd;
+  line-height: 1;
 }
 
 .mast-right {
