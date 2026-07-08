@@ -16,6 +16,12 @@ import { MarketDetailPanel } from './MarketDetailPanel'
 import { OnboardingPanel } from './OnboardingPanel'
 import { WorldMap } from './WorldMap'
 
+const VIEW_CAPTIONS: Record<'grid' | 'map' | 'apis', string> = {
+  grid: 'Region ledger — onboarded markets grouped by region. Open a card for its profiles, APIs and market document.',
+  map: 'World view — colour shows how far along each market is. Click a country to open it, or onboard a pending one.',
+  apis: 'API directory — every Billpay API and the markets onboarded to it, grouped by region.',
+}
+
 /** The whole app on one page: stats, onboarding panel, region ledger with inline detail. */
 export function Ledger() {
   const { markets, loading, loadError, catalog } = useApp()
@@ -65,6 +71,9 @@ export function Ledger() {
               APIs
             </button>
           </div>
+          <p className="view-caption" aria-live="polite">
+            {VIEW_CAPTIONS[view]}
+          </p>
           {!onboarding && (
             <button className="btn primary lg" onClick={() => openOnboarding(null)}>
               Onboard market

@@ -517,6 +517,16 @@ select:focus {
   padding: 4px 0;
 }
 
+/* one-liner describing the active view (grid / map / apis) */
+.view-caption {
+  margin: 0;
+  max-width: 40ch;
+  text-align: center;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #9db8dd;
+}
+
 .title-row {
   display: flex;
   align-items: center;
