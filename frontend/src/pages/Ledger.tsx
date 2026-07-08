@@ -16,10 +16,19 @@ import { MarketDetailPanel } from './MarketDetailPanel'
 import { OnboardingPanel } from './OnboardingPanel'
 import { WorldMap } from './WorldMap'
 
-const VIEW_CAPTIONS: Record<'grid' | 'map' | 'apis', string> = {
-  grid: 'Region ledger — onboarded markets grouped by region. Open a card for its profiles, APIs and market document.',
-  map: 'World view — colour shows how far along each market is. Click a country to open it, or onboard a pending one.',
-  apis: 'API directory — every Billpay API and the markets onboarded to it, grouped by region.',
+const VIEW_CAPTIONS: Record<'grid' | 'map' | 'apis', { label: string; text: string }> = {
+  grid: {
+    label: 'Market View',
+    text: 'Every market on Billpay, region by region. Open a card to look inside.',
+  },
+  map: {
+    label: 'World View',
+    text: 'The same story on a map — watch the world turn green.',
+  },
+  apis: {
+    label: 'API View',
+    text: 'Start from an API and see which markets are using it.',
+  },
 }
 
 /** The whole app on one page: stats, onboarding panel, region ledger with inline detail. */
@@ -78,7 +87,7 @@ export function Ledger() {
           )}
         </div>
         <p className="view-caption" aria-live="polite">
-          {VIEW_CAPTIONS[view]}
+          <strong>{VIEW_CAPTIONS[view].label}:</strong> {VIEW_CAPTIONS[view].text}
         </p>
       </section>
 
