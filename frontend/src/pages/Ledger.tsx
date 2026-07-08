@@ -361,11 +361,11 @@ function ApiDirectory() {
                   <div key={api.name} className={`api-dir-row cat-${cat.toLowerCase()}`}>
                     <div className="api-dir-head">
                       <span className="api-dir-name">{api.name}</span>
-                      <span className="api-dir-summary">{api.summary}</span>
                       <span className="api-dir-count">
                         {users.length} {users.length === 1 ? 'market' : 'markets'}
                       </span>
                     </div>
+                    <p className="api-dir-summary">{api.summary}</p>
                     {users.length > 0 ? (
                       <div className="api-dir-markets">
                         {users.map(({ m, active }) => (
