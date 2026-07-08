@@ -1,7 +1,15 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useApp } from '../AppContext'
 import { ErrorNote, Flag, StatusSeal } from '../components'
-import { ACCOUNT_TYPE_LABELS, DIMENSION_SHORT, REGION_NAMES, REGION_ORDER, yn } from '../lib'
+import {
+  ACCOUNT_TYPE_LABELS,
+  CATEGORY_LABELS,
+  CATEGORY_ORDER,
+  DIMENSION_SHORT,
+  REGION_NAMES,
+  REGION_ORDER,
+  yn,
+} from '../lib'
 import { DIMENSION_KEYS } from '../types'
 import type { MarketDocument } from '../types'
 import { MarketDetailPanel } from './MarketDetailPanel'
@@ -13,7 +21,7 @@ export function Ledger() {
   const { markets, loading, loadError, catalog } = useApp()
   const [onboarding, setOnboarding] = useState<{ presetMarket: string | null } | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
-  const [view, setView] = useState<'grid' | 'map'>('grid')
+  const [view, setView] = useState<'grid' | 'map' | 'apis'>('grid')
   const mapDetailRef = useRef<HTMLDivElement>(null)
 
   const activeMarkets = markets.filter((m) => m.status === 'ACTIVE')
@@ -46,12 +54,15 @@ export function Ledger() {
           />
         </div>
         <div className="hero-right">
-          <div className="view-toggle" role="group" aria-label="Markets view">
+          <div className="view-toggle" role="group" aria-label="Dashboard view">
             <button className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')}>
               Grid
             </button>
             <button className={view === 'map' ? 'on' : ''} onClick={() => setView('map')}>
               Map
+            </button>
+            <button className={view === 'apis' ? 'on' : ''} onClick={() => setView('apis')}>
+              APIs
             </button>
           </div>
           {!onboarding && (
@@ -76,7 +87,9 @@ export function Ledger() {
         />
       )}
 
-      {view === 'map' ? (
+      {view === 'apis' ? (
+        <ApiDirectory />
+      ) : view === 'map' ? (
         <>
           <WorldMap
             onSelect={(code) => setExpanded(expanded === code ? null : code)}
@@ -289,5 +302,75 @@ function MarketCard({
         <span className="card-open-hint">{expanded ? 'Collapse' : 'Details'}</span>
       </div>
     </article>
+  )
+}
+
+/** API-centric view: every catalog API and the markets onboarded to it. */
+function ApiDirectory() {
+  const { catalog, markets } = useApp()
+  if (!catalog) return <p className="muted">Loading APIs…</p>
+
+  return (
+    <div className="api-directory">
+      <p className="api-directory-hint">
+        Every Billpay API and the markets onboarded to it. A market appears here when any of its
+        profiles calls the API — <i className="dot dot-active" aria-hidden="true" /> active,{' '}
+        <i className="dot dot-draft" aria-hidden="true" /> draft.
+      </p>
+      {CATEGORY_ORDER.map((cat) => {
+        const apis = catalog.apis.filter((a) => a.category === cat)
+        if (apis.length === 0) return null
+        return (
+          <section key={cat} className="api-dir-category">
+            <h4 className={`api-cat-head cat-${cat.toLowerCase()}`}>
+              <span className="cat-mark" aria-hidden="true" />
+              {CATEGORY_LABELS[cat]}
+              <span className="api-cat-count">{apis.length}</span>
+            </h4>
+            <div className="api-dir-rows">
+              {apis.map((api) => {
+                const users = markets
+                  .map((m) => {
+                    const profiles = m.profiles.filter((p) => p.apis.includes(api.name))
+                    if (profiles.length === 0) return null
+                    return { m, active: profiles.some((p) => p.status === 'ACTIVE') }
+                  })
+                  .filter((x): x is { m: MarketDocument; active: boolean } => x !== null)
+                return (
+                  <div key={api.name} className={`api-dir-row cat-${cat.toLowerCase()}`}>
+                    <div className="api-dir-head">
+                      <span className="api-dir-name">{api.name}</span>
+                      <span className="api-dir-endpoint mono-tag">
+                        <b>{api.method}</b> {api.path}
+                      </span>
+                      <span className="api-dir-count">
+                        {users.length} {users.length === 1 ? 'market' : 'markets'}
+                      </span>
+                    </div>
+                    {users.length > 0 ? (
+                      <div className="api-dir-markets">
+                        {users.map(({ m, active }) => (
+                          <span
+                            key={m.market.code}
+                            className={`api-mkt-chip ${active ? 'active' : 'draft'}`}
+                            title={`${m.market.name} — ${active ? 'active' : 'draft'}`}
+                          >
+                            <i className={`dot ${active ? 'dot-active' : 'dot-draft'}`} aria-hidden="true" />
+                            <Flag code={m.market.code} size={15} />
+                            {m.market.code}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="api-dir-empty">No markets yet.</p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })}
+    </div>
   )
 }

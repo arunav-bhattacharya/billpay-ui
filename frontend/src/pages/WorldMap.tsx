@@ -45,21 +45,19 @@ const W = 960
 const H = 500
 const MIN_K = 1
 const MAX_K = 8
-const TOTAL_ACCOUNT_TYPES = 3
-
 /**
  * Map coloring encodes onboarding completeness:
- *  full    — active market, all account types onboarded  → solid green
- *  partial — active market, some account types onboarded → striped green
- *  draft   — onboarded but nothing active yet            → grey
- *  available — Amex market not onboarded                 → muted grey, clickable
+ *  full    — active market, all supported account types onboarded → solid green
+ *  partial — active market, some account types onboarded          → striped green
+ *  draft   — onboarded but nothing active yet                     → grey
+ *  available — Amex market not onboarded                          → muted grey, clickable
  */
 type MarketState = 'full' | 'partial' | 'draft' | 'available'
 
-function stateOf(doc: MarketDocument | undefined): MarketState {
+function stateOf(doc: MarketDocument | undefined, supportedTypes: number): MarketState {
   if (!doc) return 'available'
   if (doc.status === 'DRAFT') return 'draft'
-  return doc.profiles.length >= TOTAL_ACCOUNT_TYPES ? 'full' : 'partial'
+  return doc.profiles.length >= supportedTypes ? 'full' : 'partial'
 }
 
 interface Hover {
@@ -261,7 +259,9 @@ export function WorldMap({
             {countryPaths.map((c, i) => {
               const code = isoToCode.get(c.id)
               const curated = code ? curatedByCode.get(code) : undefined
-              const state = curated ? stateOf(byCode.get(curated.code)) : null
+              const state = curated
+                ? stateOf(byCode.get(curated.code), curated.allowedAccountTypes.length)
+                : null
               return (
                 <path
                   key={`${c.id}-${i}`}
@@ -280,7 +280,7 @@ export function WorldMap({
               if (!geo) return null
               const pos = projection([geo.lon, geo.lat])
               if (!pos) return null
-              const state = stateOf(byCode.get(cm.code))
+              const state = stateOf(byCode.get(cm.code), cm.allowedAccountTypes.length)
               return (
                 <g
                   key={cm.code}
@@ -350,7 +350,8 @@ export function WorldMap({
                 <div className="map-tip-status">
                   <StatusSeal status={hover.doc.status} small />
                   <span className="map-tip-completeness">
-                    {hover.doc.profiles.length}/{TOTAL_ACCOUNT_TYPES} account types
+                    {hover.doc.profiles.length}/{hover.curated.allowedAccountTypes.length} account
+                    types
                   </span>
                 </div>
                 <div className="map-tip-profiles">

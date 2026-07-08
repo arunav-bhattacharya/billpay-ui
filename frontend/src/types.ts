@@ -67,6 +67,8 @@ export interface CuratedMarket {
   name: string
   currency: string
   region: string
+  /** Account types this market supports (defaults to all three server-side). */
+  allowedAccountTypes: AccountType[]
 }
 
 export interface DimensionMeta {

@@ -145,12 +145,17 @@ class MarketService(private val objectMapper: ObjectMapper) {
             ?: throw WebApplicationException("'$target' is not a recognized Amex market", Response.Status.BAD_REQUEST)
 
         val config = objectMapper.readValue(source.configJson, MarketConfig::class.java)
-        // Only the selected account types come along (null/empty = all).
+        // Only the selected account types come along (null/empty = all),
+        // and only those the target market supports.
         val wanted = accountTypes?.toSet() ?: emptySet()
-        val selected = config.profiles.filter { wanted.isEmpty() || it.accountType in wanted }
+        val selected = config.profiles
+            .filter { wanted.isEmpty() || it.accountType in wanted }
+            .filter { it.accountType in curated.allowedAccountTypes }
         if (selected.isEmpty()) {
             throw WebApplicationException(
-                "None of the requested account types exist in '$sourceCode'", Response.Status.BAD_REQUEST
+                "No cloneable profiles: '$sourceCode' has none of the requested account types " +
+                    "that '${curated.name}' supports (${curated.allowedAccountTypes.joinToString()})",
+                Response.Status.BAD_REQUEST,
             )
         }
         // Cloned profiles get fresh ids and start over as drafts.
@@ -176,6 +181,20 @@ class MarketService(private val objectMapper: ObjectMapper) {
     // ---- validation ----
 
     private fun validate(document: MarketDocument) {
+        val curated = Catalog.marketsByCode[document.market.code.uppercase()]
+        if (curated != null) {
+            val disallowed = document.profiles
+                .map { it.accountType }
+                .filter { it !in curated.allowedAccountTypes }
+                .distinct()
+            if (disallowed.isNotEmpty()) {
+                throw WebApplicationException(
+                    "${curated.name} does not support account type(s): ${disallowed.joinToString()}. " +
+                        "Allowed: ${curated.allowedAccountTypes.joinToString()}",
+                    Response.Status.BAD_REQUEST,
+                )
+            }
+        }
         val unknownApis = document.profiles.flatMap { it.apis }.filter { it !in Catalog.apisByName }
         if (unknownApis.isNotEmpty()) {
             throw WebApplicationException(

@@ -1,5 +1,7 @@
 package com.amex.billpay.onboarding.catalog
 
+import com.amex.billpay.onboarding.model.AccountType
+
 enum class ApiCategory { CORE, COMPOSITE, EVENT_HANDLER }
 
 /**
@@ -28,6 +30,9 @@ data class CuratedMarket(
     val name: String,
     val currency: String,
     val region: String,
+    /** Account types this market supports. Defaults to all three. */
+    val allowedAccountTypes: List<AccountType> =
+        listOf(AccountType.CONSUMER, AccountType.CORPORATE, AccountType.SMALL_BUSINESS),
 )
 
 data class DimensionMeta(
@@ -182,9 +187,9 @@ object Catalog {
         CuratedMarket("FI", "Finland", "EUR", "EMEA"),
         CuratedMarket("SE", "Sweden", "SEK", "EMEA"),
         CuratedMarket("NO", "Norway", "NOK", "EMEA"),
-        CuratedMarket("DK", "Denmark", "DKK", "EMEA"),
-        CuratedMarket("PL", "Poland", "PLN", "EMEA"),
-        CuratedMarket("CZ", "Czechia", "CZK", "EMEA"),
+        CuratedMarket("DK", "Denmark", "DKK", "EMEA", listOf(AccountType.CORPORATE)),
+        CuratedMarket("PL", "Poland", "PLN", "EMEA", listOf(AccountType.CORPORATE)),
+        CuratedMarket("CZ", "Czechia", "CZK", "EMEA", listOf(AccountType.CORPORATE)),
         CuratedMarket("IN", "India", "INR", "APAC"),
         CuratedMarket("JP", "Japan", "JPY", "APAC"),
         CuratedMarket("AU", "Australia", "AUD", "APAC"),

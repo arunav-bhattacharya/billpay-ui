@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
 import { CustomDimValueInput, ErrorNote, Flag, JsonView } from '../components'
@@ -8,7 +8,6 @@ import type {
   AccountType,
   CustomDimensionDef,
   CustomDimensionType,
-  DimensionKey,
   Dimensions,
   MarketDocument,
   MarketProfile,
@@ -42,18 +41,6 @@ export function OnboardingPanel({
   const existing = markets.find((m) => m.market.code === marketCode) ?? null
   const takenTypes = existing?.profiles.map((p) => p.accountType) ?? []
   const selectedCurated = (catalog?.markets ?? []).find((m) => m.code === marketCode) ?? null
-
-  /** Guidance only: which selected APIs suggest each dimension. Nothing auto-selects. */
-  const suggestedBy = useMemo(() => {
-    const map = new Map<DimensionKey, string[]>()
-    for (const spec of catalog?.apis ?? []) {
-      if (!selectedApis.includes(spec.name)) continue
-      for (const dim of spec.suggests) {
-        map.set(dim, [...(map.get(dim) ?? []), spec.name])
-      }
-    }
-    return map
-  }, [catalog, selectedApis])
 
   const allDefs = [...(existing?.customDimensionDefs ?? []), ...newDefs]
 
@@ -213,9 +200,6 @@ export function OnboardingPanel({
                   {i === 1 && (
                     <StepApis
                       selectedApis={selectedApis}
-                      suggestedBy={suggestedBy}
-                      dims={dims}
-                      setDims={setDims}
                       onToggle={(name) =>
                         setSelectedApis((prev) =>
                           prev.includes(name)
@@ -227,7 +211,6 @@ export function OnboardingPanel({
                   )}
                   {i === 2 && (
                     <StepDimensions
-                      suggestedBy={suggestedBy}
                       dims={dims}
                       setDims={setDims}
                       isAdmin={role === 'ADMIN'}
@@ -309,10 +292,18 @@ function StepMarket({
   const { catalog } = useApp()
   const [query, setQuery] = useState('')
   const onboarded = new Map(markets.map((m) => [m.market.code, m]))
+  const curatedByCode = new Map((catalog?.markets ?? []).map((m) => [m.code, m]))
   const shown = (catalog?.markets ?? []).filter(
     (m) =>
       m.name.toLowerCase().includes(query.toLowerCase()) ||
       m.code.toLowerCase().includes(query.toLowerCase()),
+  )
+
+  const selectedCurated = marketCode ? curatedByCode.get(marketCode) : undefined
+  const allowedTypes = selectedCurated?.allowedAccountTypes ?? null
+  const restricted = !!allowedTypes && allowedTypes.length < 3
+  const shownAccountTypes = (catalog?.accountTypes ?? []).filter(
+    (t) => !allowedTypes || allowedTypes.includes(t.key),
   )
 
   return (
@@ -331,7 +322,7 @@ function StepMarket({
         <div className="market-pick-list" role="listbox" aria-label="Markets">
           {shown.map((m) => {
             const doc = onboarded.get(m.code)
-            const full = doc && doc.profiles.length >= 3
+            const full = doc && doc.profiles.length >= m.allowedAccountTypes.length
             const disabled = (presetLocked && m.code !== marketCode) || !!full
             return (
               <button
@@ -361,8 +352,15 @@ function StepMarket({
         {!marketCode ? (
           <p className="muted">Choose a market first.</p>
         ) : (
-          <div className="account-stack">
-            {(catalog?.accountTypes ?? []).map((t) => {
+          <>
+            {restricted && (
+              <p className="restricted-note">
+                {selectedCurated?.name} supports only{' '}
+                {allowedTypes!.map((k) => ACCOUNT_TYPE_LABELS[k]).join(' & ')}.
+              </p>
+            )}
+            <div className="account-stack">
+              {shownAccountTypes.map((t) => {
               const taken = takenTypes.includes(t.key)
               return (
                 <button
@@ -380,26 +378,21 @@ function StepMarket({
                 </button>
               )
             })}
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>
   )
 }
 
-/* ================= Step 2: APIs + suggestions ================= */
+/* ================= Step 2: APIs ================= */
 
 function StepApis({
   selectedApis,
-  suggestedBy,
-  dims,
-  setDims,
   onToggle,
 }: {
   selectedApis: string[]
-  suggestedBy: Map<DimensionKey, string[]>
-  dims: Dimensions
-  setDims: (d: Dimensions) => void
   onToggle: (name: string) => void
 }) {
   const { catalog } = useApp()
@@ -409,9 +402,8 @@ function StepApis({
     <div className="apis-layout">
       <div className="apis-list">
         <p className="step-hint">
-          Hover an API for a summary; expand <em>Details</em> for the full contract and a link
-          to the spec. APIs may <strong>suggest</strong> dimensions — nothing is selected for
-          you.
+          Hover an API for a summary, or expand <em>Details</em> for the full contract and a link
+          to the spec. Select every API this market's profiles will call.
         </p>
         {CATEGORY_ORDER.map((cat) => (
           <div key={cat} className="api-category">
@@ -461,14 +453,6 @@ function StepApis({
                         </button>
                         <div className="api-pop" role="tooltip">
                           <p>{spec.summary}</p>
-                          {spec.suggests.length > 0 && (
-                            <p className="api-pop-implies">
-                              Suggests{' '}
-                              {spec.suggests
-                                .map((d) => catalog.dimensions.find((x) => x.key === d)?.label ?? d)
-                                .join(', ')}
-                            </p>
-                          )}
                         </div>
                       </div>
 
@@ -480,14 +464,6 @@ function StepApis({
                             <span className="mono-tag">
                               {spec.method} {spec.path}
                             </span>
-                            {spec.suggests.map((k) => {
-                              const meta = catalog.dimensions.find((d) => d.key === k)
-                              return (
-                                <span key={k} className="chip chip-yes" title={meta?.description}>
-                                  suggests {meta?.label ?? k}
-                                </span>
-                              )
-                            })}
                           </div>
                           <a
                             className="api-spec-link"
@@ -506,37 +482,6 @@ function StepApis({
           </div>
         ))}
       </div>
-
-      <aside className="dim-panel" aria-label="Suggested dimensions">
-        <h4>Suggested dimensions</h4>
-        <p className="dim-panel-hint">
-          Guidance from your API selection — apply them or decide in the next step.
-        </p>
-        {catalog.dimensions.map((d) => {
-          const sources = suggestedBy.get(d.key) ?? []
-          const on = dims[d.key]
-          return (
-            <div key={d.key} className={`dim-row ${on ? 'on' : sources.length > 0 ? 'hint' : ''}`}>
-              <span className="dim-lamp" aria-hidden="true" />
-              <div className="dim-row-main">
-                <div className="dim-name">{d.label}</div>
-                <div className="dim-src">
-                  {sources.length > 0 ? `suggested by ${sources.join(', ')}` : 'no suggestion'}
-                </div>
-              </div>
-              {sources.length > 0 && !on && (
-                <button
-                  className="btn xs ghost"
-                  onClick={() => setDims({ ...dims, [d.key]: true })}
-                >
-                  Apply
-                </button>
-              )}
-              {on && <span className="dim-on-note">on</span>}
-            </div>
-          )
-        })}
-      </aside>
     </div>
   )
 }
@@ -544,7 +489,6 @@ function StepApis({
 /* ================= Step 3: dimensions (always manual) ================= */
 
 function StepDimensions({
-  suggestedBy,
   dims,
   setDims,
   isAdmin,
@@ -554,7 +498,6 @@ function StepDimensions({
   customValues,
   setCustomValues,
 }: {
-  suggestedBy: Map<DimensionKey, string[]>
   dims: Dimensions
   setDims: (d: Dimensions) => void
   isAdmin: boolean
@@ -571,13 +514,11 @@ function StepDimensions({
   return (
     <div>
       <p className="step-hint">
-        Dimensions are always set manually — suggestions from the API selection are shown as
-        hints, and each account type can carry a different set.
+        Dimensions are always set manually, and each account type can carry a different set.
       </p>
       <div className="dim-review">
         {catalog.dimensions.map((d) => {
           const on = dims[d.key]
-          const sources = suggestedBy.get(d.key) ?? []
           return (
             <div key={d.key} className={`dim-review-row ${on ? 'on' : ''}`}>
               <div className="dim-review-main">
@@ -585,12 +526,6 @@ function StepDimensions({
                   {d.label} <span className="yn-mark">{yn(on)}</span>
                 </div>
                 <p className="dim-desc">{d.description}</p>
-                {sources.length > 0 && !on && (
-                  <div className="dim-hint">Suggested by {sources.join(', ')} — currently off.</div>
-                )}
-                {sources.length > 0 && on && (
-                  <div className="dim-src">Suggested by {sources.join(', ')}</div>
-                )}
               </div>
               <button
                 className={`switch ${on ? 'on' : ''}`}
