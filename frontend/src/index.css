@@ -86,7 +86,7 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0.012em;
   color: var(--ink);
   margin: 0;
@@ -94,7 +94,7 @@ h4 {
 
 h1 {
   font-size: 36px;
-  font-weight: 700;
+  font-weight: 650;
   letter-spacing: 0.015em;
   line-height: 1.1;
   color: var(--ink);
@@ -353,7 +353,7 @@ select:focus {
 .brand-name {
   font-family: var(--font-display);
   font-size: 23px;
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0.01em;
   display: flex;
   flex-direction: column;
@@ -386,7 +386,7 @@ select:focus {
   background: none;
   color: #a9c7e4;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 550;
   padding: 5px 14px;
   border-radius: 999px;
   transition: background 0.15s ease, color 0.15s ease;
@@ -561,7 +561,7 @@ select:focus {
 
 .donut-num {
   font-size: 21px;
-  font-weight: 700;
+  font-weight: 650;
   fill: var(--ink);
   text-anchor: middle;
   font-family: var(--font-display);
@@ -569,7 +569,7 @@ select:focus {
 
 .donut-sub {
   font-size: 8px;
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   fill: var(--muted);
@@ -649,7 +649,7 @@ select:focus {
 
 .status-legend b {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .ldot {
@@ -757,7 +757,7 @@ select:focus {
   background: var(--card);
   font-family: var(--font-body);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 550;
   color: var(--muted);
   transition: all 0.15s ease;
 }
@@ -776,7 +776,7 @@ select:focus {
 
 .acc-label {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 550;
   font-size: 19px;
   letter-spacing: 0.01em;
 }
@@ -794,7 +794,7 @@ select:focus {
   margin-left: auto;
   color: var(--iris-deep);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .acc-body {
@@ -828,7 +828,7 @@ select:focus {
 .split-title {
   font-size: 14px;
   font-family: var(--font-body);
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
@@ -922,7 +922,7 @@ select:focus {
 
 .account-name {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 550;
   font-size: 15px;
   letter-spacing: 0.01em;
 }
@@ -950,7 +950,7 @@ select:focus {
   align-items: center;
   gap: 8px;
   font-size: 17px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.01em;
   padding-bottom: 8px;
   margin: 0 0 10px;
@@ -1080,7 +1080,7 @@ select:focus {
   grid-area: name;
   font-family: var(--font-body);
   font-size: 15.5px;
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0.01em;
   color: var(--ink);
   overflow-wrap: anywhere;
@@ -1095,7 +1095,7 @@ select:focus {
 
 .api-endpoint b {
   color: var(--iris-deep);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .api-expand {
@@ -1134,7 +1134,7 @@ select:focus {
 }
 
 .api-detail-summary {
-  font-weight: 600;
+  font-weight: 550;
   margin: 0 0 4px;
 }
 
@@ -1160,7 +1160,7 @@ select:focus {
 .api-spec-link {
   display: inline-block;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .api-spec-link:hover {
@@ -1270,7 +1270,7 @@ select:focus {
 }
 
 .dim-name {
-  font-weight: 600;
+  font-weight: 550;
   font-size: 13.5px;
   letter-spacing: 0.01em;
 }
@@ -1285,7 +1285,7 @@ select:focus {
 .dim-on-note {
   font-family: var(--font-body);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 550;
   color: var(--green);
 }
 
@@ -1324,7 +1324,7 @@ select:focus {
 .yn-mark {
   font-family: var(--font-body);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 550;
   padding: 1px 8px;
   border-radius: 5px;
   background: var(--grey-wash);
@@ -1409,7 +1409,7 @@ select:focus {
 .pe-section h5 {
   margin: 0 0 8px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 650;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1428,7 +1428,7 @@ select:focus {
 .pe-cat {
   display: block;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 650;
   margin-bottom: 6px;
 }
 
@@ -1526,7 +1526,7 @@ select:focus {
 .admin-badge {
   font-family: var(--font-body);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #fff;
@@ -1597,7 +1597,7 @@ select:focus {
   margin: 0 0 6px;
   font-family: var(--font-body);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1639,7 +1639,7 @@ select:focus {
 
 .chip.chip-grad {
   border: 1px solid transparent;
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .chip.chip-grad.cat-core {
@@ -1677,7 +1677,7 @@ select:focus {
 .json-view summary {
   cursor: pointer;
   padding: 12px 16px;
-  font-weight: 600;
+  font-weight: 550;
   font-size: 14px;
   color: var(--iris-deep);
 }
@@ -1735,7 +1735,7 @@ select:focus {
   background: rgba(120, 176, 230, 0.08);
   color: #cfe4f8;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 550;
   border-radius: 7px;
   padding: 4px 12px;
   transition: background 0.15s ease;
@@ -1835,7 +1835,7 @@ select:focus {
 .modal-section {
   font-family: var(--font-body);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1901,7 +1901,7 @@ select:focus {
 }
 
 .clone-name {
-  font-weight: 600;
+  font-weight: 550;
   font-size: 13.5px;
 }
 
@@ -1919,7 +1919,7 @@ select:focus {
   align-items: center;
   gap: 7px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0.02em;
   padding: 3px 11px;
   border-radius: 999px;
@@ -1986,7 +1986,7 @@ select:focus {
   border: 1px solid var(--iris-border);
   box-shadow: var(--shadow-1);
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
 }
 
@@ -2130,7 +2130,7 @@ select:focus {
 
 .card-open-hint {
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 550;
   color: var(--iris-deep);
 }
 
@@ -2278,7 +2278,7 @@ select:focus {
   background: none;
   color: var(--muted);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 550;
   padding: 7px 18px;
   border-radius: 999px;
   transition: background 0.15s ease, color 0.15s ease;
@@ -2435,7 +2435,7 @@ select:focus {
   background: rgba(0, 17, 46, 0.75);
   color: #d9eaf9;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 550;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -2532,7 +2532,7 @@ select:focus {
 .map-tip-cta {
   margin-top: 8px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 550;
   color: var(--iris-deep);
 }
 
