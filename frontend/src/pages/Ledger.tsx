@@ -71,15 +71,15 @@ export function Ledger() {
               APIs
             </button>
           </div>
-          <p className="view-caption" aria-live="polite">
-            {VIEW_CAPTIONS[view]}
-          </p>
           {!onboarding && (
             <button className="btn primary lg" onClick={() => openOnboarding(null)}>
               Onboard market
             </button>
           )}
         </div>
+        <p className="view-caption" aria-live="polite">
+          {VIEW_CAPTIONS[view]}
+        </p>
       </section>
 
       <ErrorNote message={loadError} />
@@ -322,11 +322,6 @@ function ApiDirectory() {
 
   return (
     <div className="api-directory">
-      <p className="api-directory-hint">
-        Every Billpay API and the markets onboarded to it. A market appears here when any of its
-        profiles calls the API — <i className="dot dot-active" aria-hidden="true" /> active,{' '}
-        <i className="dot dot-draft" aria-hidden="true" /> draft.
-      </p>
       {CATEGORY_ORDER.map((cat) => {
         const apis = catalog.apis.filter((a) => a.category === cat)
         if (apis.length === 0) return null
