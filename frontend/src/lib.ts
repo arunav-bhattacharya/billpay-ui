@@ -31,9 +31,9 @@ export const DIMENSION_SHORT: Record<DimensionKey, string> = {
 export const REGION_ORDER = ['AMER', 'EMEA', 'APAC']
 
 export const REGION_NAMES: Record<string, string> = {
-  AMER: 'Americas',
-  EMEA: 'Europe, Middle East & Africa',
-  APAC: 'Asia Pacific',
+  AMER: 'AMER: Americas',
+  EMEA: 'EMEA: Europe, Middle East & Africa',
+  APAC: 'APAC: Asia Pacific',
 }
 
 /** Booleans render as Y / N wherever profiles are shown. */
