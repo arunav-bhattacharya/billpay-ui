@@ -121,7 +121,8 @@ export function Ledger() {
           const regionMarkets = markets.filter((m) => m.market.region === region)
           return (
             <section key={region} className="region-section">
-              <div className="region-head">
+              <div className={`region-head region-${region.toLowerCase()}`}>
+                <span className="region-mark" aria-hidden="true" />
                 <h2>{REGION_NAMES[region] ?? region}</h2>
                 <span className="region-stat">
                   <span className="rs-seg rs-onb">
@@ -262,7 +263,7 @@ function MarketCard({
 }) {
   return (
     <article
-      className={`market-card st-${market.status.toLowerCase()} ${expanded ? 'expanded' : ''}`}
+      className={`market-card st-${market.status.toLowerCase()} region-${market.market.region.toLowerCase()} ${expanded ? 'expanded' : ''}`}
       onClick={onToggle}
       role="button"
       tabIndex={0}
@@ -336,6 +337,13 @@ function ApiDirectory() {
                     return { m, active: profiles.some((p) => p.status === 'ACTIVE') }
                   })
                   .filter((x): x is { m: MarketDocument; active: boolean } => x !== null)
+                  // group by region (AMER → EMEA → APAC), then by code
+                  .sort((a, b) => {
+                    const r =
+                      REGION_ORDER.indexOf(a.m.market.region) -
+                      REGION_ORDER.indexOf(b.m.market.region)
+                    return r !== 0 ? r : a.m.market.code.localeCompare(b.m.market.code)
+                  })
                 return (
                   <div key={api.name} className={`api-dir-row cat-${cat.toLowerCase()}`}>
                     <div className="api-dir-head">
@@ -352,8 +360,8 @@ function ApiDirectory() {
                         {users.map(({ m, active }) => (
                           <span
                             key={m.market.code}
-                            className={`api-mkt-chip ${active ? 'active' : 'draft'}`}
-                            title={`${m.market.name} — ${active ? 'active' : 'draft'}`}
+                            className={`api-mkt-chip region-${m.market.region.toLowerCase()} ${active ? 'active' : 'draft'}`}
+                            title={`${m.market.name} (${m.market.region}) — ${active ? 'active' : 'draft'}`}
                           >
                             <i className={`dot ${active ? 'dot-active' : 'dot-draft'}`} aria-hidden="true" />
                             <Flag code={m.market.code} size={15} />

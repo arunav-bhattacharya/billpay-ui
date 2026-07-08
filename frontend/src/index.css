@@ -354,7 +354,7 @@ select:focus {
    "MARKET ONBOARDING" bottoms out with it */
 .brand-name {
   font-family: var(--font-display);
-  font-size: 23px;
+  font-size: 27px;
   font-weight: 550;
   letter-spacing: 0.01em;
   display: flex;
@@ -366,9 +366,9 @@ select:focus {
 
 .brand-sub {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 13.5px;
   font-weight: 500;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #8fb4dd;
   line-height: 1;
@@ -1937,6 +1937,36 @@ select:focus {
   margin-bottom: 40px;
 }
 
+/* ---------- region color coding (AMER / EMEA / APAC) ----------
+   One hue per region, applied consistently: region heading mark,
+   market-card rail, and API-view market chips. */
+
+.region-amer {
+  --rg: var(--iris);
+  --rg-wash: var(--iris-wash);
+  --rg-border: var(--iris-border);
+}
+
+.region-emea {
+  --rg: var(--copper);
+  --rg-wash: var(--copper-wash);
+  --rg-border: #eccdb8;
+}
+
+.region-apac {
+  --rg: var(--teal);
+  --rg-wash: var(--teal-wash);
+  --rg-border: #bfe2ea;
+}
+
+.region-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--rg);
+  flex: none;
+}
+
 .region-head {
   display: flex;
   align-items: center;
@@ -1999,13 +2029,25 @@ select:focus {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow-1);
-  padding: 14px 16px 10px;
+  padding: 14px 16px 10px 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   cursor: pointer;
   overflow: hidden;
   transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+/* region accent rail — same hue as the region heading mark and API-view chips */
+.market-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--rg, transparent);
+  opacity: 0.75;
 }
 
 .market-card:hover {
@@ -2280,6 +2322,22 @@ select:focus {
   margin: 0 0 18px;
 }
 
+/* category headings read larger in the directory than in the wizard */
+.api-dir-category .api-cat-head {
+  font-size: 21px;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+.api-dir-category .api-cat-head .cat-mark {
+  width: 10px;
+  height: 10px;
+}
+
+.api-dir-category .api-cat-count {
+  font-size: 12.5px;
+}
+
 .api-directory-hint .dot {
   margin: 0 1px 0 6px;
 }
@@ -2362,28 +2420,22 @@ select:focus {
   margin-top: 12px;
 }
 
+/* chips are colored by region; the dot carries active/draft status */
 .api-mkt-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 4px 9px 4px 7px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border: 1px solid var(--rg-border, var(--line));
+  background: var(--rg-wash, var(--bg));
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--ink);
 }
 
-.api-mkt-chip.active {
-  border-color: var(--green-border);
-  background: var(--green-wash);
-}
-
 .api-mkt-chip.draft {
-  border-color: var(--grey-border);
-  background: var(--grey-wash);
-  color: var(--grey);
+  color: var(--muted);
 }
 
 .api-dir-empty {
