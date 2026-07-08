@@ -402,8 +402,8 @@ function StepApis({
     <div className="apis-layout">
       <div className="apis-list">
         <p className="step-hint">
-          Hover an API for a summary, or expand <em>Details</em> for the full contract and a link
-          to the spec. Select every API this market's profiles will call.
+          Expand <em>Details</em> for the full contract, the Billpay-Core endpoint, and a link to
+          the spec. Select every API this market's profiles will call.
         </p>
         {CATEGORY_ORDER.map((cat) => (
           <div key={cat} className="api-category">
@@ -437,9 +437,7 @@ function StepApis({
                             {sel ? '✓' : ''}
                           </span>
                           <span className="api-name">{spec.name}</span>
-                          <span className="api-endpoint">
-                            <b>{spec.method}</b> {spec.path}
-                          </span>
+                          <span className="api-summary">{spec.summary}</span>
                         </button>
                         <button
                           className="api-expand"
@@ -451,18 +449,15 @@ function StepApis({
                             ▾
                           </span>
                         </button>
-                        <div className="api-pop" role="tooltip">
-                          <p>{spec.summary}</p>
-                        </div>
                       </div>
 
                       {open && (
                         <div className="api-detail-body">
-                          <p className="api-detail-summary">{spec.summary}</p>
                           <p className="api-detail-desc">{spec.description}</p>
                           <div className="api-detail-meta">
+                            <span className="api-endpoint-label">Billpay-Core endpoint</span>
                             <span className="mono-tag">
-                              {spec.method} {spec.path}
+                              <b>{spec.method}</b> {spec.path}
                             </span>
                           </div>
                           <a

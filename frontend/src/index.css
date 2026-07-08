@@ -1098,16 +1098,14 @@ select:focus {
   overflow-wrap: anywhere;
 }
 
-.api-endpoint {
+/* brief description shown while the card is collapsed */
+.api-summary {
   grid-area: endpoint;
-  font-family: var(--font-mono);
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.45;
   color: var(--muted);
-}
-
-.api-endpoint b {
-  color: var(--iris-deep);
-  font-weight: 550;
+  padding-right: 8px;
 }
 
 .api-expand {
@@ -1162,13 +1160,28 @@ select:focus {
 .api-detail-meta .mono-tag {
   font-family: var(--font-mono);
   letter-spacing: 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.api-detail-meta .mono-tag b {
+  color: var(--iris-deep);
+  font-weight: 550;
+}
+
+.api-endpoint-label {
+  font-size: 11px;
+  font-weight: 550;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .api-detail-meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 10px;
 }
 
@@ -1181,52 +1194,6 @@ select:focus {
 .api-spec-link:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
-}
-
-/* the hover popover is redundant while the card is expanded */
-.api-card.open .api-pop {
-  display: none;
-}
-
-/* hover popover */
-
-.api-pop {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: calc(100% + 6px);
-  z-index: 30;
-  background: var(--mast-1);
-  color: #e6e8f7;
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  box-shadow: var(--shadow-2);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-4px);
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
-  pointer-events: none;
-}
-
-.api-card:hover .api-pop,
-.api-main:focus-visible ~ .api-pop {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.api-pop p {
-  margin: 0;
-}
-
-.api-pop-implies {
-  margin-top: 6px !important;
-  color: #7fd6e4;
-  font-family: var(--font-body);
-  font-size: 11px;
-  letter-spacing: 0.04em;
 }
 
 /* suggested dimensions panel */
