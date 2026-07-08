@@ -33,3 +33,6 @@ logs/
 
 # --- Claude scratch ---
 .claude/settings.local.json
+
+# Kotlin compiler session files
+.kotlin/
