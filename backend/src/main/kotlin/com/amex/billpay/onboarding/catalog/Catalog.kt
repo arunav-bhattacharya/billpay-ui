@@ -206,8 +206,10 @@ object Catalog {
 
     val dimensions: List<DimensionMeta> = listOf(
         DimensionMeta(
+            // Key stays requiresArPosting: it is persisted in every stored
+            // document, and only the display label changed.
             key = "requiresArPosting",
-            label = "AR Posting",
+            label = "Good-faith Credit",
             description = "Processed payments must be reported to Accounts Receivable, the system " +
                 "tracking cardmember debt.",
         ),

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
 import {
+  CloseIcon,
   CustomDimValueInput,
   dimOptions,
   ErrorNote,
@@ -170,7 +171,7 @@ export function OnboardingPanel({
           </h2>
         </div>
         <button className="icon-btn" onClick={onClose} aria-label="Close onboarding">
-          ✕
+          <CloseIcon />
         </button>
       </div>
 
@@ -264,7 +265,7 @@ export function OnboardingPanel({
                       </button>
                     ) : (
                       <button className="btn primary" disabled={saving} onClick={() => save()}>
-                        {saving ? 'Saving…' : 'Save to e1'}
+                        {saving ? 'Saving…' : 'Onboard in e1'}
                       </button>
                     )}
                   </div>
@@ -453,9 +454,7 @@ function StepApis({
                           aria-label={`${spec.name} details`}
                           onClick={() => setOpenApi(open ? null : spec.name)}
                         >
-                          <span className={`chevron ${open ? 'up' : ''}`} aria-hidden="true">
-                            ▾
-                          </span>
+                          <span className={`chevron ${open ? 'up' : ''}`} aria-hidden="true" />
                         </button>
                       </div>
 

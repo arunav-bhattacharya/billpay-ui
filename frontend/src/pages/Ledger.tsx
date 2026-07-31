@@ -5,14 +5,11 @@ import {
   ACCOUNT_TYPE_LABELS,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
-  DIMENSION_SHORT,
   ENV_LABELS,
   ENV_ORDER,
   REGION_NAMES,
   REGION_ORDER,
-  yn,
 } from '../lib'
-import { DIMENSION_KEYS } from '../types'
 import type { EnvStage, MarketDocument } from '../types'
 import { MarketDetailPanel } from './MarketDetailPanel'
 import { OnboardingPanel } from './OnboardingPanel'
@@ -149,7 +146,6 @@ export function Ledger() {
           return (
             <section key={region} className="region-section">
               <div className={`region-head region-${region.toLowerCase()}`}>
-                <span className="region-mark" aria-hidden="true" />
                 <h2>{REGION_NAMES[region] ?? region}</h2>
                 <span className="region-stat">
                   <span className="rs-seg rs-act">
@@ -202,6 +198,9 @@ function StatusOverview({
   inProgress: MarketRef[]
   pending: MarketRef[]
 }) {
+  // Hovering previews a bucket's markets; clicking pins the list so it stays
+  // put while the cursor moves away to read it.
+  const [pinned, setPinned] = useState<string | null>(null)
   const total = active.length + inProgress.length + pending.length || 1
   const R = 30
   const C = 2 * Math.PI * R
@@ -259,7 +258,20 @@ function StatusOverview({
       </svg>
       <div className="status-legend">
         {rows.map((r) => (
-          <span key={r.label} className="legend-row" tabIndex={0}>
+          <span
+            key={r.label}
+            className={`legend-row ${pinned === r.label ? 'pinned' : ''}`}
+            tabIndex={0}
+            role="button"
+            aria-pressed={pinned === r.label}
+            onClick={() => setPinned(pinned === r.label ? null : r.label)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setPinned(pinned === r.label ? null : r.label)
+              }
+            }}
+          >
             <i className={`ldot ${r.dot}`} aria-hidden="true" />
             <b>{r.count}</b> {r.label}
             {r.list.length > 0 && (
@@ -318,10 +330,6 @@ function MarketCard({
           <div key={p.accountType} className="profile-row">
             <i className={`dot dot-${p.status.toLowerCase()}`} aria-hidden="true" />
             <span className="profile-row-name">{ACCOUNT_TYPE_LABELS[p.accountType]}</span>
-            <span className="profile-row-dims mono-tag">
-              {/* four pairs now, so single-space them to stay inside a 280px card */}
-              {DIMENSION_KEYS.map((k) => `${DIMENSION_SHORT[k]}:${yn(p.dimensions[k])}`).join(' ')}
-            </span>
           </div>
         ))}
       </div>

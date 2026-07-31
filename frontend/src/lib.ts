@@ -30,7 +30,7 @@ export const CATEGORY_LABELS: Record<ApiCategory, string> = {
 export const CATEGORY_ORDER: ApiCategory[] = ['CORE', 'COMPOSITE', 'EVENT_HANDLER']
 
 export const DIMENSION_SHORT: Record<DimensionKey, string> = {
-  requiresArPosting: 'AR',
+  requiresArPosting: 'GC',
   requiresRealtimeClearing: 'RT',
   requiresMandateAuthorization: 'MA',
   requiresRepresentableReturn: 'RR',

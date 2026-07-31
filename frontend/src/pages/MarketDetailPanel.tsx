@@ -3,6 +3,7 @@ import { api } from '../api'
 import { useApp } from '../AppContext'
 import {
   CloneDialog,
+  CloseIcon,
   CopyIcon,
   CustomDimValueInput,
   dimOptions,
@@ -132,7 +133,7 @@ export function MarketDetailPanel({
             <TrashIcon />
           </button>
           <button className="icon-btn" onClick={onClose} aria-label="Collapse details">
-            ✕
+            <CloseIcon />
           </button>
         </div>
       </div>
@@ -540,7 +541,7 @@ function ProfileEditor({
             })
           }
         >
-          {busy ? 'Saving…' : 'Save changes'}
+          {busy ? 'Saving…' : 'Save'}
         </button>
       </div>
     </div>

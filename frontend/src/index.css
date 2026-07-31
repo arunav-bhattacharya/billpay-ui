@@ -173,12 +173,16 @@ body {
   /* The veil sits over the engraving across the whole page. It stays partly
      transparent all the way down — full coverage — but heavy enough that the
      pattern reads as paper texture behind the content, not as artwork. */
+  /* The veil is thinnest at the top (engraving reads strongest there), heavier
+     through the middle, and nearly opaque at the bottom so the pattern fades
+     out under the footer. */
   background-image:
     linear-gradient(
       180deg,
-      rgba(244, 244, 244, 0.42) 0%,
-      rgba(244, 244, 244, 0.66) 46%,
-      rgba(244, 244, 244, 0.8) 100%
+      rgba(244, 244, 244, 0.12) 0%,
+      rgba(244, 244, 244, 0.52) 34%,
+      rgba(244, 244, 244, 0.74) 62%,
+      rgba(244, 244, 244, 0.97) 100%
     ),
     url('./assets/worldservice-tile-gray.svg');
   /* Amex bands this repeat-x across the top only; here it tiles both ways
@@ -321,6 +325,7 @@ select:focus {
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   padding: 8px 20px;
   border-radius: 8px;
@@ -355,14 +360,20 @@ select:focus {
 }
 
 .btn.ghost:hover:not(:disabled) {
-  background: var(--iris-wash);
-  border-color: var(--iris-deep);
-  color: var(--iris-deep);
+  background: var(--iris);
+  border-color: var(--iris);
+  color: #fff;
 }
 
 .btn.danger {
   background: var(--red);
   color: #fff;
+  box-shadow: 0 1px 2px rgba(90, 0, 0, 0.18), 0 3px 8px rgba(192, 52, 52, 0.26);
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: #a52a2a;
+  box-shadow: 0 2px 4px rgba(90, 0, 0, 0.22), 0 6px 14px rgba(192, 52, 52, 0.32);
 }
 
 .btn.ghost.delete {
@@ -397,12 +408,27 @@ select:focus {
 }
 
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   background: none;
   border: none;
-  font-size: 15px;
-  color: var(--muted);
-  padding: 6px 8px;
-  border-radius: 8px;
+  border-radius: 50%;
+  color: var(--iris);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+.icon-btn:hover {
+  background: var(--iris-wash);
+  color: var(--iris-deep);
 }
 
 /* ---------- square icon action buttons (edit / clone / delete) ---------- */
@@ -502,7 +528,7 @@ select:focus {
 .masthead-inner {
   max-width: 1560px;
   margin: 0 auto;
-  padding: 16px 28px;
+  padding: 24px 32px;
   display: flex;
   align-items: center;
   gap: 34px;
@@ -518,15 +544,15 @@ select:focus {
 }
 
 .brand-logo {
-  width: 44px;
-  height: 44px;
+  width: 50px;
+  height: 50px;
   border-radius: 4px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
 }
 
 .brand-rule {
   width: 1px;
-  height: 34px;
+  height: 40px;
   background: rgba(255, 255, 255, 0.22);
   flex: none;
 }
@@ -540,7 +566,7 @@ select:focus {
 
 .brand-title {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 400;
   letter-spacing: 0.005em;
   color: #fff;
@@ -549,7 +575,7 @@ select:focus {
 
 .brand-sub {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -570,12 +596,15 @@ select:focus {
 }
 
 .role-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: none;
   color: #a9c7e4;
-  font-size: 12.5px;
+  font-size: 14px;
   font-weight: 400;
-  padding: 5px 14px;
+  padding: 7px 18px;
   border-radius: 999px;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -615,11 +644,21 @@ select:focus {
   flex-wrap: wrap;
   /* Stays a dark panel — 14 `.hero .x` rules below (white h1, donut
      fills, inverted view-toggle) are written against a dark ground. */
-  background: var(--navy);
+  /* Moulded like the cards, in navy: a lit top edge, a darker base wall and a
+     deep contact shadow, so the hero sits proud of the page. */
+  background: linear-gradient(180deg, #03215e 0%, var(--navy) 55%, #000f3d 100%);
   border: none;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-2);
-  padding: 30px 52px;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 0 #0a2a66,
+    0 2px 0 #001450,
+    0 3px 0 #001248,
+    0 4px 0 #000f3d,
+    0 6px 2px rgba(0, 12, 48, 0.4),
+    0 16px 34px rgba(0, 23, 90, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  padding: 32px 52px;
   margin-bottom: 34px;
 }
 
@@ -651,10 +690,18 @@ select:focus {
   color: #fff;
 }
 
+/* Inside the hero the legend text is light-on-navy, so the pinned/hover state
+   has to stay translucent — a white fill would hide the count. */
 .hero .legend-row:hover,
 .hero .legend-row:focus-visible {
   background: rgba(255, 255, 255, 0.08);
   box-shadow: none;
+}
+
+.hero .legend-row.pinned {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+  outline-color: rgba(255, 255, 255, 0.55);
 }
 
 .hero .ldot-off {
@@ -803,10 +850,20 @@ select:focus {
   margin-left: -6px;
 }
 
+.legend-row {
+  cursor: pointer;
+}
+
 .legend-row:hover,
-.legend-row:focus-visible {
+.legend-row:focus-visible,
+.legend-row.pinned {
   background: var(--card);
   box-shadow: var(--shadow-1);
+}
+
+.legend-row.pinned {
+  outline: 2px solid var(--iris);
+  outline-offset: 0;
 }
 
 .legend-pop {
@@ -835,6 +892,7 @@ select:focus {
 }
 
 .legend-row:hover .legend-pop,
+.legend-row.pinned .legend-pop,
 .legend-row:focus-visible .legend-pop {
   opacity: 1;
   visibility: visible;
@@ -903,8 +961,8 @@ select:focus {
 
 .onboard-panel {
   background: var(--card);
-  border: 1px solid var(--iris-border);
-  border-radius: var(--radius);
+  border: 1px solid var(--key-w4);
+  border-radius: 16px;
   box-shadow: var(--shadow-2);
   margin-bottom: 36px;
   overflow: hidden;
@@ -984,9 +1042,9 @@ select:focus {
 
 .acc-label {
   font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 22px;
-  letter-spacing: 0.01em;
+  font-weight: 400;
+  font-size: 25px;
+  letter-spacing: normal;
 }
 
 .acc-summary {
@@ -1164,9 +1222,9 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 19.5px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: normal;
   padding-bottom: 8px;
   margin: 0 0 10px;
   border-bottom: 1px solid var(--line);
@@ -1203,15 +1261,32 @@ select:focus {
   gap: 8px;
 }
 
+/* The category hue used to be a 3px rail down the left edge. It now lights the
+   bottom-right corner as a gradient border and bleeds a little way into the
+   face, so the colour belongs to the card rather than sitting beside it. */
 .api-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
-  box-shadow: var(--shadow-1);
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background:
+    radial-gradient(80% 62% at 100% 100%, color-mix(in srgb, var(--cat, var(--iris)) 11%, transparent), transparent 68%)
+      padding-box,
+    linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%) padding-box,
+    linear-gradient(
+        315deg,
+        color-mix(in srgb, var(--cat, var(--iris)) 62%, #fff) 0%,
+        var(--cat, var(--iris)) 9%,
+        color-mix(in srgb, var(--cat, var(--iris)) 30%, transparent) 22%,
+        color-mix(in srgb, var(--cat, var(--iris)) 3%, transparent) 38%
+      )
+      border-box;
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 4px 7px rgba(0, 23, 90, 0.12);
+  transition: box-shadow 0.14s ease, transform 0.14s ease, background 0.14s ease;
 }
 
 .api-row {
@@ -1220,33 +1295,26 @@ select:focus {
   align-items: stretch;
 }
 
-.api-card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  border-radius: 3px;
-  opacity: 0.35;
-  transition: opacity 0.12s ease;
+/* one accent token per category, consumed by the gradients above */
+.cat-core {
+  --cat: var(--iris);
 }
 
-.api-card.cat-core::before {
-  background: var(--iris);
+.cat-composite {
+  --cat: var(--copper);
 }
 
-.api-card.cat-composite::before {
-  background: var(--copper);
-}
-
-.api-card.cat-event_handler::before {
-  background: var(--teal);
+.cat-event_handler {
+  --cat: var(--teal);
 }
 
 .api-card:hover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-1);
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 3px 0 var(--key-w5),
+    5px 7px 14px rgba(0, 23, 90, 0.16);
+  transform: translate(-1px, -1px);
 }
 
 .api-card.sel {
@@ -1328,13 +1396,23 @@ select:focus {
   background: var(--iris-wash);
 }
 
+/* same tailless chevron the market cards and Market JSON use */
 .api-expand .chevron {
   display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  border-radius: 1px;
+  transform: rotate(45deg);
+  margin-bottom: 3px;
   transition: transform 0.15s ease;
 }
 
 .api-expand .chevron.up {
-  transform: rotate(180deg);
+  transform: rotate(-135deg);
+  margin-bottom: 0;
+  margin-top: 3px;
 }
 
 /* collapsible details under the row */
@@ -1345,7 +1423,9 @@ select:focus {
   font-size: 15.5px;
   line-height: 1.6;
   background: var(--surface-alt);
-  border-radius: 0 0 var(--radius) var(--radius);
+  /* 14px card radius minus the 2px gradient border = 12px inside, otherwise
+     this body squares off the card's bottom corners and eats the border. */
+  border-radius: 0 0 12px 12px;
 }
 
 .api-detail-desc {
@@ -1414,11 +1494,15 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 20px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  border: 1px solid var(--key-w3);
+  border-radius: 14px;
   padding: 18px 22px;
-  background: var(--card);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 4px 7px rgba(0, 23, 90, 0.12);
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .dim-review-row.on {
@@ -1491,11 +1575,14 @@ select:focus {
   flex: none;
   display: inline-flex;
   border: 1px solid var(--iris);
-  border-radius: var(--radius-sm);
+  border-radius: 9px;
   overflow: hidden;
 }
 
 .tri-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 48px;
   padding: 7px 14px;
   border: 0;
@@ -1581,21 +1668,16 @@ select:focus {
 
 .pe-cat {
   display: block;
-  font-size: 12px;
-  font-weight: 500;
-  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  margin-bottom: 7px;
 }
 
-.pe-cat.cat-core {
-  color: var(--iris-deep);
-}
-
-.pe-cat.cat-composite {
-  color: var(--copper);
-}
-
+.pe-cat.cat-core,
+.pe-cat.cat-composite,
 .pe-cat.cat-event_handler {
-  color: var(--teal);
+  color: var(--navy);
 }
 
 .pe-api {
@@ -1631,8 +1713,8 @@ select:focus {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 14.5px;
+  font-weight: 400;
 }
 
 .pe-dim.locked > span {
@@ -1795,7 +1877,7 @@ select:focus {
 
 .chip.chip-grad {
   border: 1px solid transparent;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .chip.chip-grad.cat-core {
@@ -2181,14 +2263,6 @@ select:focus {
   --rg-border: #f3c6dc;
 }
 
-.region-mark {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: var(--rg);
-  flex: none;
-}
-
 .region-head {
   display: flex;
   align-items: center;
@@ -2308,7 +2382,9 @@ select:focus {
 .market-card.expanded {
   z-index: 1;
   overflow: visible;
-  background: var(--card);
+  /* Plain face: the colour now lives at the bottom-left of the panel below and
+     fades upward, so the tab is white exactly where the two meet. */
+  background: linear-gradient(180deg, #ffffff 0%, #fdfdfd 100%);
   border-color: var(--key-w4);
   /* bottom border matches the card face (not transparent): no corner-miter
      notch, and it paints over the panel's top border inside the overlap */
@@ -2318,7 +2394,11 @@ select:focus {
      clip only stops it below the tab, not left and right. The tab and panel
      are one shape, so a shallow lip is all it needs. */
   box-shadow: 0 -1px 3px rgba(0, 23, 90, 0.07);
-  clip-path: inset(-64px -8px 0 -8px);
+  /* Side inset must clear the shoulder fillets, which are 13px boxes sitting
+     OUTSIDE this element's edges — clip tighter than that and the arcs get
+     sliced, leaving a notch at both bottom corners. The shadow above is
+     shallow enough that 24px cannot smudge the panel. */
+  clip-path: inset(-64px -24px 0 -24px);
   /* Sink the tab a full row gap + 2px overlap with the panel: the panel keeps
      the grid's normal clearance from neighbouring cards and the seam (panel
      top border) is fully buried under the tab.
@@ -2349,7 +2429,7 @@ select:focus {
     transparent 10.5px,
     var(--key-w4) 11px,
     var(--key-w4) 12px,
-    var(--card) 12.5px
+    #ffffff 12.5px
   );
 }
 
@@ -2360,7 +2440,7 @@ select:focus {
     transparent 10.5px,
     var(--key-w4) 11px,
     var(--key-w4) 12px,
-    var(--card) 12.5px
+    #ffffff 12.5px
   );
 }
 
@@ -2500,7 +2580,16 @@ select:focus {
 
 .detail-panel {
   grid-column: 1 / -1;
-  background: var(--card);
+  /* Region colour pools in the bottom-left corner and fades up and right to
+     white, which leaves the top edge — where the tab lands — clean. */
+  background:
+    radial-gradient(
+        118% 92% at 0% 100%,
+        color-mix(in srgb, var(--rg, var(--iris)) 16%, transparent) 0%,
+        color-mix(in srgb, var(--rg, var(--iris)) 5%, transparent) 38%,
+        transparent 70%
+      ),
+    linear-gradient(180deg, #ffffff 0%, #fdfdfd 100%);
   /* Uniform 1px: the expanded tab overlaps the panel by exactly 2px and
      paints its own 1px white bottom border over the seam. A thicker top
      border here peeks out below the tab as a coloured sliver. */
@@ -2590,15 +2679,21 @@ select:focus {
 /* Same moulded language as the grid keycaps, one step shallower — these sit
    inside a panel rather than on the page, so the wall is 3px not 6px. */
 .profile-card {
-  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
-  border: 1px solid color-mix(in srgb, var(--rg-border, #cdd9e8) 65%, var(--rg, #8aa6c8));
+  /* A cool off-white, a few steps below the panel's near-white face. The panel
+     and these cards were within two values of each other, so only the wall
+     shadow was separating them — this gives the edge something to sit against.
+     Kept on the blue axis so it reads as a shade of white next to the region
+     wash rather than as grey. */
+  background: linear-gradient(180deg, #fbfcfe 0%, #f2f5fa 100%);
+  /* No outline — the moulded wall below is the edge. */
+  border: none;
   border-radius: 10px;
   padding: 16px 20px;
   box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 3px 0 var(--key-w5),
-    4px 5px 8px rgba(0, 23, 90, 0.13),
+    1px 1px 0 #eef1f6,
+    2px 2px 0 #e3e8f0,
+    3px 3px 0 #d5dbe6,
+    4px 5px 9px rgba(0, 23, 90, 0.15),
     inset 0 1px 0 #fff;
 }
 
@@ -2638,16 +2733,12 @@ select:focus {
   color: var(--muted);
 }
 
-.profile-api-cat.cat-core {
-  color: var(--iris-deep);
-}
-
-.profile-api-cat.cat-composite {
-  color: var(--copper);
-}
-
+/* All three category labels share deep Amex navy — the API chips beside them
+   still carry the per-category hue, so nothing is lost by calming the labels. */
+.profile-api-cat.cat-core,
+.profile-api-cat.cat-composite,
 .profile-api-cat.cat-event_handler {
-  color: var(--teal);
+  color: var(--navy);
 }
 
 /* ---------- view toggle ---------- */
@@ -2665,6 +2756,9 @@ select:focus {
 }
 
 .view-toggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: none;
   color: var(--muted);
@@ -2717,33 +2811,35 @@ select:focus {
 
 .api-dir-row {
   position: relative;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
-  padding: 14px 16px 14px 20px;
-  box-shadow: var(--shadow-1);
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 14px 18px;
+  background:
+    radial-gradient(80% 62% at 100% 100%, color-mix(in srgb, var(--cat, var(--iris)) 11%, transparent), transparent 68%)
+      padding-box,
+    linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%) padding-box,
+    linear-gradient(
+        315deg,
+        color-mix(in srgb, var(--cat, var(--iris)) 62%, #fff) 0%,
+        var(--cat, var(--iris)) 9%,
+        color-mix(in srgb, var(--cat, var(--iris)) 30%, transparent) 22%,
+        color-mix(in srgb, var(--cat, var(--iris)) 3%, transparent) 38%
+      )
+      border-box;
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 4px 7px rgba(0, 23, 90, 0.12);
+  transition: box-shadow 0.14s ease, transform 0.14s ease;
 }
 
-.api-dir-row::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 3px;
-  border-radius: 3px;
-}
-
-.api-dir-row.cat-core::before {
-  background: var(--iris);
-}
-
-.api-dir-row.cat-composite::before {
-  background: var(--copper);
-}
-
-.api-dir-row.cat-event_handler::before {
-  background: var(--teal);
+.api-dir-row:hover {
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 3px 0 var(--key-w5),
+    5px 7px 14px rgba(0, 23, 90, 0.16);
+  transform: translate(-1px, -1px);
 }
 
 .api-dir-head {
