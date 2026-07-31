@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useApp } from '../AppContext'
-import { ErrorNote, Flag, StatusSeal } from '../components'
+import { ApiDetailBody, ErrorNote, Flag, StatusSeal } from '../components'
 import {
   ACCOUNT_TYPE_LABELS,
   CATEGORY_LABELS,
@@ -350,6 +350,8 @@ function MarketCard({
 /** API-centric view: every catalog API and the markets onboarded to it. */
 function ApiDirectory() {
   const { catalog, markets } = useApp()
+  // Same expand-for-details affordance the onboarding wizard offers.
+  const [openApi, setOpenApi] = useState<string | null>(null)
   if (!catalog) return <p className="muted">Loading APIs…</p>
 
   return (
@@ -360,7 +362,6 @@ function ApiDirectory() {
         return (
           <section key={cat} className="api-dir-category">
             <h4 className={`api-cat-head cat-${cat.toLowerCase()}`}>
-              <span className="cat-mark" aria-hidden="true" />
               {CATEGORY_LABELS[cat]}
               <span className="api-cat-count">{apis.length}</span>
             </h4>
@@ -384,12 +385,30 @@ function ApiDirectory() {
                       REGION_ORDER.indexOf(b.m.market.region)
                     return r !== 0 ? r : a.m.market.code.localeCompare(b.m.market.code)
                   })
+                const open = openApi === api.name
                 return (
-                  <div key={api.name} className={`api-dir-row cat-${cat.toLowerCase()}`}>
+                  <div
+                    key={api.name}
+                    className={`api-dir-row cat-${cat.toLowerCase()} ${open ? 'open' : ''}`}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={open}
+                    aria-label={`${api.name} details`}
+                    onClick={() => setOpenApi(open ? null : api.name)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setOpenApi(open ? null : api.name)
+                      }
+                    }}
+                  >
                     <div className="api-dir-head">
                       <span className="api-dir-name">{api.name}</span>
                       <span className="api-dir-count">
                         {users.length} {users.length === 1 ? 'market' : 'markets'}
+                      </span>
+                      <span className="api-expand" aria-hidden="true">
+                        <span className={`chevron ${open ? 'up' : ''}`} />
                       </span>
                     </div>
                     <p className="api-dir-summary">{api.summary}</p>
@@ -410,6 +429,7 @@ function ApiDirectory() {
                     ) : (
                       <p className="api-dir-empty">No markets yet.</p>
                     )}
+                    {open && <ApiDetailBody spec={api} />}
                   </div>
                 )
               })}

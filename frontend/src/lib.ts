@@ -93,8 +93,3 @@ export function setDimension(dims: Dimensions, key: DimensionKey, value: DimValu
     : next
 }
 
-export function chipClass(v: DimValue): string {
-  if (v === 'Y') return 'chip-yes'
-  if (v === 'BOTH') return 'chip-both'
-  return 'chip-off'
-}

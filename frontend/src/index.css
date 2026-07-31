@@ -278,6 +278,20 @@ select {
   color: var(--ink);
 }
 
+/* Native selects render their own arrow at an inconsistent size and pad
+   unpredictably across platforms, so draw the chevron ourselves and leave
+   room for it. */
+select {
+  appearance: none;
+  padding-right: 32px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--iris) 50%),
+    linear-gradient(135deg, var(--iris) 50%, transparent 50%);
+  background-position: calc(100% - 17px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
 input:focus,
 select:focus {
   outline: 2px solid var(--iris);
@@ -659,7 +673,9 @@ select:focus {
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
     inset 0 -1px 0 rgba(0, 0, 0, 0.35);
   padding: 32px 52px;
-  margin-bottom: 34px;
+  /* Clears the hero's own moulded wall and contact shadow before anything
+     below it starts. */
+  margin-bottom: 52px;
 }
 
 .hero h1 {
@@ -973,13 +989,25 @@ select:focus {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 22px 26px 16px;
-  background: var(--iris-wash);
-  border-bottom: 1px solid var(--iris-border);
+  padding: 22px 26px 18px;
+  background: var(--navy);
+  border-bottom: none;
 }
 
 .onboard-head h2 {
   font-size: 26px;
+  color: #fff;
+  text-shadow: var(--title-shadow-dark);
+}
+
+/* the close control sits on navy here, so it inverts */
+.onboard-head .icon-btn {
+  color: #bfd6ef;
+}
+
+.onboard-head .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
 }
 
 .accordion {
@@ -996,7 +1024,8 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 26px;
+  /* Extra top padding so the heading clears the divider above it. */
+  padding: 26px 26px 16px;
   background: none;
   border: none;
   text-align: left;
@@ -1058,21 +1087,44 @@ select:focus {
 
 .acc-edit {
   margin-left: auto;
-  color: var(--iris-deep);
-  font-size: 13px;
-  font-weight: 500;
+  color: var(--iris);
+  font-size: 15.5px;
+  font-weight: 400;
 }
 
 .acc-body {
-  padding: 6px 26px 24px 70px;
+  padding: 18px 26px 24px 70px;
+  /* Steps unroll downward as you move between them. */
+  animation: step-open 0.26s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+@keyframes step-open {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .acc-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  align-items: center;
   border-top: 1px solid var(--line);
-  padding-top: 16px;
+  padding-top: 20px;
   margin-top: 22px;
+}
+
+/* Step navigation carries the wizard, so it gets a larger target than the
+   inline buttons elsewhere. Scoped here rather than on .btn, which would
+   resize every button in the app. */
+.acc-actions .btn {
+  padding: 12px 30px;
+  font-size: 16px;
+  border-radius: 10px;
 }
 
 .step-hint {
@@ -1091,14 +1143,15 @@ select:focus {
   align-items: start;
 }
 
+/* Same treatment as the API category headings: Regular, navy, no rule. */
 .split-title {
-  font-size: 14px;
-  font-family: var(--font-body);
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 10px;
+  font-size: 21px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--navy);
+  margin: 0 0 18px;
 }
 
 .search {
@@ -1141,20 +1194,25 @@ select:focus {
 }
 
 .pick-name {
-  font-weight: 500;
-  font-size: 14px;
+  font-weight: 400;
+  font-size: 15.5px;
 }
 
 .pick-note {
   margin-left: auto;
-  font-family: var(--font-body);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  color: var(--teal);
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--green);
+}
+
+.pick-note svg {
+  width: 17px;
+  height: 17px;
 }
 
 .pick-note.full {
-  color: var(--muted);
+  color: var(--green);
 }
 
 .restricted-note {
@@ -1167,23 +1225,39 @@ select:focus {
   border-radius: 8px;
 }
 
+/* Grid rather than a flex column: grid-auto-rows: 1fr sizes every row to the
+   tallest, so the cards match regardless of how long each description runs.
+   A flex column sizes each item to its own content. */
 .account-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-auto-rows: 1fr;
+  gap: 16px;
 }
 
 .account-cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 9px;
   align-items: flex-start;
   text-align: left;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 14px 16px;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  border: 1px solid var(--key-w3);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 4px 7px rgba(0, 23, 90, 0.12);
+  padding: 16px 18px;
+  transition: box-shadow 0.14s ease, transform 0.14s ease, border-color 0.14s ease;
+}
+
+.account-cell:hover:not(:disabled) {
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 3px 0 var(--key-w5),
+    5px 7px 14px rgba(0, 23, 90, 0.16);
+  transform: translate(-1px, -1px);
 }
 
 .account-cell:hover:not(:disabled) {
@@ -1198,13 +1272,15 @@ select:focus {
 
 .account-name {
   font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 15px;
-  letter-spacing: 0.01em;
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: normal;
+  color: var(--navy);
 }
 
 .account-desc {
-  font-size: 12.5px;
+  font-size: 13.5px;
+  line-height: 1.5;
   color: var(--muted);
 }
 
@@ -1215,37 +1291,19 @@ select:focus {
 }
 
 .api-category {
-  margin-bottom: 20px;
+  margin-bottom: 38px;
 }
 
 .api-cat-head {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 400;
   letter-spacing: normal;
-  padding-bottom: 8px;
-  margin: 0 0 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.cat-mark {
-  width: 8px;
-  height: 8px;
-  border-radius: 3px;
-}
-
-.cat-core .cat-mark {
-  background: var(--iris);
-}
-
-.cat-composite .cat-mark {
-  background: var(--copper);
-}
-
-.cat-event_handler .cat-mark {
-  background: var(--teal);
+  /* No rule under the heading — the gap below carries the separation. */
+  padding-bottom: 0;
+  margin: 0 0 18px;
 }
 
 .api-cat-count {
@@ -1268,20 +1326,11 @@ select:focus {
   position: relative;
   display: flex;
   flex-direction: column;
-  border: 2px solid transparent;
+  /* Plain hairline during selection — the gradient edge competed with the
+     checkbox and the selected state for attention. */
+  border: 1px solid var(--key-w3);
   border-radius: 14px;
-  background:
-    radial-gradient(80% 62% at 100% 100%, color-mix(in srgb, var(--cat, var(--iris)) 11%, transparent), transparent 68%)
-      padding-box,
-    linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%) padding-box,
-    linear-gradient(
-        315deg,
-        color-mix(in srgb, var(--cat, var(--iris)) 62%, #fff) 0%,
-        var(--cat, var(--iris)) 9%,
-        color-mix(in srgb, var(--cat, var(--iris)) 30%, transparent) 22%,
-        color-mix(in srgb, var(--cat, var(--iris)) 3%, transparent) 38%
-      )
-      border-box;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
   box-shadow:
     1px 1px 0 var(--key-w1),
     2px 2px 0 var(--key-w3),
@@ -1295,17 +1344,13 @@ select:focus {
   align-items: stretch;
 }
 
-/* one accent token per category, consumed by the gradients above */
-.cat-core {
-  --cat: var(--iris);
-}
-
-.cat-composite {
-  --cat: var(--copper);
-}
-
+/* Single accent for all three categories: deep Amex navy. The token is kept
+   per-class so a category can be given its own hue again by changing one
+   declaration. */
+.cat-core,
+.cat-composite,
 .cat-event_handler {
-  --cat: var(--teal);
+  --cat: var(--navy);
 }
 
 .api-card:hover {
@@ -1334,6 +1379,7 @@ select:focus {
   grid-template-areas: 'check name' 'check endpoint';
   align-items: center;
   column-gap: 10px;
+  row-gap: 5px;
   text-align: left;
   background: none;
   border: none;
@@ -1364,9 +1410,9 @@ select:focus {
   grid-area: name;
   font-family: var(--font-body);
   font-size: 17px;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.01em;
-  color: var(--ink);
+  color: var(--navy);
   overflow-wrap: anywhere;
 }
 
@@ -1423,9 +1469,9 @@ select:focus {
   font-size: 15.5px;
   line-height: 1.6;
   background: var(--surface-alt);
-  /* 14px card radius minus the 2px gradient border = 12px inside, otherwise
-     this body squares off the card's bottom corners and eats the border. */
-  border-radius: 0 0 12px 12px;
+  /* Card radius minus its 1px border, so the body cannot square off the
+     card's bottom corners. */
+  border-radius: 0 0 13px 13px;
 }
 
 .api-detail-desc {
@@ -1477,9 +1523,10 @@ select:focus {
 /* suggested dimensions panel */
 
 .dim-name {
-  font-weight: 500;
+  font-weight: 400;
   font-size: 13.5px;
   letter-spacing: 0.01em;
+  color: var(--navy);
 }
 
 /* ---------- step 3: dimensions ---------- */
@@ -1505,15 +1552,8 @@ select:focus {
   transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
-.dim-review-row.on {
-  border-color: var(--green-border);
-  background: #fbfffd;
-}
-
-.dim-review-row.both {
-  border-color: var(--amber-border);
-  background: #fffdf6;
-}
+/* Selection shows in the segmented control alone — recolouring the card too
+   turned the list into a field of green and amber. */
 
 .dim-review-row.locked {
   background: var(--surface-alt);
@@ -1539,27 +1579,9 @@ select:focus {
   font-size: 17px;
 }
 
-.yn-mark {
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 1px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--grey-wash);
-  color: var(--grey);
-  margin-left: 6px;
-}
 
-.dim-review-row.on .yn-mark {
-  background: var(--green-wash);
-  color: var(--green);
-}
 
-.dim-review-row .yn-mark.both,
-.dim-review-row.both .yn-mark {
-  background: var(--amber-wash);
-  color: var(--amber);
-}
+
 
 .dim-desc {
   color: var(--muted);
@@ -1804,6 +1826,10 @@ select:focus {
   min-width: 150px;
 }
 
+.def-form select {
+  min-width: 132px;
+}
+
 /* ---------- step 4: review ---------- */
 
 .review-grid {
@@ -1826,13 +1852,16 @@ select:focus {
 }
 
 .review-block h4 {
-  margin: 0 0 10px;
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--muted);
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: 18.5px;
+  font-weight: 400;
+  /* Sentence case, so the wide tracking that suited small caps goes too.
+     The labels are already authored as "Market" / "APIs · 1" in the JSX,
+     which keeps the acronym intact. */
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--navy);
 }
 
 .review-block p {
@@ -1858,44 +1887,26 @@ select:focus {
   color: var(--ink);
 }
 
-.chip.chip-yes {
-  border-color: var(--green-border);
-  background: var(--green-wash);
-  color: var(--green);
+/* APIs in Deep Blue, dimensions in Bright Blue — the same split everywhere
+   the two appear together: Review & save, and the expanded market card.
+   Dimensions read the same regardless of Y / N / Both, since the value is
+   already in the label and colouring it too made N look like a failure. */
+.chip.chip-api,
+.chip.chip-grad {
+  border-color: #c2cee5;
+  background: #e9eef7;
+  color: var(--navy);
 }
 
-.chip.chip-both {
-  border-color: var(--amber-border);
-  background: var(--amber-wash);
-  color: var(--amber);
-}
-
-.chip.chip-off {
-  color: var(--muted);
-  background: transparent;
+.chip.chip-dim {
+  border-color: var(--iris-border);
+  background: var(--iris-wash);
+  color: var(--iris);
 }
 
 .chip.chip-grad {
   border: 1px solid transparent;
   font-weight: 400;
-}
-
-.chip.chip-grad.cat-core {
-  background: #e2f0fd;
-  border-color: #aed4f4;
-  color: var(--iris-deep);
-}
-
-.chip.chip-grad.cat-composite {
-  background: #fbefe4;
-  border-color: #ecc9a4;
-  color: #92511f;
-}
-
-.chip.chip-grad.cat-event_handler {
-  background: #e0f4f8;
-  border-color: #a8dbe5;
-  color: #086678;
 }
 
 .chip.chip-custom {
@@ -2241,45 +2252,32 @@ select:focus {
   margin-bottom: 40px;
 }
 
+/* Regions need clearly more air between them than the cards have between
+   rows, or the grid reads as one long run. Applied between sections only,
+   so the last region keeps its normal bottom margin. */
+.region-section + .region-section {
+  margin-top: 56px;
+}
+
 /* ---------- region color coding (AMER / EMEA / APAC) ----------
    One hue per region, applied consistently: region heading mark,
    market-card rail, and API-view market chips. */
 
-.region-amer {
-  --rg: var(--iris);
-  --rg-wash: var(--iris-wash);
-  --rg-border: var(--iris-border);
-}
-
-.region-emea {
-  --rg: var(--copper);
-  --rg-wash: var(--copper-wash);
-  --rg-border: #eccdb8;
-}
-
+/* Every region shares deep Amex navy. Kept as three declarations so a region
+   can be given its own hue again without restructuring the consumers. */
+.region-amer,
+.region-emea,
 .region-apac {
-  --rg: #d0367f;
-  --rg-wash: #fdeef5;
-  --rg-border: #f3c6dc;
+  --rg: var(--navy);
+  --rg-wash: #eaeef7;
+  --rg-border: #c2cee5;
 }
 
 .region-head {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-  position: relative;
-}
-
-.region-head::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--line-strong);
+  margin-bottom: 18px;
 }
 
 .region-head h2 {
@@ -2705,31 +2703,53 @@ select:focus {
 }
 
 .profile-card-head h4 {
-  font-size: 19px;
+  font-size: 21px;
+}
+
+.profile-block + .profile-block {
+  margin-top: 20px;
+}
+
+.profile-block-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 400;
+  /* Sentence case, so the tracking that opened up the small caps goes with it. */
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--navy);
+  margin: 0 0 14px;
 }
 
 .profile-dims {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 12px;
 }
 
 .profile-api-group {
   display: flex;
   gap: 14px;
   align-items: baseline;
-  padding: 8px 0;
+  padding: 7px 0;
+}
+
+/* Divider between category rows only — not above the first one, and the
+   APIs/Dimensions headings stay ruleless. */
+.profile-api-group + .profile-api-group {
   border-top: 1px solid var(--line);
 }
 
+
 .profile-api-cat {
   flex: none;
-  width: 118px;
+  /* Sized so "Event Handlers" stays on one line at this size. */
+  width: 132px;
   font-family: var(--font-body);
-  font-size: 10.5px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  font-size: 13.5px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
   color: var(--muted);
 }
 
@@ -2784,14 +2804,9 @@ select:focus {
 
 /* category headings read larger in the directory than in the wizard */
 .api-dir-category .api-cat-head {
-  font-size: 21px;
-  padding-bottom: 10px;
-  margin-bottom: 14px;
-}
-
-.api-dir-category .api-cat-head .cat-mark {
-  width: 10px;
-  height: 10px;
+  font-size: 26px;
+  padding-bottom: 0;
+  margin-bottom: 22px;
 }
 
 .api-dir-category .api-cat-count {
@@ -2800,7 +2815,7 @@ select:focus {
 
 
 .api-dir-category {
-  margin-bottom: 26px;
+  margin-bottom: 44px;
 }
 
 .api-dir-rows {
@@ -2844,28 +2859,57 @@ select:focus {
 
 .api-dir-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
 
+/* The whole row is the control now; the chevron is only an affordance. */
+.api-dir-row {
+  cursor: pointer;
+}
+
+.api-dir-head .api-expand {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  background: none;
+  border: none;
+  color: var(--iris);
+  pointer-events: none;
+}
+
+.api-dir-row:focus-visible {
+  outline: 2px solid var(--iris);
+  outline-offset: 2px;
+}
+
+.api-dir-row .api-detail-body {
+  margin: 12px -18px -14px;
+  border-radius: 0 0 13px 13px;
+}
+
 .api-dir-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--ink);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--navy);
 }
 
 .api-dir-summary {
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--muted);
-  margin: 4px 0 0;
+  margin: 9px 0 0;
 }
 
+/* Sole margin-left:auto in the head row — the chevron previously carried one
+   too, so the free space split between them and this never reached the right. */
 .api-dir-count {
   margin-left: auto;
-  font-size: 12px;
+  margin-right: 10px;
+  font-size: 14.5px;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .api-dir-markets {

@@ -2,19 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
 import {
+  ApiDetailBody,
   CloseIcon,
   CustomDimValueInput,
   dimOptions,
   ErrorNote,
   Flag,
   JsonView,
+  TickIcon,
   TriToggle,
 } from '../components'
 import {
   ACCOUNT_TYPE_LABELS,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
-  chipClass,
   DIM_LABELS,
   isDimLocked,
   setDimension,
@@ -346,8 +347,11 @@ function StepMarket({
                 <span className="pick-name">{m.name}</span>
                 <span className="mono-tag">{m.code}</span>
                 {doc && (
-                  <span className={`pick-note ${full ? 'full' : ''}`}>
-                    {full ? 'complete' : 'onboarded'}
+                  <span
+                    className={`pick-note ${full ? 'full' : ''}`}
+                    title={full ? 'Every account type onboarded' : 'Already onboarded'}
+                  >
+                    <TickIcon />
                   </span>
                 )}
               </button>
@@ -382,7 +386,9 @@ function StepMarket({
                   <span className="account-name">{t.label}</span>
                   <span className="account-desc">{t.description}</span>
                   {taken && (
-                    <span className="pick-note full">Already onboarded in {marketCode}</span>
+                    <span className="pick-note full" title={`Already onboarded in ${marketCode}`}>
+                      <TickIcon />
+                    </span>
                   )}
                 </button>
               )
@@ -417,7 +423,6 @@ function StepApis({
         {CATEGORY_ORDER.map((cat) => (
           <div key={cat} className="api-category">
             <h4 className={`api-cat-head cat-${cat.toLowerCase()}`}>
-              <span className="cat-mark" aria-hidden="true" />
               {CATEGORY_LABELS[cat]}
               <span className="api-cat-count">
                 {catalog.apis.filter((a) => a.category === cat && selectedApis.includes(a.name)).length}
@@ -458,25 +463,7 @@ function StepApis({
                         </button>
                       </div>
 
-                      {open && (
-                        <div className="api-detail-body">
-                          <p className="api-detail-desc">{spec.description}</p>
-                          <div className="api-detail-meta">
-                            <span className="api-endpoint-label">Billpay-Core endpoint</span>
-                            <span className="mono-tag">
-                              <b>{spec.method}</b> {spec.path}
-                            </span>
-                          </div>
-                          <a
-                            className="api-spec-link"
-                            href={spec.specUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            View API spec ↗
-                          </a>
-                        </div>
-                      )}
+                      {open && <ApiDetailBody spec={spec} />}
                     </div>
                   )
                 })}
@@ -531,7 +518,7 @@ function StepDimensions({
             >
               <div className="dim-review-main">
                 <div className="dim-name">
-                  {d.label} <span className={`yn-mark ${v === 'BOTH' ? 'both' : ''}`}>{yn(v)}</span>
+                  {d.label}
                 </div>
                 <p className="dim-desc">{d.description}</p>
                 {locked && (
@@ -717,7 +704,7 @@ function StepReview({
           <h4>APIs · {selectedApis.length}</h4>
           <div className="review-chips">
             {selectedApis.map((a) => (
-              <span key={a} className="chip">
+              <span key={a} className="chip chip-api">
                 {a}
               </span>
             ))}
@@ -727,7 +714,7 @@ function StepReview({
           <h4>Dimensions</h4>
           <div className="review-chips">
             {catalog.dimensions.map((d) => (
-              <span key={d.key} className={`chip ${chipClass(dims[d.key])}`}>
+              <span key={d.key} className="chip chip-dim">
                 {d.label}: {DIM_LABELS[dims[d.key]]}
               </span>
             ))}

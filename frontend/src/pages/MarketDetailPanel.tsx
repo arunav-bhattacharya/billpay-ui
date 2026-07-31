@@ -17,7 +17,6 @@ import {
   ACCOUNT_TYPE_LABELS,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
-  chipClass,
   DIM_LABELS,
   ENV_LABELS,
   isDimLocked,
@@ -357,46 +356,49 @@ function ProfileCard({
         </div>
       )}
 
-      <div className="profile-dims">
-        {dims.map((d) => (
-          <span
-            key={d.key}
-            className={`chip ${chipClass(profile.dimensions[d.key])}`}
-            title={d.description}
-          >
-            {d.label}: {DIM_LABELS[profile.dimensions[d.key]]}
-          </span>
-        ))}
-        {customEntries.map(([k, v]) => {
-          const def = market.customDimensionDefs.find((d) => d.key === k)
-          return (
-            <span key={k} className="chip chip-custom" title={def?.description ?? k}>
-              {def?.label ?? k}: {def?.type === 'BOOLEAN' ? yn(v) : v}
-            </span>
-          )
-        })}
-      </div>
-
-      <div className="profile-apis">
-        {byCategory.map(({ cat, apis }) => (
-          <div key={cat} className="profile-api-group">
-            <span className={`profile-api-cat cat-${cat.toLowerCase()}`}>
-              {CATEGORY_LABELS[cat]}
-            </span>
-            <div className="review-chips">
-              {apis.map((a) => (
-                <span
-                  key={a.name}
-                  className={`chip chip-grad cat-${cat.toLowerCase()}`}
-                  title={a.summary}
-                >
-                  {a.name}
-                </span>
-              ))}
+      {/* Two classifiers: what the profile calls, and how it behaves. */}
+      <section className="profile-block">
+        <h5 className="profile-block-title">APIs</h5>
+        <div className="profile-apis">
+          {byCategory.map(({ cat, apis }) => (
+            <div key={cat} className="profile-api-group">
+              <span className={`profile-api-cat cat-${cat.toLowerCase()}`}>
+                {CATEGORY_LABELS[cat]}
+              </span>
+              <div className="review-chips">
+                {apis.map((a) => (
+                  <span
+                    key={a.name}
+                    className={`chip chip-grad cat-${cat.toLowerCase()}`}
+                    title={a.summary}
+                  >
+                    {a.name}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="profile-block">
+        <h5 className="profile-block-title">Dimensions</h5>
+        <div className="profile-dims">
+          {dims.map((d) => (
+            <span key={d.key} className="chip chip-dim" title={d.description}>
+              {d.label}: {DIM_LABELS[profile.dimensions[d.key]]}
+            </span>
+          ))}
+          {customEntries.map(([k, v]) => {
+            const def = market.customDimensionDefs.find((d) => d.key === k)
+            return (
+              <span key={k} className="chip chip-custom" title={def?.description ?? k}>
+                {def?.label ?? k}: {def?.type === 'BOOLEAN' ? yn(v) : v}
+              </span>
+            )
+          })}
+        </div>
+      </section>
     </article>
   )
 }

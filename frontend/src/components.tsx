@@ -6,6 +6,7 @@ import amexLogo from './assets/amex.svg'
 import { ACCOUNT_TYPE_LABELS, DIM_LABELS, ENV_LABELS, flagEmoji } from './lib'
 import type {
   AccountType,
+  ApiSpec,
   CustomDimensionDef,
   DimValue,
   EnvStage,
@@ -81,6 +82,22 @@ export function CloseIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
       <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  )
+}
+
+/** Filled green tick — "already onboarded", distinct from the outline CheckIcon. */
+export function TickIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="11" fill="currentColor" />
+      <path
+        d="M7 12.4l3.4 3.3L17 9"
+        stroke="#fff"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
@@ -197,6 +214,27 @@ export function TriToggle({
 /** Segment set for a dimension, from its catalog metadata. */
 export function dimOptions(meta: { allowsBoth?: boolean }): DimValue[] {
   return meta.allowsBoth === false ? ['Y', 'N'] : ['Y', 'N', 'BOTH']
+}
+
+/* ---------- API detail body (wizard selection + API view) ----------
+
+   Shared so both surfaces show the same contract, endpoint and spec link. */
+
+export function ApiDetailBody({ spec }: { spec: ApiSpec }) {
+  return (
+    <div className="api-detail-body">
+      <p className="api-detail-desc">{spec.description}</p>
+      <div className="api-detail-meta">
+        <span className="api-endpoint-label">Billpay-Core endpoint</span>
+        <span className="mono-tag">
+          <b>{spec.method}</b> {spec.path}
+        </span>
+      </div>
+      <a className="api-spec-link" href={spec.specUrl} target="_blank" rel="noreferrer">
+        View API spec ↗
+      </a>
+    </div>
+  )
 }
 
 /* ---------- Custom dimension value input (wizard + detail panel) ---------- */
