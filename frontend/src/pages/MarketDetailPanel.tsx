@@ -1,8 +1,29 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
-import { CloneDialog, CustomDimValueInput, ErrorNote, Flag, JsonView, StatusSeal } from '../components'
-import { ACCOUNT_TYPE_LABELS, CATEGORY_LABELS, CATEGORY_ORDER, yn } from '../lib'
+import {
+  CloneDialog,
+  CopyIcon,
+  CustomDimValueInput,
+  dimOptions,
+  ErrorNote,
+  Flag,
+  JsonView,
+  StatusSeal,
+  TriToggle,
+} from '../components'
+import {
+  ACCOUNT_TYPE_LABELS,
+  CATEGORY_LABELS,
+  CATEGORY_ORDER,
+  chipClass,
+  DIM_LABELS,
+  ENV_LABELS,
+  isDimLocked,
+  nextEnv,
+  setDimension,
+  yn,
+} from '../lib'
 import type {
   AccountType,
   CustomDimensionDef,
@@ -65,7 +86,7 @@ export function MarketDetailPanel({
   }
 
   const canAddType = market.profiles.length < 3
-  const draftCount = market.profiles.filter((p) => p.status === 'DRAFT').length
+  const promotableCount = market.profiles.filter((p) => p.status !== 'E3').length
 
   return (
     <div ref={panelRef} className={`detail-panel region-${market.market.region.toLowerCase()}`}>
@@ -80,7 +101,7 @@ export function MarketDetailPanel({
         </div>
         <div className="detail-actions">
           {canAddType && (
-            <button className="btn sm ghost" onClick={() => onAddAccountType(market.market.code)}>
+            <button className="btn sm primary" onClick={() => onAddAccountType(market.market.code)}>
               + Account type
             </button>
           )}
@@ -92,13 +113,13 @@ export function MarketDetailPanel({
           >
             <CopyIcon />
           </button>
-          {draftCount > 1 && (
+          {promotableCount > 1 && (
             <button
               className="btn sm ghost"
               disabled={busy}
-              onClick={() => run(() => api.activateAll(market.market.code))}
+              onClick={() => run(() => api.promoteAll(market.market.code))}
             >
-              Activate all profiles
+              Promote all profiles
             </button>
           )}
           <button
@@ -153,7 +174,7 @@ export function MarketDetailPanel({
             profile={p}
             busy={busy}
             run={run}
-            onActivate={() => p.id && run(() => api.activateProfile(market.market.code, p.id!))}
+            onPromote={() => p.id && run(() => api.promoteProfile(market.market.code, p.id!))}
             onDelete={() => p.id && run(() => api.deleteProfile(market.market.code, p.id!))}
           />
         ))}
@@ -182,14 +203,14 @@ function ProfileCard({
   profile,
   busy,
   run,
-  onActivate,
+  onPromote,
   onDelete,
 }: {
   market: MarketDocument
   profile: MarketProfile
   busy: boolean
   run: (a: () => Promise<unknown>) => Promise<void>
-  onActivate: () => void
+  onPromote: () => void
   onDelete: () => void
 }) {
   const { catalog } = useApp()
@@ -212,7 +233,7 @@ function ProfileCard({
     setShowCloneTargets(false)
     const copy: MarketProfile = {
       accountType: target,
-      status: 'DRAFT',
+      status: 'E1',
       apis: [...profile.apis],
       dimensions: { ...profile.dimensions },
       customDimensions: { ...profile.customDimensions },
@@ -261,9 +282,9 @@ function ProfileCard({
         <h4>{ACCOUNT_TYPE_LABELS[profile.accountType]}</h4>
         <StatusSeal status={profile.status} small />
         <span className="spacer" />
-        {profile.status === 'DRAFT' && (
-          <button className="btn sm primary" disabled={busy} onClick={onActivate}>
-            Activate
+        {nextEnv(profile.status) && (
+          <button className="btn sm primary" disabled={busy} onClick={onPromote}>
+            Promote to {ENV_LABELS[nextEnv(profile.status)!]}
           </button>
         )}
         <button
@@ -339,10 +360,10 @@ function ProfileCard({
         {dims.map((d) => (
           <span
             key={d.key}
-            className={`chip ${profile.dimensions[d.key] ? 'chip-yes' : 'chip-off'}`}
+            className={`chip ${chipClass(profile.dimensions[d.key])}`}
             title={d.description}
           >
-            {d.label}: {yn(profile.dimensions[d.key])}
+            {d.label}: {DIM_LABELS[profile.dimensions[d.key]]}
           </span>
         ))}
         {customEntries.map(([k, v]) => {
@@ -385,15 +406,6 @@ function PencilIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-    </svg>
-  )
-}
-
-function CopyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
     </svg>
   )
 }
@@ -465,20 +477,28 @@ function ProfileEditor({
       <div className="pe-section">
         <h5>Dimensions</h5>
         <div className="pe-dims">
-          {(catalog?.dimensions ?? []).map((d) => (
-            <label key={d.key} className="pe-dim" title={d.description}>
-              <span>{d.label}</span>
-              <button
-                className={`switch sm ${dims[d.key] ? 'on' : ''}`}
-                role="switch"
-                aria-checked={dims[d.key]}
-                aria-label={d.label}
-                onClick={() => setDims({ ...dims, [d.key]: !dims[d.key] })}
+          {(catalog?.dimensions ?? []).map((d) => {
+            const locked = isDimLocked(d.key, dims)
+            return (
+              <div
+                key={d.key}
+                className={`pe-dim ${locked ? 'locked' : ''}`}
+                title={
+                  locked ? 'Locked to N while Realtime Clearing is Y.' : d.description
+                }
               >
-                <span className="knob" />
-              </button>
-            </label>
-          ))}
+                <span>{d.label}</span>
+                <TriToggle
+                  value={dims[d.key]}
+                  options={dimOptions(d)}
+                  locked={locked}
+                  small
+                  label={d.label}
+                  onChange={(next) => setDims(setDimension(dims, d.key, next))}
+                />
+              </div>
+            )
+          })}
         </div>
       </div>
 

@@ -29,10 +29,10 @@ export const api = {
     request<MarketDocument>(`/api/markets/${code}`, { method: 'PUT', body: JSON.stringify(doc) }),
   deleteMarket: (code: string) =>
     request<void>(`/api/markets/${code}`, { method: 'DELETE' }),
-  activateAll: (code: string) =>
-    request<MarketDocument>(`/api/markets/${code}/activate`, { method: 'POST' }),
-  activateProfile: (code: string, profileId: string) =>
-    request<MarketDocument>(`/api/markets/${code}/profiles/${profileId}/activate`, {
+  promoteAll: (code: string) =>
+    request<MarketDocument>(`/api/markets/${code}/promote`, { method: 'POST' }),
+  promoteProfile: (code: string, profileId: string) =>
+    request<MarketDocument>(`/api/markets/${code}/profiles/${profileId}/promote`, {
       method: 'POST',
     }),
   deleteProfile: (code: string, profileId: string) =>

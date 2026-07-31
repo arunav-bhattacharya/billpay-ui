@@ -1,38 +1,69 @@
 /* ============================================================
-   Billpay Market Onboarding — v2
-   One-page console. Porcelain canvas, iris primary, green/grey
-   status, copper & teal category accents, dark-indigo masthead
-   with soft aurora glows.
-   Type: Geist (display + body) · Geist Mono (codes, data)
+   Billpay Market Onboarding — v3
+   One-page console styled after americanexpress.com: flat grey
+   canvas, Amex Bright Blue primary, deep-blue masthead, squarish
+   corners, drop shadows instead of gradients.
+   Type: Benton Sans Regular (400) + Benton Sans Medium (500),
+   self-hosted so it renders identically on every OS.
    ============================================================ */
 
+/* Self-hosted Benton Sans. Only two faces ship: Regular carries all
+   normal text, Medium carries everything the design calls "bold".
+   The `font-weight` descriptor is authoritative here — the OTF
+   sources both report usWeightClass 400 with per-weight family
+   names, so the browser must be told which is which. */
+@font-face {
+  font-family: 'Benton Sans';
+  src:
+    url('./assets/fonts/BentonSans-Regular.woff2') format('woff2'),
+    url('./assets/fonts/BentonSans-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Benton Sans';
+  src:
+    url('./assets/fonts/BentonSans-Medium.woff2') format('woff2'),
+    url('./assets/fonts/BentonSans-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --bg: #f6f6f9;
+  /* Canvas, ink and hairlines measured on global.americanexpress.com/overview. */
+  --bg: #f4f4f4;
+  --surface-alt: #f7f8f9;
   --card: #ffffff;
-  --ink: #171722;
-  --muted: #626880;
-  --line: #e3e4ee;
-  --line-strong: #c9cbdc;
+  --ink: #3d3d3d;
+  --muted: #53565a;
+  --line: #e0e0e0;
+  --line-strong: #c8c9c7;
 
   /* primary = Amex Bright Blue */
   --iris: #006fcf;
-  --iris-deep: #0055a8;
+  --iris-deep: #0066be;
   --iris-wash: #e7f2fc;
   --iris-border: #b9d9f5;
 
-  --green: #1a7f4b;
+  /* Amex Deep Blue — masthead, hero, display headings */
+  --navy: #00175a;
+
+  --green: #008767;
   --green-wash: #e3f6ec;
   --green-border: #bfe8d2;
 
-  /* draft = amber */
+  /* e2 = amber (e1 grey, e3 green) */
   --amber: #a37b0a;
   --amber-bright: #f2c14e;
   --amber-wash: #fdf4dc;
   --amber-border: #ecd9a3;
 
-  --grey: #5b6272;
-  --grey-wash: #edeff4;
-  --grey-border: #d8dbe4;
+  --grey: #53565a;
+  --grey-wash: #edeff0;
+  --grey-border: #d3d6da;
 
   --copper: #c2703d;
   --copper-wash: #faf0e8;
@@ -42,18 +73,82 @@
   --red: #c03434;
   --red-wash: #faecec;
 
-  --mast-1: #00112e;
-  --mast-2: #00205f;
+  --mast-1: #00175a;
+  --mast-2: #00175a;
 
-  /* SF Pro on Apple systems (-apple-system / local install), Nunito as the
-     web fallback; SF Mono for code (JSON, endpoints) */
-  --font-display: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Nunito', sans-serif;
-  --font-body: -apple-system, 'SF Pro Text', 'SF Pro Display', 'Nunito', sans-serif;
+  /* Benton Sans everywhere. The system fallback is load-bearing, not
+     decoration: the shipped faces cover ASCII and Latin-1 but have no
+     glyphs for → ✓ ✕ ▾ ↗ ⌂, which the UI uses. Do not reduce this to
+     'Benton Sans', sans-serif. */
+  --font-display: 'Benton Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-body: 'Benton Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, 'Menlo', monospace;
 
-  --shadow-1: 0 1px 2px rgba(23, 23, 34, 0.05), 0 4px 16px rgba(23, 23, 34, 0.06);
-  --shadow-2: 0 2px 6px rgba(23, 23, 34, 0.08), 0 18px 40px rgba(23, 23, 34, 0.12);
-  --radius: 12px;
+  /* Navy-tinted and tighter than the old violet shadows. With the
+     gradients gone these carry the depth on their own. */
+  --shadow-1: 0 1px 2px rgba(0, 23, 90, 0.06), 0 2px 8px rgba(0, 23, 90, 0.1);
+  --shadow-2: 0 2px 4px rgba(0, 23, 90, 0.08), 0 10px 28px rgba(0, 23, 90, 0.14);
+  /* Amex's own card elevation, copied verbatim from the overview page. */
+  --shadow-card: 0 2px 5px 2px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 4px 14px 3px rgba(0, 0, 0, 0.08), 0 3px 8px -1px rgba(0, 0, 0, 0.1);
+
+  /* ---- Grid cards are keycaps ----
+     Depth comes from an extruded side wall, not a blur: six hard, zero-blur
+     shadows stepped 1px at a time build the moulded side of the key, then a
+     real contact shadow grounds it. The face is domed with a soft radial and
+     capped by an inset top highlight. Pressing it shortens the wall by the
+     same distance the cap travels, so the key bottoms out instead of sliding. */
+  --key-face:
+    radial-gradient(120% 100% at 50% 0%, #ffffff 0%, #fdfdfd 58%, #f4f4f4 100%);
+  --key-face-hover:
+    radial-gradient(120% 100% at 50% 0%, #ffffff 0%, #ffffff 58%, #f8f8f8 100%);
+  /* Moulded wall, stepping down the neutral axis to match the canvas. */
+  --key-w1: #efefef;
+  --key-w2: #e8e8e8;
+  --key-w3: #e0e0e0;
+  --key-w4: #d7d7d7;
+  --key-w5: #cbcbcb;
+  --key-w6: #bebebe;
+  /* The wall steps right as well as down, so the moulding shows on two faces
+     and the cap reads as extruded toward the bottom-right rather than merely
+     lifted. Contact shadow is offset the same way. */
+  --key-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w2),
+    3px 3px 0 var(--key-w3),
+    4px 4px 0 var(--key-w4),
+    5px 5px 0 var(--key-w5),
+    6px 6px 0 var(--key-w6),
+    7px 8px 2px rgba(0, 23, 90, 0.17),
+    10px 14px 20px rgba(0, 23, 90, 0.16),
+    inset 0 1px 0 #fff;
+  /* hover raises the cap: wall grows to 9px on both faces */
+  --key-shadow-hover:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w2),
+    3px 3px 0 var(--key-w3),
+    4px 4px 0 var(--key-w4),
+    5px 5px 0 var(--key-w5),
+    6px 6px 0 var(--key-w6),
+    7px 7px 0 var(--key-w6),
+    8px 8px 0 var(--key-w6),
+    9px 9px 0 var(--key-w6),
+    10px 12px 3px rgba(0, 23, 90, 0.19),
+    14px 20px 30px rgba(0, 23, 90, 0.2),
+    inset 0 1px 0 #fff;
+  /* pressed: wall collapses to 2px on both faces */
+  --key-shadow-active:
+    1px 1px 0 var(--key-w3),
+    2px 2px 0 var(--key-w5),
+    3px 4px 2px rgba(0, 23, 90, 0.16),
+    4px 6px 8px rgba(0, 23, 90, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --title-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 5px rgba(0, 23, 90, 0.16);
+  --title-shadow-dark: 0 1px 3px rgba(0, 0, 0, 0.38);
+
+  --radius: 6px;
+  --radius-sm: 3px;
+  --radius-lg: 8px;
 }
 
 * {
@@ -62,21 +157,44 @@
 
 html {
   scroll-behavior: smooth;
+  /* Only Regular and Medium ship, so a browser asked for 700 would
+     smear a synthetic bold. Weight synthesis off; oblique stays on,
+     since there is no italic face either and one <em> relies on it. */
+  font-synthesis-weight: none;
 }
 
 body {
   margin: 0;
-  background:
-    radial-gradient(900px 420px at 8% -6%, rgba(0, 111, 207, 0.14), transparent 60%),
-    radial-gradient(700px 380px at 96% -4%, rgba(14, 138, 158, 0.12), transparent 60%),
-    radial-gradient(700px 460px at 50% 112%, rgba(26, 127, 75, 0.07), transparent 65%),
-    linear-gradient(180deg, #e9f1fb 0%, var(--bg) 420px);
+  /* The World Service background from global.americanexpress.com/overview:
+     a 320x305 line-art tile banded across the top (repeat-x, drawn at
+     378x361) with a white-to-canvas fade pulling it out of the way by the
+     halfway mark. Fixed, so it stays put as the page scrolls. */
+  background-color: var(--bg);
+  /* The veil sits over the engraving across the whole page. It stays partly
+     transparent all the way down — full coverage — but heavy enough that the
+     pattern reads as paper texture behind the content, not as artwork. */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(244, 244, 244, 0.42) 0%,
+      rgba(244, 244, 244, 0.66) 46%,
+      rgba(244, 244, 244, 0.8) 100%
+    ),
+    url('./assets/worldservice-tile-gray.svg');
+  /* Amex bands this repeat-x across the top only; here it tiles both ways
+     and the fade is pushed most of the way down, so the engraving carries
+     through the whole viewport instead of just the masthead strip. */
+  background-size: 100% 100%, 460px 439px;
+  background-repeat: no-repeat, repeat;
+  background-position: 0 0;
   background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
-  line-height: 1.55;
-  letter-spacing: 0.014em;
+  /* 1.47 ≈ the 15/22 ratio Amex sets, but unitless so the ~60 smaller
+     sizes in this file scale with it instead of inheriting a hard 22px. */
+  line-height: 1.47;
+  letter-spacing: normal;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -86,18 +204,42 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 550;
-  letter-spacing: 0.012em;
-  color: var(--ink);
+  /* Regular, not Medium — Benton Sans at display sizes reads better light,
+     and the size carries the hierarchy instead of the weight. */
+  font-weight: 400;
+  letter-spacing: normal;
+  color: var(--navy);
   margin: 0;
 }
 
 h1 {
-  font-size: 36px;
-  font-weight: 650;
-  letter-spacing: 0.015em;
+  font-size: 42px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
   line-height: 1.1;
-  color: var(--ink);
+  color: var(--navy);
+}
+
+/* Display-level headings only. At the 12–13px end a text-shadow just
+   goes muddy, so the small headings are deliberately left flat. */
+h1,
+.region-head h2,
+.detail-title h3,
+.market-card h3,
+.modal-head h2 {
+  text-shadow: var(--title-shadow);
+}
+
+.hero h1,
+.masthead .brand-title {
+  text-shadow: var(--title-shadow-dark);
+}
+
+/* Medium is this family's "bold" — the browser default of 700 has no face. */
+b,
+strong,
+summary {
+  font-weight: 500;
 }
 
 a {
@@ -141,16 +283,6 @@ select:focus {
 
 /* ---------- utility ---------- */
 
-.eyebrow {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-
 .mono-tag {
   font-family: var(--font-body);
   font-size: 12.5px;
@@ -161,12 +293,6 @@ select:focus {
 
 .muted {
   color: var(--muted);
-}
-
-.lede {
-  color: var(--muted);
-  max-width: 56ch;
-  margin: 8px 0 0;
 }
 
 .spacer {
@@ -196,53 +322,47 @@ select:focus {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 9px 18px;
-  border-radius: 9px;
+  padding: 8px 20px;
+  border-radius: 8px;
   border: 1px solid transparent;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-weight: 400;
   font-size: 14px;
   line-height: 1.3;
-  letter-spacing: 0.01em;
+  letter-spacing: normal;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease,
     box-shadow 0.15s ease;
 }
 
 .btn.primary {
-  background: linear-gradient(180deg, #2b8fe0, var(--iris) 55%, var(--iris-deep));
+  background: var(--iris);
   color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 111, 207, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  box-shadow: 0 1px 2px rgba(0, 23, 90, 0.16), 0 3px 8px rgba(0, 111, 207, 0.28);
 }
 
 .btn.primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #1a82d8, var(--iris-deep) 60%, #00417f);
-  box-shadow: 0 3px 10px rgba(0, 111, 207, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  background: var(--iris-deep);
+  box-shadow: 0 2px 4px rgba(0, 23, 90, 0.2), 0 6px 14px rgba(0, 111, 207, 0.34);
+}
+
+.btn.primary:active:not(:disabled) {
+  box-shadow: 0 1px 2px rgba(0, 23, 90, 0.2);
 }
 
 .btn.ghost {
   background: var(--card);
-  border-color: var(--line-strong);
-  color: var(--ink);
+  border-color: var(--iris);
+  color: var(--iris);
 }
 
 .btn.ghost:hover:not(:disabled) {
-  border-color: var(--iris);
+  background: var(--iris-wash);
+  border-color: var(--iris-deep);
   color: var(--iris-deep);
 }
 
 .btn.danger {
   background: var(--red);
   color: #fff;
-}
-
-.btn.ghost.draft {
-  color: var(--amber);
-}
-
-.btn.ghost.draft:hover:not(:disabled) {
-  border-color: var(--amber-bright);
-  background: var(--amber-wash);
-  color: var(--amber);
 }
 
 .btn.ghost.delete {
@@ -263,12 +383,13 @@ select:focus {
 .btn.xs {
   padding: 3px 10px;
   font-size: 12px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
 }
 
 .btn.lg {
-  padding: 12px 24px;
-  font-size: 15px;
+  padding: 14px 34px;
+  font-size: 16.5px;
+  border-radius: 10px;
 }
 
 .btn:active:not(:disabled) {
@@ -313,29 +434,27 @@ select:focus {
 }
 
 .act-btn.act-blue {
-  color: var(--iris-deep);
+  color: var(--iris);
   border-color: var(--iris-border);
-  background: linear-gradient(180deg, #ffffff, var(--iris-wash));
-  box-shadow: 0 1px 2px rgba(0, 60, 130, 0.1), inset 0 1px 0 #fff;
+  background: #fff;
+  box-shadow: var(--shadow-1);
 }
 
 .act-btn.act-blue:hover:not(:disabled) {
   border-color: var(--iris);
-  background: linear-gradient(180deg, #ffffff, #d6e8fb);
-  box-shadow: 0 2px 6px rgba(0, 80, 160, 0.2), inset 0 1px 0 #fff;
+  background: var(--iris-wash);
 }
 
 .act-btn.act-red {
   color: var(--red);
   border-color: color-mix(in srgb, var(--red) 30%, #fff);
-  background: linear-gradient(180deg, #ffffff, var(--red-wash));
-  box-shadow: 0 1px 2px rgba(170, 30, 40, 0.08), inset 0 1px 0 #fff;
+  background: #fff;
+  box-shadow: var(--shadow-1);
 }
 
 .act-btn.act-red:hover:not(:disabled) {
   border-color: var(--red);
-  background: linear-gradient(180deg, #ffffff, #fbdfe0);
-  box-shadow: 0 2px 6px rgba(170, 30, 40, 0.18), inset 0 1px 0 #fff;
+  background: var(--red-wash);
 }
 
 .icon-btn:hover {
@@ -366,24 +485,22 @@ select:focus {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 2.5px;
-  background: linear-gradient(90deg, var(--iris), var(--teal) 55%, var(--green));
-  opacity: 0.85;
+  height: 3px;
+  background: var(--iris);
 }
 
 .masthead {
-  position: relative;
-  background:
-    radial-gradient(520px 260px at 18% -40%, rgba(0, 111, 207, 0.55), transparent 70%),
-    radial-gradient(420px 220px at 78% -30%, rgba(14, 138, 158, 0.35), transparent 70%),
-    linear-gradient(150deg, var(--mast-1), var(--mast-2));
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: var(--navy);
   color: #fff;
   overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 23, 90, 0.28);
 }
 
 .masthead-inner {
-  max-width: 1200px;
+  max-width: 1560px;
   margin: 0 auto;
   padding: 16px 28px;
   display: flex;
@@ -391,40 +508,52 @@ select:focus {
   gap: 34px;
 }
 
+/* Product lockup the way Amex builds them: the blue box logo, a hairline
+   rule, then the product name — the name sits beside the mark rather than
+   stacked on it, and the descriptor is a quiet second line, not a banner. */
 .brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .brand-logo {
-  width: 50px;
-  height: 50px;
-  border-radius: 6px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* wordmark spans the logo's full height: "Billpay" tops out with the logo,
-   "MARKET ONBOARDING" bottoms out with it */
+.brand-rule {
+  width: 1px;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.22);
+  flex: none;
+}
+
 .brand-name {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 550;
-  letter-spacing: 0.01em;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: 50px;
+  gap: 3px;
+  line-height: 1;
+}
+
+.brand-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  color: #fff;
   line-height: 1;
 }
 
 .brand-sub {
   font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #8fb4dd;
+  color: #93b4d8;
   line-height: 1;
 }
 
@@ -445,7 +574,7 @@ select:focus {
   background: none;
   color: #a9c7e4;
   font-size: 12.5px;
-  font-weight: 550;
+  font-weight: 400;
   padding: 5px 14px;
   border-radius: 999px;
   transition: background 0.15s ease, color 0.15s ease;
@@ -459,23 +588,15 @@ select:focus {
 /* ---------- page scaffold ---------- */
 
 .page {
-  max-width: 1200px;
+  max-width: 1560px;
   margin: 0 auto;
-  padding: 38px 28px 80px;
-}
-
-.page-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 26px;
+  padding: 38px 32px 80px;
 }
 
 .footer {
   border-top: 1px solid var(--line);
   padding: 18px 28px;
-  max-width: 1200px;
+  max-width: 1560px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -492,18 +613,12 @@ select:focus {
   align-items: center;
   gap: 40px;
   flex-wrap: wrap;
-  background:
-    radial-gradient(520px 260px at 10% -30%, rgba(0, 111, 207, 0.6), transparent 70%),
-    radial-gradient(460px 240px at 92% 140%, rgba(14, 138, 158, 0.45), transparent 70%),
-    radial-gradient(380px 200px at 50% -40%, rgba(84, 120, 220, 0.35), transparent 70%),
-    radial-gradient(320px 180px at 30% 130%, rgba(26, 127, 75, 0.22), transparent 70%),
-    linear-gradient(140deg, #001030, #002a70 55%, #00348a);
-  border: 1px solid #2a5590;
-  border-radius: 18px;
-  box-shadow:
-    0 0 0 1px rgba(0, 111, 207, 0.1),
-    0 6px 20px rgba(0, 47, 130, 0.16),
-    0 2px 32px rgba(0, 111, 207, 0.08);
+  /* Stays a dark panel — 14 `.hero .x` rules below (white h1, donut
+     fills, inverted view-toggle) are written against a dark ground. */
+  background: var(--navy);
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
   padding: 30px 52px;
   margin-bottom: 34px;
 }
@@ -548,8 +663,9 @@ select:focus {
 }
 
 .hero .view-toggle {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .hero .view-toggle button {
@@ -558,8 +674,12 @@ select:focus {
 
 .hero .view-toggle button.on {
   background: #fff;
-  color: var(--mast-1);
-  box-shadow: none;
+  color: var(--navy);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 -1px 0 rgba(0, 23, 90, 0.12);
+}
+
+.hero .view-toggle button:hover:not(.on) {
+  color: #fff;
 }
 
 .hero-right {
@@ -590,9 +710,9 @@ select:focus {
 .view-caption strong {
   display: block;
   margin-bottom: 12px;
-  font-size: 21px;
+  font-size: 24px;
   color: #dce8fa;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 @media (max-width: 1100px) {
@@ -602,13 +722,6 @@ select:focus {
     flex-basis: 100%;
     max-width: none;
   }
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 26px;
-  flex-wrap: wrap;
 }
 
 .status-overview {
@@ -636,12 +749,14 @@ select:focus {
   transition: stroke-dasharray 0.4s ease, stroke-dashoffset 0.4s ease;
 }
 
+/* Hero donut: active (e3) / in progress (e1+e2) / pending (not onboarded) */
+
 .donut-seg.seg-active {
   stroke: var(--green);
-  filter: drop-shadow(0 0 5px rgba(26, 127, 75, 0.55));
+  filter: drop-shadow(0 0 5px rgba(0, 135, 103, 0.55));
 }
 
-.donut-seg.seg-draft {
+.donut-seg.seg-progress {
   stroke: var(--amber-bright);
   filter: drop-shadow(0 0 5px rgba(223, 164, 31, 0.55));
 }
@@ -653,7 +768,7 @@ select:focus {
 
 .donut-num {
   font-size: 21px;
-  font-weight: 650;
+  font-weight: 500;
   fill: var(--ink);
   text-anchor: middle;
   font-family: var(--font-display);
@@ -661,7 +776,7 @@ select:focus {
 
 .donut-sub {
   font-size: 8px;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   fill: var(--muted);
@@ -708,7 +823,7 @@ select:focus {
   overflow-y: auto;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   box-shadow: var(--shadow-2);
   padding: 10px 14px;
   font-size: 13px;
@@ -741,7 +856,7 @@ select:focus {
 
 .status-legend b {
   color: var(--ink);
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .ldot {
@@ -754,7 +869,7 @@ select:focus {
   background: var(--green);
 }
 
-.ldot-draft {
+.ldot-progress {
   background: var(--amber-bright);
 }
 
@@ -774,7 +889,7 @@ select:focus {
   padding: 10px 14px;
   background: var(--red-wash);
   border: 1px solid #ecc9c9;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 14px;
   color: var(--ink);
 }
@@ -801,7 +916,8 @@ select:focus {
   align-items: flex-start;
   justify-content: space-between;
   padding: 22px 26px 16px;
-  background: linear-gradient(180deg, var(--iris-wash), transparent);
+  background: var(--iris-wash);
+  border-bottom: 1px solid var(--iris-border);
 }
 
 .onboard-head h2 {
@@ -849,7 +965,7 @@ select:focus {
   background: var(--card);
   font-family: var(--font-body);
   font-size: 14.5px;
-  font-weight: 550;
+  font-weight: 500;
   color: var(--muted);
   transition: all 0.15s ease;
 }
@@ -868,7 +984,7 @@ select:focus {
 
 .acc-label {
   font-family: var(--font-display);
-  font-weight: 550;
+  font-weight: 500;
   font-size: 22px;
   letter-spacing: 0.01em;
 }
@@ -886,7 +1002,7 @@ select:focus {
   margin-left: auto;
   color: var(--iris-deep);
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .acc-body {
@@ -920,7 +1036,7 @@ select:focus {
 .split-title {
   font-size: 14px;
   font-family: var(--font-body);
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
@@ -934,7 +1050,7 @@ select:focus {
 
 .market-pick-list {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   max-height: 320px;
   overflow-y: auto;
   background: var(--card);
@@ -967,7 +1083,7 @@ select:focus {
 }
 
 .pick-name {
-  font-weight: 550;
+  font-weight: 500;
   font-size: 14px;
 }
 
@@ -1007,7 +1123,7 @@ select:focus {
   text-align: left;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 14px 16px;
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
@@ -1024,7 +1140,7 @@ select:focus {
 
 .account-name {
   font-family: var(--font-display);
-  font-weight: 550;
+  font-weight: 500;
   font-size: 15px;
   letter-spacing: 0.01em;
 }
@@ -1049,7 +1165,7 @@ select:focus {
   align-items: center;
   gap: 8px;
   font-size: 19.5px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.01em;
   padding-bottom: 8px;
   margin: 0 0 10px;
@@ -1092,8 +1208,9 @@ select:focus {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   background: var(--card);
+  box-shadow: var(--shadow-1);
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
@@ -1153,7 +1270,7 @@ select:focus {
   background: none;
   border: none;
   padding: 10px 12px 10px 16px;
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .api-check {
@@ -1179,7 +1296,7 @@ select:focus {
   grid-area: name;
   font-family: var(--font-body);
   font-size: 17px;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: 0.01em;
   color: var(--ink);
   overflow-wrap: anywhere;
@@ -1203,7 +1320,7 @@ select:focus {
   color: var(--iris);
   font-size: 17px;
   padding: 0 16px;
-  border-radius: 0 10px 10px 0;
+  border-radius: 0 6px 6px 0;
 }
 
 .api-expand:hover {
@@ -1227,14 +1344,8 @@ select:focus {
   padding: 14px 20px 16px 52px;
   font-size: 15.5px;
   line-height: 1.6;
-  background: linear-gradient(180deg, var(--bg), transparent 40px);
-  border-radius: 0 0 10px 10px;
-}
-
-.api-detail-summary {
-  font-size: 16px;
-  font-weight: 550;
-  margin: 0 0 5px;
+  background: var(--surface-alt);
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 
 .api-detail-desc {
@@ -1253,12 +1364,12 @@ select:focus {
 
 .api-detail-meta .mono-tag b {
   color: var(--iris-deep);
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .api-endpoint-label {
   font-size: 11px;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1275,7 +1386,7 @@ select:focus {
 .api-spec-link {
   display: inline-block;
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .api-spec-link:hover {
@@ -1285,77 +1396,10 @@ select:focus {
 
 /* suggested dimensions panel */
 
-.dim-panel {
-  position: sticky;
-  top: 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--bg);
-  padding: 16px 16px;
-}
-
-.dim-panel h4 {
-  font-size: 16px;
-}
-
-.dim-panel-hint {
-  font-size: 12px;
-  color: var(--muted);
-  margin: 4px 0 12px;
-}
-
-.dim-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 9px 0;
-  border-top: 1px solid var(--line);
-}
-
-.dim-row-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.dim-lamp {
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1.5px solid var(--line-strong);
-  background: transparent;
-  transition: all 0.2s ease;
-}
-
-.dim-row.hint .dim-lamp {
-  border-color: var(--copper);
-  background: var(--copper-wash);
-}
-
-.dim-row.on .dim-lamp {
-  background: var(--green);
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px var(--green-wash);
-}
-
 .dim-name {
-  font-weight: 550;
+  font-weight: 500;
   font-size: 13.5px;
   letter-spacing: 0.01em;
-}
-
-.dim-src {
-  font-family: var(--font-body);
-  font-size: 10.5px;
-  color: var(--muted);
-  overflow-wrap: anywhere;
-}
-
-.dim-on-note {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 550;
-  color: var(--green);
 }
 
 /* ---------- step 3: dimensions ---------- */
@@ -1371,7 +1415,7 @@ select:focus {
   align-items: center;
   gap: 20px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 18px 22px;
   background: var(--card);
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -1380,6 +1424,27 @@ select:focus {
 .dim-review-row.on {
   border-color: var(--green-border);
   background: #fbfffd;
+}
+
+.dim-review-row.both {
+  border-color: var(--amber-border);
+  background: #fffdf6;
+}
+
+.dim-review-row.locked {
+  background: var(--surface-alt);
+}
+
+.dim-review-row.locked .dim-name,
+.dim-review-row.locked .dim-desc {
+  color: var(--muted);
+}
+
+.dim-lock-note {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-style: italic;
 }
 
 .dim-review-main {
@@ -1393,9 +1458,9 @@ select:focus {
 .yn-mark {
   font-family: var(--font-body);
   font-size: 12px;
-  font-weight: 550;
+  font-weight: 500;
   padding: 1px 8px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   background: var(--grey-wash);
   color: var(--grey);
   margin-left: 6px;
@@ -1406,6 +1471,12 @@ select:focus {
   color: var(--green);
 }
 
+.dim-review-row .yn-mark.both,
+.dim-review-row.both .yn-mark {
+  background: var(--amber-wash);
+  color: var(--amber);
+}
+
 .dim-desc {
   color: var(--muted);
   font-size: 14px;
@@ -1413,49 +1484,63 @@ select:focus {
   max-width: 68ch;
 }
 
-.dim-hint {
-  margin-top: 6px;
-  font-size: 12.5px;
-  color: var(--copper);
-  background: var(--copper-wash);
-  border-radius: 6px;
-  padding: 5px 10px;
-  display: inline-block;
-}
+/* Y / N / Both segmented control. inline-flex so a two-option dimension
+   (Representable Return) simply renders narrower — no separate variant. */
 
-/* switch */
-
-.switch {
+.tri {
   flex: none;
-  width: 54px;
-  height: 30px;
-  border-radius: 999px;
-  border: 1px solid var(--line-strong);
-  background: var(--grey-wash);
-  position: relative;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  display: inline-flex;
+  border: 1px solid var(--iris);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
 }
 
-.switch .knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+.tri-opt {
+  min-width: 48px;
+  padding: 7px 14px;
+  border: 0;
+  border-right: 1px solid var(--iris);
   background: #fff;
-  border: 1px solid var(--line-strong);
-  transition: left 0.15s ease;
+  color: var(--iris);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.2;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
-.switch.on {
-  background: var(--green);
-  border-color: var(--green);
+.tri-opt:last-child {
+  border-right: 0;
 }
 
-.switch.on .knob {
-  left: 28px;
-  border-color: var(--green);
+.tri-opt:hover:not(:disabled):not(.on) {
+  background: var(--iris-wash);
+}
+
+.tri-opt.on {
+  background: var(--iris);
+  color: #fff;
+}
+
+.tri.locked {
+  border-color: var(--line-strong);
+}
+
+.tri.locked .tri-opt {
+  background: var(--grey-wash);
+  color: var(--muted);
+  border-right-color: var(--line-strong);
+  cursor: not-allowed;
+}
+
+.tri.locked .tri-opt.on {
+  background: var(--line-strong);
+  color: var(--ink);
+}
+
+.tri-sm .tri-opt {
+  min-width: 36px;
+  padding: 4px 10px;
+  font-size: 12px;
 }
 
 /* ---------- inline profile editor ---------- */
@@ -1478,7 +1563,7 @@ select:focus {
 .pe-section h5 {
   margin: 0 0 8px;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1497,7 +1582,7 @@ select:focus {
 .pe-cat {
   display: block;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 500;
   margin-bottom: 6px;
 }
 
@@ -1550,18 +1635,8 @@ select:focus {
   font-weight: 500;
 }
 
-.switch.sm {
-  width: 42px;
-  height: 24px;
-}
-
-.switch.sm .knob {
-  width: 18px;
-  height: 18px;
-}
-
-.switch.sm.on .knob {
-  left: 20px;
+.pe-dim.locked > span {
+  color: var(--muted);
 }
 
 .pe-actions {
@@ -1595,12 +1670,12 @@ select:focus {
 .admin-badge {
   font-family: var(--font-body);
   font-size: 10px;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #fff;
   background: var(--iris);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 2px 8px;
 }
 
@@ -1617,7 +1692,7 @@ select:focus {
   gap: 10px;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 10px 14px;
 }
 
@@ -1672,7 +1747,7 @@ select:focus {
   margin: 0 0 10px;
   font-family: var(--font-body);
   font-size: 11px;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1692,12 +1767,12 @@ select:focus {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 12.5px;
+  font-weight: 400;
   padding: 4px 11px;
-  border-radius: 999px;
+  border-radius: 4px;
   border: 1px solid var(--line);
-  background: var(--bg);
+  background: var(--surface-alt);
   color: var(--ink);
 }
 
@@ -1707,6 +1782,12 @@ select:focus {
   color: var(--green);
 }
 
+.chip.chip-both {
+  border-color: var(--amber-border);
+  background: var(--amber-wash);
+  color: var(--amber);
+}
+
 .chip.chip-off {
   color: var(--muted);
   background: transparent;
@@ -1714,23 +1795,23 @@ select:focus {
 
 .chip.chip-grad {
   border: 1px solid transparent;
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .chip.chip-grad.cat-core {
-  background: linear-gradient(135deg, #e2f0fd, #c7e2fa);
+  background: #e2f0fd;
   border-color: #aed4f4;
   color: var(--iris-deep);
 }
 
 .chip.chip-grad.cat-composite {
-  background: linear-gradient(135deg, #fbefe4, #f6ddc4);
+  background: #fbefe4;
   border-color: #ecc9a4;
   color: #92511f;
 }
 
 .chip.chip-grad.cat-event_handler {
-  background: linear-gradient(135deg, #e0f4f8, #c8ebf1);
+  background: #e0f4f8;
   border-color: #a8dbe5;
   color: #086678;
 }
@@ -1744,7 +1825,7 @@ select:focus {
 .json-view {
   margin-top: 22px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   background: var(--card);
   overflow: hidden;
 }
@@ -1752,14 +1833,42 @@ select:focus {
 .json-view summary {
   cursor: pointer;
   padding: 12px 16px;
-  font-weight: 550;
-  font-size: 14px;
-  color: var(--iris-deep);
+  font-weight: 400;
+  font-size: 14.5px;
+  color: var(--iris);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+/* strip the native disclosure triangle in both engines */
+.json-view summary::-webkit-details-marker {
+  display: none;
+}
+
+/* same tailless chevron as the market cards use */
+.json-view summary::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  border-radius: 1px;
+  transform: rotate(45deg);
+  margin-bottom: 3px;
+  transition: transform 0.15s ease;
+}
+
+.json-view[open] summary::after {
+  transform: rotate(-135deg);
+  margin-bottom: 0;
+  margin-top: 3px;
 }
 
 .json-block {
   border-top: 1px solid var(--line);
-  background: linear-gradient(170deg, #001536, var(--mast-1) 55%);
+  background: var(--navy);
 }
 
 .json-head {
@@ -1806,14 +1915,28 @@ select:focus {
 }
 
 .json-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   border: 1px solid rgba(120, 176, 230, 0.35);
   background: rgba(120, 176, 230, 0.08);
   color: #cfe4f8;
-  font-size: 12px;
-  font-weight: 550;
-  border-radius: 7px;
-  padding: 4px 12px;
-  transition: background 0.15s ease;
+  border-radius: 5px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.json-copy svg {
+  width: 14px;
+  height: 14px;
+}
+
+.json-copy.copied {
+  color: #7ee2b0;
+  border-color: rgba(126, 226, 176, 0.45);
+  background: rgba(126, 226, 176, 0.12);
 }
 
 .json-copy:hover {
@@ -1870,7 +1993,7 @@ select:focus {
 
 .modal {
   background: var(--card);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-2);
   width: min(640px, 94vw);
   max-height: 86vh;
@@ -1910,7 +2033,7 @@ select:focus {
 .modal-section {
   font-family: var(--font-body);
   font-size: 11px;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1928,11 +2051,11 @@ select:focus {
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   background: var(--card);
   padding: 8px 14px;
   font-size: 13.5px;
-  font-weight: 550;
+  font-weight: 500;
   cursor: pointer;
 }
 
@@ -1961,7 +2084,7 @@ select:focus {
   gap: 2px;
   border: 1px solid var(--line);
   background: var(--card);
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 10px 12px;
   text-align: left;
 }
@@ -1976,7 +2099,7 @@ select:focus {
 }
 
 .clone-name {
-  font-weight: 550;
+  font-weight: 500;
   font-size: 13.5px;
 }
 
@@ -1994,7 +2117,7 @@ select:focus {
   align-items: center;
   gap: 7px;
   font-size: 12px;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: 0.02em;
   padding: 3px 11px;
   border-radius: 999px;
@@ -2007,16 +2130,22 @@ select:focus {
   background: currentColor;
 }
 
-.seal-active {
+.seal-e3 {
   color: var(--green);
   background: var(--green-wash);
   border: 1px solid var(--green-border);
 }
 
-.seal-draft {
+.seal-e2 {
   color: var(--amber);
   background: var(--amber-wash);
   border: 1px solid var(--amber-border);
+}
+
+.seal-e1 {
+  color: var(--grey);
+  background: var(--grey-wash);
+  border: 1px solid var(--grey-border);
 }
 
 .seal-sm {
@@ -2076,12 +2205,12 @@ select:focus {
   right: 0;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(90deg, var(--iris), rgba(14, 138, 158, 0.5) 45%, transparent);
-  opacity: 0.45;
+  background: var(--line-strong);
 }
 
 .region-head h2 {
-  font-size: 23px;
+  font-size: 26px;
+  font-weight: 400;
 }
 
 .region-stat {
@@ -2091,7 +2220,7 @@ select:focus {
   border: 1px solid var(--iris-border);
   box-shadow: var(--shadow-1);
   font-size: 12.5px;
-  font-weight: 650;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
@@ -2112,17 +2241,26 @@ select:focus {
 
 .market-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  /* 340px keeps the longest account-type label ("Business Travel Account")
+     on one line next to its four dimension pairs. */
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  /* Row gap carries the extra clearance for the keycap wall, which is a
+     box-shadow and so occupies no layout box of its own. Putting it here
+     rather than in a card margin keeps the row's bottom edge — which the
+     expanded tab's translate is calibrated against — where it belongs. */
+  /* Both gaps clear the moulded wall, which now steps right as well as down
+     (9px at its deepest on hover) and casts no layout box of its own. */
+  column-gap: 24px;
+  row-gap: 26px;
 }
 
 .market-card {
   position: relative;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6)) 12%, #ffffff 65%);
+  background: var(--card);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
-  padding: 14px 16px 10px 20px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  padding: 16px 18px 12px 22px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -2131,24 +2269,37 @@ select:focus {
   transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
 }
 
-/* region accent rail — same hue as the region heading mark and API-view chips.
-   Collapsed cards only: the expanded "tab" reuses ::before/::after for its
-   shoulder fillets, and its solid wash already carries the region color. */
-.market-card:not(.expanded)::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--rg, transparent);
-  opacity: 0.75;
+/* The 3D treatment is scoped to collapsed cards. The expanded "tab" keeps its
+   1px border: the seam geometry below depends on that exact width, and its
+   ::before/::after are taken over by the shoulder fillets. */
+.market-card:not(.expanded) {
+  --card-accent: var(--rg, var(--iris));
+  /* No border: the wall's first 1px step already draws the edge. A border on
+     top of it reads as a second outline. */
+  border: 1px solid transparent;
+  /* The region hue tints the very top of the cap, where the light lands. */
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 9%, transparent) 0%, transparent 46%),
+    var(--key-face);
+  box-shadow: var(--key-shadow);
 }
 
-.market-card:hover {
-  box-shadow: var(--shadow-2);
-  transform: translateY(-2px);
-  border-color: var(--line-strong);
+.market-card:not(.expanded):hover {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 13%, transparent) 0%, transparent 46%),
+    var(--key-face-hover);
+  box-shadow: var(--key-shadow-hover);
+  transform: translate(-3px, -3px);
+}
+
+/* Travels exactly the distance the wall loses, so the cap bottoms out. */
+.market-card:not(.expanded):active {
+  box-shadow: var(--key-shadow-active);
+  transform: translate(4px, 4px);
+}
+
+.market-card {
+  transition: transform 0.11s ease, box-shadow 0.11s ease, background 0.11s ease;
 }
 
 /* Expanded card fuses with the detail panel below it: it becomes the "tab"
@@ -2157,20 +2308,23 @@ select:focus {
 .market-card.expanded {
   z-index: 1;
   overflow: visible;
-  background: color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6));
-  border-color: var(--rg-border, var(--iris-border));
-  /* bottom border matches the wash (not transparent): no corner-miter notch,
-     and it paints over the panel's top border inside the overlap */
-  border-bottom-color: color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6));
+  background: var(--card);
+  border-color: var(--key-w4);
+  /* bottom border matches the card face (not transparent): no corner-miter
+     notch, and it paints over the panel's top border inside the overlap */
+  border-bottom-color: var(--card);
   border-radius: 16px 16px 0 0;
-  /* same elevation as the panel so the merged silhouette has one uniform glow;
-     clipped just past the bottom edge so none of it spills onto the panel */
-  box-shadow: var(--shadow-2);
-  clip-path: inset(-64px -64px 0 -64px);
-  /* sink the tab a full row gap + 2px overlap with the panel: the panel keeps
-     the grid's normal 16px clearance from neighbouring cards and the seam
-     (panel top border) is fully buried under the tab */
-  transform: translateY(18px);
+  /* A wide shadow here smudges the panel either side of the join, because the
+     clip only stops it below the tab, not left and right. The tab and panel
+     are one shape, so a shallow lip is all it needs. */
+  box-shadow: 0 -1px 3px rgba(0, 23, 90, 0.07);
+  clip-path: inset(-64px -8px 0 -8px);
+  /* Sink the tab a full row gap + 2px overlap with the panel: the panel keeps
+     the grid's normal clearance from neighbouring cards and the seam (panel
+     top border) is fully buried under the tab.
+     Locked to .market-grid { row-gap } — change one and you must change the
+     other, or the overlap goes to zero and the seam shows. */
+  transform: translateY(28px);
 }
 
 /* Concave shoulder fillets: a quarter-arc of tab material that curves the
@@ -2193,9 +2347,9 @@ select:focus {
   --fillet: radial-gradient(
     circle at 0 0,
     transparent 10.5px,
-    var(--rg-border, var(--iris-border)) 11px,
-    var(--rg-border, var(--iris-border)) 12px,
-    color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6)) 12.5px
+    var(--key-w4) 11px,
+    var(--key-w4) 12px,
+    var(--card) 12.5px
   );
 }
 
@@ -2204,9 +2358,9 @@ select:focus {
   --fillet: radial-gradient(
     circle at 100% 0,
     transparent 10.5px,
-    var(--rg-border, var(--iris-border)) 11px,
-    var(--rg-border, var(--iris-border)) 12px,
-    color-mix(in srgb, var(--rg-wash, #eef4fc) 86%, var(--rg, #6b8fd6)) 12.5px
+    var(--key-w4) 11px,
+    var(--key-w4) 12px,
+    var(--card) 12.5px
   );
 }
 
@@ -2222,8 +2376,8 @@ select:focus {
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 9px;
-  background: linear-gradient(160deg, #fff, #e8eef8);
+  border-radius: 4px;
+  background: #fff;
   border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 #fff;
   flex: none;
@@ -2245,7 +2399,8 @@ select:focus {
 }
 
 .market-card h3 {
-  font-size: 15.5px;
+  font-size: 17px;
+  font-weight: 400;
   letter-spacing: 0.01em;
 }
 
@@ -2273,19 +2428,25 @@ select:focus {
   flex: none;
 }
 
-.dot-active {
+.dot-e3 {
   background: var(--green);
   box-shadow: 0 0 0 3px var(--green-wash);
 }
 
-.dot-draft {
+.dot-e2 {
   background: var(--amber-bright);
   box-shadow: 0 0 0 3px var(--amber-wash);
 }
 
+.dot-e1 {
+  background: var(--grey);
+  box-shadow: 0 0 0 3px var(--grey-wash);
+}
+
 .profile-row-name {
-  font-weight: 550;
-  font-size: 13px;
+  font-weight: 400;
+  font-size: 14.5px;
+  white-space: nowrap;
 }
 
 .profile-row-dims {
@@ -2301,9 +2462,10 @@ select:focus {
 }
 
 .card-open-hint {
-  font-size: 12.5px;
-  font-weight: 550;
-  color: var(--iris-deep);
+  display: inline-block;
+  color: var(--iris);
+  line-height: 0;
+  cursor: pointer;
 }
 
 /* tailless chevron drawn with borders — identical geometry in both states */
@@ -2338,11 +2500,14 @@ select:focus {
 
 .detail-panel {
   grid-column: 1 / -1;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--rg-wash, var(--iris-wash)) 86%, var(--rg, var(--iris))), transparent 130px),
-    var(--card);
-  border: 1px solid var(--rg-border, var(--iris-border));
-  border-radius: var(--radius);
+  background: var(--card);
+  /* Uniform 1px: the expanded tab overlaps the panel by exactly 2px and
+     paints its own 1px white bottom border over the seam. A thicker top
+     border here peeks out below the tab as a coloured sliver. */
+  border: 1px solid var(--key-w4);
+  /* Matches the tab's 16px so the tab-plus-panel silhouette reads as one
+     rounded shape rather than a rounded lid on a squarer box. */
+  border-radius: 16px;
   box-shadow: var(--shadow-2);
   padding: 22px 26px;
   animation: panel-in 0.2s ease;
@@ -2355,6 +2520,19 @@ select:focus {
 .market-grid .detail-panel {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+}
+
+/* …but a top corner the tab is NOT sitting on is free to round. The shoulder
+   flags already mark exactly that: shoulder-l means the panel extends past
+   the tab on the left, so its top-left corner is out in the open. Rounding a
+   corner the tab IS flush against would bite a notch out of the edge right
+   below it, which is why the rule above squares them by default. */
+.market-card.expanded.shoulder-l + .detail-panel {
+  border-top-left-radius: 16px;
+}
+
+.market-card.expanded.shoulder-r + .detail-panel {
+  border-top-right-radius: 16px;
 }
 
 .market-grid .detail-panel .detail-title {
@@ -2409,12 +2587,19 @@ select:focus {
   gap: 14px;
 }
 
+/* Same moulded language as the grid keycaps, one step shallower — these sit
+   inside a panel rather than on the page, so the wall is 3px not 6px. */
 .profile-card {
-  background: linear-gradient(165deg, #fbfcfe, #f0f5fc);
-  /* deeper, region-toned border so each account type reads as its own block */
-  border: 1.5px solid color-mix(in srgb, var(--rg-border, #cdd9e8) 65%, var(--rg, #8aa6c8));
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+  border: 1px solid color-mix(in srgb, var(--rg-border, #cdd9e8) 65%, var(--rg, #8aa6c8));
   border-radius: 10px;
   padding: 16px 20px;
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 3px 0 var(--key-w5),
+    4px 5px 8px rgba(0, 23, 90, 0.13),
+    inset 0 1px 0 #fff;
 }
 
 .profile-card-head {
@@ -2467,35 +2652,38 @@ select:focus {
 
 /* ---------- view toggle ---------- */
 
-.head-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
+/* Recessed track, raised active segment — the segment reads as sitting on
+   top of the groove rather than being a differently-coloured flat block. */
 .view-toggle {
   display: inline-flex;
-  background: var(--card);
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  padding: 3px;
+  gap: 2px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 23, 90, 0.09);
 }
 
 .view-toggle button {
   border: none;
   background: none;
   color: var(--muted);
-  font-size: 15px;
-  font-weight: 550;
-  padding: 7px 18px;
-  border-radius: 999px;
-  transition: background 0.15s ease, color 0.15s ease;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  padding: 7px 20px;
+  border-radius: 7px;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.view-toggle button:hover:not(.on) {
+  color: var(--iris);
 }
 
 .view-toggle button.on {
   background: var(--iris);
   color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 111, 207, 0.4);
+  box-shadow: 0 1px 2px rgba(0, 23, 90, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 /* ---------- API directory (API view) ---------- */
@@ -2530,7 +2718,7 @@ select:focus {
 .api-dir-row {
   position: relative;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   background: var(--card);
   padding: 14px 16px 14px 20px;
   box-shadow: var(--shadow-1);
@@ -2567,7 +2755,7 @@ select:focus {
 
 .api-dir-name {
   font-size: 16px;
-  font-weight: 550;
+  font-weight: 500;
   color: var(--ink);
 }
 
@@ -2619,10 +2807,8 @@ select:focus {
 /* ---------- world map ---------- */
 
 .map-panel {
-  background:
-    radial-gradient(700px 320px at 12% -10%, rgba(0, 111, 207, 0.3), transparent 65%),
-    radial-gradient(600px 300px at 90% -8%, rgba(14, 138, 158, 0.22), transparent 65%),
-    linear-gradient(165deg, var(--mast-1), var(--mast-2));
+  /* Stays dark — it is an ocean, not a decorative wash. */
+  background: var(--navy);
   border: 1px solid #1c3f6e;
   border-radius: var(--radius);
   box-shadow: var(--shadow-2);
@@ -2684,9 +2870,14 @@ select:focus {
   stroke: #6fcf9c;
 }
 
-.map-svg .country-draft {
+.map-svg .country-e2 {
   fill: #cfa227;
   stroke: #f0cd6e;
+}
+
+.map-svg .country-e1 {
+  fill: #6d737d;
+  stroke: #aab1bd;
 }
 
 .map-svg .country-available {
@@ -2727,9 +2918,14 @@ select:focus {
   stroke-dasharray: 2.4 1.6;
 }
 
-.marker-draft .marker-dot {
+.marker-e2 .marker-dot {
   fill: var(--amber-bright);
   stroke: #6b520e;
+}
+
+.marker-e1 .marker-dot {
+  fill: #aab1bd;
+  stroke: #4a5059;
 }
 
 .marker-available .marker-dot {
@@ -2756,12 +2952,12 @@ select:focus {
 .map-zoom button {
   width: 32px;
   height: 32px;
-  border-radius: 9px;
+  border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(0, 17, 46, 0.75);
   color: #d9eaf9;
   font-size: 16px;
-  font-weight: 550;
+  font-weight: 500;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -2807,7 +3003,7 @@ select:focus {
   transform: translate(-50%, calc(-100% - 14px));
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   box-shadow: var(--shadow-2);
   padding: 10px 14px;
   min-width: 230px;
@@ -2858,7 +3054,7 @@ select:focus {
 .map-tip-cta {
   margin-top: 8px;
   font-size: 12px;
-  font-weight: 550;
+  font-weight: 500;
   color: var(--iris-deep);
 }
 
@@ -2894,9 +3090,14 @@ select:focus {
   background: repeating-linear-gradient(45deg, #2fae6e 0 3px, #1e5a44 3px 6px);
 }
 
-.legend-draft {
+.legend-e2 {
   background: var(--amber-bright);
   border: 1px solid #b28a12;
+}
+
+.legend-e1 {
+  background: #6d737d;
+  border: 1px solid #aab1bd;
 }
 
 .legend-available {
@@ -2921,6 +3122,7 @@ select:focus {
   background: var(--card);
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
   padding: 70px 30px;
   display: flex;
   flex-direction: column;

@@ -4,8 +4,9 @@ import com.amex.billpay.onboarding.entity.MarketEntity
 import com.amex.billpay.onboarding.model.AccountType
 import com.amex.billpay.onboarding.model.CustomDimensionDef
 import com.amex.billpay.onboarding.model.CustomDimensionType
+import com.amex.billpay.onboarding.model.DimValue
 import com.amex.billpay.onboarding.model.Dimensions
-import com.amex.billpay.onboarding.model.LifecycleStatus
+import com.amex.billpay.onboarding.model.EnvStage
 import com.amex.billpay.onboarding.model.MarketDocument
 import com.amex.billpay.onboarding.model.MarketInfo
 import com.amex.billpay.onboarding.model.MarketProfile
@@ -39,19 +40,19 @@ class SeedData(private val service: MarketService) {
                 profiles = listOf(
                     MarketProfile(
                         accountType = AccountType.CONSUMER,
-                        status = LifecycleStatus.ACTIVE,
+                        status = EnvStage.E3,
                         apis = listOf(
                             "CreatePayment.v3", "UpdatePayment.v1", "DeletePayment.v1",
                             "ReadPayments.v1", "ReadPaymentEventsById.v1", "CreateCreditBalanceRefund.v1",
                             "CreateBillpayTransactionFromAccountsReceivable.v1",
                             "AccountsReceivableTransactionEventHandler.v1",
                         ),
-                        dimensions = Dimensions(requiresArPosting = true),
+                        dimensions = Dimensions(requiresArPosting = DimValue.Y),
                         customDimensions = mapOf("settlementWindow" to "T+1"),
                     ),
                     MarketProfile(
                         accountType = AccountType.CORPORATE,
-                        status = LifecycleStatus.ACTIVE,
+                        status = EnvStage.E3,
                         apis = listOf(
                             "CreatePayment.v3", "UpdatePayment.v1", "DeletePayment.v1",
                             "ReadPayments.v1", "ReadPaymentEventsById.v1",
@@ -59,7 +60,7 @@ class SeedData(private val service: MarketService) {
                             "CreateBillpayTransactionFromAccountsReceivable.v1",
                             "AccountsReceivableTransactionEventHandler.v1",
                         ),
-                        dimensions = Dimensions(requiresArPosting = true, requiresMandateAuthorization = true),
+                        dimensions = Dimensions(requiresArPosting = DimValue.Y, requiresMandateAuthorization = DimValue.Y),
                         customDimensions = mapOf("settlementWindow" to "T+0"),
                     ),
                 ),
@@ -72,13 +73,13 @@ class SeedData(private val service: MarketService) {
                 profiles = listOf(
                     MarketProfile(
                         accountType = AccountType.CONSUMER,
-                        status = LifecycleStatus.ACTIVE,
+                        status = EnvStage.E3,
                         apis = listOf(
                             "CreatePayment.v3", "UpdatePayment.v1", "DeletePayment.v1",
                             "ReadPayments.v1", "ReadPaymentEventsById.v1", "CreateCreditBalanceRefund.v1",
                             "CreatePaymentIntent.v1", "MoneyMovementEventHandler.v1",
                         ),
-                        dimensions = Dimensions(requiresRealtimeClearing = true),
+                        dimensions = Dimensions(requiresRealtimeClearing = DimValue.Y),
                     ),
                 ),
             )
@@ -90,7 +91,7 @@ class SeedData(private val service: MarketService) {
                 profiles = listOf(
                     MarketProfile(
                         accountType = AccountType.CONSUMER,
-                        status = LifecycleStatus.DRAFT,
+                        status = EnvStage.E2,
                         apis = listOf(
                             "CreatePayment.v3", "ReadPayments.v1", "ReadPaymentEventsById.v1",
                         ),

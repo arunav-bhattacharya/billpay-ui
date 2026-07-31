@@ -1,8 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
-import { CustomDimValueInput, ErrorNote, Flag, JsonView } from '../components'
-import { ACCOUNT_TYPE_LABELS, CATEGORY_LABELS, CATEGORY_ORDER, yn } from '../lib'
+import {
+  CustomDimValueInput,
+  dimOptions,
+  ErrorNote,
+  Flag,
+  JsonView,
+  TriToggle,
+} from '../components'
+import {
+  ACCOUNT_TYPE_LABELS,
+  CATEGORY_LABELS,
+  CATEGORY_ORDER,
+  chipClass,
+  DIM_LABELS,
+  isDimLocked,
+  setDimension,
+  yn,
+} from '../lib'
 import { DIMENSION_KEYS, EMPTY_DIMENSIONS } from '../types'
 import type {
   AccountType,
@@ -80,7 +96,7 @@ export function OnboardingPanel({
       case 1:
         return selectedApis.length > 0 ? `${selectedApis.length} APIs selected` : ''
       case 2: {
-        const on = DIMENSION_KEYS.filter((k) => dims[k])
+        const on = DIMENSION_KEYS.filter((k) => dims[k] !== 'N')
         const parts = [
           on.length === 0 ? 'no dimension flags' : `${on.length} flag${on.length > 1 ? 's' : ''} on`,
         ]
@@ -93,7 +109,7 @@ export function OnboardingPanel({
     }
   }
 
-  function buildDocument(activate: boolean): MarketDocument {
+  function buildDocument(): MarketDocument {
     // One profile per selected account type — all carry the same configuration.
     const customDimensions = Object.fromEntries(
       Object.entries(customValues).filter(
@@ -102,7 +118,8 @@ export function OnboardingPanel({
     )
     const profiles: MarketProfile[] = accountTypes.map((t) => ({
       accountType: t,
-      status: activate ? 'ACTIVE' : 'DRAFT',
+      // Everything starts in e1 and is promoted a stage at a time from the market card.
+      status: 'E1',
       apis: selectedApis,
       dimensions: dims,
       customDimensions,
@@ -121,17 +138,17 @@ export function OnboardingPanel({
         currency: selectedCurated?.currency ?? '',
         region: selectedCurated?.region ?? '',
       },
-      status: 'DRAFT',
+      status: 'E1',
       customDimensionDefs: allDefs,
       profiles,
     }
   }
 
-  async function save(activate: boolean) {
+  async function save() {
     setSaving(true)
     setSaveError(null)
     try {
-      const doc = buildDocument(activate)
+      const doc = buildDocument()
       if (existing) await api.updateMarket(existing.market.code, doc)
       else await api.createMarket(doc)
       await refreshMarkets()
@@ -223,7 +240,7 @@ export function OnboardingPanel({
                   )}
                   {i === 3 && (
                     <StepReview
-                      document={buildDocument(false)}
+                      document={buildDocument()}
                       accountTypes={accountTypes}
                       selectedApis={selectedApis}
                       dims={dims}
@@ -246,18 +263,9 @@ export function OnboardingPanel({
                         Continue
                       </button>
                     ) : (
-                      <>
-                        <button
-                          className="btn ghost draft"
-                          disabled={saving}
-                          onClick={() => save(false)}
-                        >
-                          Save as draft
-                        </button>
-                        <button className="btn primary" disabled={saving} onClick={() => save(true)}>
-                          {saving ? 'Saving…' : 'Save & activate'}
-                        </button>
-                      </>
+                      <button className="btn primary" disabled={saving} onClick={() => save()}>
+                        {saving ? 'Saving…' : 'Save to e1'}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -513,24 +521,31 @@ function StepDimensions({
       </p>
       <div className="dim-review">
         {catalog.dimensions.map((d) => {
-          const on = dims[d.key]
+          const v = dims[d.key]
+          const locked = isDimLocked(d.key, dims)
           return (
-            <div key={d.key} className={`dim-review-row ${on ? 'on' : ''}`}>
+            <div
+              key={d.key}
+              className={`dim-review-row ${v !== 'N' ? 'on' : ''} ${v === 'BOTH' ? 'both' : ''} ${
+                locked ? 'locked' : ''
+              }`}
+            >
               <div className="dim-review-main">
                 <div className="dim-name">
-                  {d.label} <span className="yn-mark">{yn(on)}</span>
+                  {d.label} <span className={`yn-mark ${v === 'BOTH' ? 'both' : ''}`}>{yn(v)}</span>
                 </div>
                 <p className="dim-desc">{d.description}</p>
+                {locked && (
+                  <p className="dim-lock-note">Locked to N while Realtime Clearing is Y.</p>
+                )}
               </div>
-              <button
-                className={`switch ${on ? 'on' : ''}`}
-                role="switch"
-                aria-checked={on}
-                aria-label={d.label}
-                onClick={() => setDims({ ...dims, [d.key]: !on })}
-              >
-                <span className="knob" />
-              </button>
+              <TriToggle
+                value={v}
+                options={dimOptions(d)}
+                locked={locked}
+                label={d.label}
+                onChange={(next) => setDims(setDimension(dims, d.key, next))}
+              />
             </div>
           )
         })}
@@ -713,8 +728,8 @@ function StepReview({
           <h4>Dimensions</h4>
           <div className="review-chips">
             {catalog.dimensions.map((d) => (
-              <span key={d.key} className={`chip ${dims[d.key] ? 'chip-yes' : 'chip-off'}`}>
-                {d.label}: {yn(dims[d.key])}
+              <span key={d.key} className={`chip ${chipClass(dims[d.key])}`}>
+                {d.label}: {DIM_LABELS[dims[d.key]]}
               </span>
             ))}
           </div>

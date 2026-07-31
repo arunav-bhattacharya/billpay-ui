@@ -3,7 +3,8 @@ package com.amex.billpay.onboarding.service
 import com.amex.billpay.onboarding.catalog.Catalog
 import com.amex.billpay.onboarding.entity.MarketEntity
 import com.amex.billpay.onboarding.model.AccountType
-import com.amex.billpay.onboarding.model.LifecycleStatus
+import com.amex.billpay.onboarding.model.DimValue
+import com.amex.billpay.onboarding.model.EnvStage
 import com.amex.billpay.onboarding.model.MarketConfig
 import com.amex.billpay.onboarding.model.MarketDocument
 import com.amex.billpay.onboarding.model.MarketInfo
@@ -38,9 +39,9 @@ class MarketService(private val objectMapper: ObjectMapper) {
         )
     }
 
-    private fun deriveStatus(profiles: List<MarketProfile>): LifecycleStatus =
-        if (profiles.any { it.status == LifecycleStatus.ACTIVE }) LifecycleStatus.ACTIVE
-        else LifecycleStatus.DRAFT
+    /** A market sits at the furthest environment any of its profiles has reached. */
+    private fun deriveStatus(profiles: List<MarketProfile>): EnvStage =
+        profiles.maxOfOrNull { it.status } ?: EnvStage.E1
 
     private fun writeConfig(document: MarketDocument): String =
         objectMapper.writeValueAsString(
@@ -105,15 +106,30 @@ class MarketService(private val objectMapper: ObjectMapper) {
         requireEntity(code).delete()
     }
 
+    /**
+     * Advance profiles one environment. With no [profileId] every profile that
+     * still has somewhere to go moves up a stage; profiles already at E3 are
+     * left alone, and the call only fails when nothing could be promoted.
+     */
     @Transactional
-    fun activate(code: String, profileId: String?): MarketDocument {
+    fun promote(code: String, profileId: String?): MarketDocument {
         val entity = requireEntity(code)
         val config = objectMapper.readValue(entity.configJson, MarketConfig::class.java)
-        if (profileId != null && config.profiles.none { it.id == profileId }) {
+        val targets = config.profiles.filter { profileId == null || it.id == profileId }
+        if (profileId != null && targets.isEmpty()) {
             throw WebApplicationException("Profile '$profileId' not found in market '$code'", Response.Status.NOT_FOUND)
         }
+        if (targets.none { it.status.next() != null }) {
+            throw WebApplicationException(
+                if (profileId != null) "Profile is already in ${EnvStage.E3}"
+                else "Every profile in '$code' is already in ${EnvStage.E3}",
+                Response.Status.CONFLICT,
+            )
+        }
         val profiles = config.profiles.map {
-            if (profileId == null || it.id == profileId) it.copy(status = LifecycleStatus.ACTIVE) else it
+            val target = profileId == null || it.id == profileId
+            val next = it.status.next()
+            if (target && next != null) it.copy(status = next) else it
         }
         entity.configJson = objectMapper.writeValueAsString(config.copy(profiles = profiles))
         entity.updatedAt = Instant.now()
@@ -158,10 +174,10 @@ class MarketService(private val objectMapper: ObjectMapper) {
                 Response.Status.BAD_REQUEST,
             )
         }
-        // Cloned profiles get fresh ids and start over as drafts.
+        // Cloned profiles get fresh ids and start over in e1.
         val cloned = config.copy(
             profiles = selected.map {
-                it.copy(id = UUID.randomUUID().toString(), status = LifecycleStatus.DRAFT)
+                it.copy(id = UUID.randomUUID().toString(), status = EnvStage.E1)
             }
         )
         val now = Instant.now()
@@ -206,6 +222,23 @@ class MarketService(private val objectMapper: ObjectMapper) {
             throw WebApplicationException(
                 "Duplicate profile for account type(s): ${duplicated.keys.joinToString()}", Response.Status.CONFLICT
             )
+        }
+        // Representable Return is strictly Y/N, and is only offered when clearing
+        // is not fully realtime. The UI enforces this too; this is the backstop.
+        document.profiles.forEach { p ->
+            val d = p.dimensions
+            if (d.requiresRepresentableReturn == DimValue.BOTH) {
+                throw WebApplicationException(
+                    "Representable Return must be Y or N, not BOTH (${p.accountType})",
+                    Response.Status.BAD_REQUEST,
+                )
+            }
+            if (d.requiresRealtimeClearing == DimValue.Y && d.requiresRepresentableReturn != DimValue.N) {
+                throw WebApplicationException(
+                    "Representable Return must be N when Realtime Clearing is Y (${p.accountType})",
+                    Response.Status.BAD_REQUEST,
+                )
+            }
         }
         val definedKeys = document.customDimensionDefs.map { it.key }.toSet()
         val undefinedUse = document.profiles.flatMap { it.customDimensions.keys }.filter { it !in definedKeys }

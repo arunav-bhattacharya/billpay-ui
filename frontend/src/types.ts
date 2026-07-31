@@ -1,5 +1,6 @@
-export type AccountType = 'CONSUMER' | 'CORPORATE' | 'SMALL_BUSINESS'
-export type LifecycleStatus = 'DRAFT' | 'ACTIVE'
+export type AccountType = 'CONSUMER' | 'CORPORATE' | 'BUSINESS_TRAVEL_ACCOUNT'
+/** Deployment environment. Strictly linear — promoted one stage at a time. */
+export type EnvStage = 'E1' | 'E2' | 'E3'
 export type CustomDimensionType = 'BOOLEAN' | 'ENUM' | 'TEXT'
 export type ApiCategory = 'CORE' | 'COMPOSITE' | 'EVENT_HANDLER'
 export type Role = 'OPERATOR' | 'ADMIN'
@@ -8,11 +9,17 @@ export type DimensionKey =
   | 'requiresArPosting'
   | 'requiresRealtimeClearing'
   | 'requiresMandateAuthorization'
+  | 'requiresRepresentableReturn'
+
+/** 'BOTH' = required for some flows but not others. */
+export type DimValue = 'Y' | 'N' | 'BOTH'
 
 export interface Dimensions {
-  requiresArPosting: boolean
-  requiresRealtimeClearing: boolean
-  requiresMandateAuthorization: boolean
+  requiresArPosting: DimValue
+  requiresRealtimeClearing: DimValue
+  requiresMandateAuthorization: DimValue
+  /** Only meaningful when realtime clearing is not 'Y'; never 'BOTH'. */
+  requiresRepresentableReturn: DimValue
 }
 
 export interface CustomDimensionDef {
@@ -26,7 +33,7 @@ export interface CustomDimensionDef {
 export interface MarketProfile {
   id?: string
   accountType: AccountType
-  status: LifecycleStatus
+  status: EnvStage
   apis: string[]
   dimensions: Dimensions
   customDimensions: Record<string, string>
@@ -42,7 +49,7 @@ export interface MarketInfo {
 
 export interface MarketDocument {
   market: MarketInfo
-  status: LifecycleStatus
+  status: EnvStage
   customDimensionDefs: CustomDimensionDef[]
   profiles: MarketProfile[]
   createdAt?: string
@@ -75,6 +82,8 @@ export interface DimensionMeta {
   key: DimensionKey
   label: string
   description: string
+  /** False for strictly Y/N dimensions — the control renders two segments. */
+  allowsBoth: boolean
 }
 
 export interface AccountTypeMeta {
@@ -94,10 +103,12 @@ export const DIMENSION_KEYS: DimensionKey[] = [
   'requiresArPosting',
   'requiresRealtimeClearing',
   'requiresMandateAuthorization',
+  'requiresRepresentableReturn',
 ]
 
 export const EMPTY_DIMENSIONS: Dimensions = {
-  requiresArPosting: false,
-  requiresRealtimeClearing: false,
-  requiresMandateAuthorization: false,
+  requiresArPosting: 'N',
+  requiresRealtimeClearing: 'N',
+  requiresMandateAuthorization: 'N',
+  requiresRepresentableReturn: 'N',
 }

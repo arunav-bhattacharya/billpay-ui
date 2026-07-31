@@ -6,28 +6,30 @@ import {
   CATEGORY_LABELS,
   CATEGORY_ORDER,
   DIMENSION_SHORT,
+  ENV_LABELS,
+  ENV_ORDER,
   REGION_NAMES,
   REGION_ORDER,
   yn,
 } from '../lib'
 import { DIMENSION_KEYS } from '../types'
-import type { MarketDocument } from '../types'
+import type { EnvStage, MarketDocument } from '../types'
 import { MarketDetailPanel } from './MarketDetailPanel'
 import { OnboardingPanel } from './OnboardingPanel'
 import { WorldMap } from './WorldMap'
 
 const VIEW_CAPTIONS: Record<'grid' | 'map' | 'apis', { label: string; text: string }> = {
   grid: {
-    label: 'Market View',
-    text: 'A list of all onboarded markets. Pick a card to view more details',
+    label: 'Grid View',
+    text: 'List of all onboarded markets.',
   },
   map: {
     label: 'World View',
-    text: 'Same story on a map. On a mission to turn the world green.',
+    text: 'Same story on the world map.',
   },
   apis: {
     label: 'API View',
-    text: 'Provides a view of all APIs and the markets onboarded on each.',
+    text: 'Mapping of APIs to the onboarded markets.',
   },
 }
 
@@ -39,8 +41,9 @@ export function Ledger() {
   const [view, setView] = useState<'grid' | 'map' | 'apis'>('grid')
   const mapDetailRef = useRef<HTMLDivElement>(null)
 
-  const activeMarkets = markets.filter((m) => m.status === 'ACTIVE')
-  const draftMarkets = markets.filter((m) => m.status === 'DRAFT')
+  // The hero speaks in plain terms: e3 is live, anything earlier is still in flight.
+  const activeMarkets = markets.filter((m) => m.status === 'E3')
+  const inProgressMarkets = markets.filter((m) => m.status !== 'E3')
   const availableMarkets = (catalog?.markets ?? []).filter(
     (cm) => !markets.some((m) => m.market.code === cm.code),
   )
@@ -54,6 +57,9 @@ export function Ledger() {
   }, [view, expanded])
 
   function openOnboarding(presetMarket: string | null) {
+    // Onboarding always happens against the grid, including when it was
+    // entered by clicking a country on the map.
+    setView('grid')
     setOnboarding({ presetMarket })
   }
 
@@ -64,8 +70,11 @@ export function Ledger() {
           <h1>Markets</h1>
           <StatusOverview
             active={activeMarkets.map((m) => ({ code: m.market.code, name: m.market.name }))}
-            draft={draftMarkets.map((m) => ({ code: m.market.code, name: m.market.name }))}
-            available={availableMarkets.map((m) => ({ code: m.code, name: m.name }))}
+            inProgress={inProgressMarkets.map((m) => ({
+              code: m.market.code,
+              name: m.market.name,
+            }))}
+            pending={availableMarkets.map((m) => ({ code: m.code, name: m.name }))}
           />
         </div>
         <div className="hero-right">
@@ -82,7 +91,7 @@ export function Ledger() {
           </div>
           {!onboarding && (
             <button className="btn primary lg" onClick={() => openOnboarding(null)}>
-              Onboard market
+              Onboard
             </button>
           )}
         </div>
@@ -129,9 +138,9 @@ export function Ledger() {
       ) : markets.length === 0 ? (
         <div className="empty-state">
           <h2>No markets yet</h2>
-          <p>Onboard the first market to open the ledger.</p>
+          <p>Onboard the first market in Billpay</p>
           <button className="btn primary" onClick={() => openOnboarding(null)}>
-            Onboard market
+            Onboard
           </button>
         </div>
       ) : (
@@ -143,11 +152,8 @@ export function Ledger() {
                 <span className="region-mark" aria-hidden="true" />
                 <h2>{REGION_NAMES[region] ?? region}</h2>
                 <span className="region-stat">
-                  <span className="rs-seg rs-onb">
-                    {regionMarkets.length} onboarded
-                  </span>
                   <span className="rs-seg rs-act">
-                    {regionMarkets.filter((m) => m.status === 'ACTIVE').length} active
+                    {regionMarkets.filter((m) => m.status === 'E3').length} in e3
                   </span>
                 </span>
               </div>
@@ -183,24 +189,26 @@ interface MarketRef {
   name: string
 }
 
-/** Circular progress: active / draft / yet-to-onboard shares of the Amex market list.
+/** Circular progress over the Amex market list. The hero rolls the three
+ *  environments up into a plainer story than the per-market seals do:
+ *  e3 is active, e1/e2 are in progress, everything else is pending.
  *  Hovering a legend row reveals which countries are in that state. */
 function StatusOverview({
   active,
-  draft,
-  available,
+  inProgress,
+  pending,
 }: {
   active: MarketRef[]
-  draft: MarketRef[]
-  available: MarketRef[]
+  inProgress: MarketRef[]
+  pending: MarketRef[]
 }) {
-  const total = active.length + draft.length + available.length || 1
+  const total = active.length + inProgress.length + pending.length || 1
   const R = 30
   const C = 2 * Math.PI * R
   const segments = [
     { n: active.length, cls: 'seg-active' },
-    { n: draft.length, cls: 'seg-draft' },
-    { n: available.length, cls: 'seg-off' },
+    { n: inProgress.length, cls: 'seg-progress' },
+    { n: pending.length, cls: 'seg-off' },
   ].filter((s) => s.n > 0)
   const gap = segments.length > 1 ? 2.5 : 0
 
@@ -218,14 +226,14 @@ function StatusOverview({
 
   const rows: { dot: string; count: number; label: string; list: MarketRef[] }[] = [
     { dot: 'ldot-active', count: active.length, label: 'active', list: active },
-    { dot: 'ldot-draft', count: draft.length, label: 'draft', list: draft },
-    { dot: 'ldot-off', count: available.length, label: 'pending', list: available },
+    { dot: 'ldot-progress', count: inProgress.length, label: 'in progress', list: inProgress },
+    { dot: 'ldot-off', count: pending.length, label: 'pending', list: pending },
   ]
 
   return (
     <div
       className="status-overview"
-      aria-label={`${active.length} active, ${draft.length} draft, ${available.length} pending`}
+      aria-label={`${active.length} active, ${inProgress.length} in progress, ${pending.length} pending`}
     >
       <svg viewBox="0 0 80 80" className="donut" aria-hidden="true">
         <circle className="donut-track" cx="40" cy="40" r={R} />
@@ -308,17 +316,24 @@ function MarketCard({
       <div className="profile-rows">
         {market.profiles.map((p) => (
           <div key={p.accountType} className="profile-row">
-            <i className={`dot ${p.status === 'ACTIVE' ? 'dot-active' : 'dot-draft'}`} aria-hidden="true" />
+            <i className={`dot dot-${p.status.toLowerCase()}`} aria-hidden="true" />
             <span className="profile-row-name">{ACCOUNT_TYPE_LABELS[p.accountType]}</span>
             <span className="profile-row-dims mono-tag">
-              {DIMENSION_KEYS.map((k) => `${DIMENSION_SHORT[k]}:${yn(p.dimensions[k])}`).join('  ')}
+              {/* four pairs now, so single-space them to stay inside a 280px card */}
+              {DIMENSION_KEYS.map((k) => `${DIMENSION_SHORT[k]}:${yn(p.dimensions[k])}`).join(' ')}
             </span>
           </div>
         ))}
       </div>
 
       <div className="market-card-foot">
-        <span className="card-open-hint">{expanded ? 'Collapse' : 'Details'}</span>
+        {/* The chevron alone carries the state — it points down to expand,
+            up to collapse, so the words were saying it twice. */}
+        <span
+          className="card-open-hint"
+          role="button"
+          aria-label={expanded ? 'Collapse details' : 'Show details'}
+        />
       </div>
     </article>
   )
@@ -347,9 +362,13 @@ function ApiDirectory() {
                   .map((m) => {
                     const profiles = m.profiles.filter((p) => p.apis.includes(api.name))
                     if (profiles.length === 0) return null
-                    return { m, active: profiles.some((p) => p.status === 'ACTIVE') }
+                    // The furthest environment this API has reached in this market.
+                    const env = profiles
+                      .map((p) => p.status)
+                      .reduce((a, b) => (ENV_ORDER.indexOf(b) > ENV_ORDER.indexOf(a) ? b : a))
+                    return { m, env }
                   })
-                  .filter((x): x is { m: MarketDocument; active: boolean } => x !== null)
+                  .filter((x): x is { m: MarketDocument; env: EnvStage } => x !== null)
                   // group by region (AMER → EMEA → APAC), then by code
                   .sort((a, b) => {
                     const r =
@@ -368,13 +387,13 @@ function ApiDirectory() {
                     <p className="api-dir-summary">{api.summary}</p>
                     {users.length > 0 ? (
                       <div className="api-dir-markets">
-                        {users.map(({ m, active }) => (
+                        {users.map(({ m, env }) => (
                           <span
                             key={m.market.code}
-                            className={`api-mkt-chip region-${m.market.region.toLowerCase()} ${active ? 'active' : 'draft'}`}
-                            title={`${m.market.name} (${m.market.region}) — ${active ? 'active' : 'draft'}`}
+                            className={`api-mkt-chip region-${m.market.region.toLowerCase()} ${env === 'E3' ? 'active' : 'draft'}`}
+                            title={`${m.market.name} (${m.market.region}) — ${ENV_LABELS[env]}`}
                           >
-                            <i className={`dot ${active ? 'dot-active' : 'dot-draft'}`} aria-hidden="true" />
+                            <i className={`dot dot-${env.toLowerCase()}`} aria-hidden="true" />
                             <Flag code={m.market.code} size={15} />
                             {m.market.code}
                           </span>

@@ -46,17 +46,19 @@ const H = 500
 const MIN_K = 1
 const MAX_K = 8
 /**
- * Map coloring encodes onboarding completeness:
- *  full    — active market, all supported account types onboarded → solid green
- *  partial — active market, some account types onboarded          → striped green
- *  draft   — onboarded but nothing active yet                     → grey
- *  available — Amex market not onboarded                          → muted grey, clickable
+ * Map coloring encodes environment reached, then onboarding completeness:
+ *  full    — in e3, all supported account types onboarded → solid green
+ *  partial — in e3, some account types onboarded          → striped green
+ *  e2      — onboarded, furthest profile is in e2         → amber
+ *  e1      — onboarded, still entirely in e1              → grey
+ *  available — Amex market not onboarded                  → muted grey, clickable
  */
-type MarketState = 'full' | 'partial' | 'draft' | 'available'
+type MarketState = 'full' | 'partial' | 'e2' | 'e1' | 'available'
 
 function stateOf(doc: MarketDocument | undefined, supportedTypes: number): MarketState {
   if (!doc) return 'available'
-  if (doc.status === 'DRAFT') return 'draft'
+  if (doc.status === 'E1') return 'e1'
+  if (doc.status === 'E2') return 'e2'
   return doc.profiles.length >= supportedTypes ? 'full' : 'partial'
 }
 
@@ -288,7 +290,9 @@ export function WorldMap({
                   transform={`translate(${pos[0]}, ${pos[1]}) scale(${1 / t.k})`}
                   tabIndex={0}
                   role="button"
-                  aria-label={`${cm.name} — ${state === 'available' ? 'pending' : state}`}
+                  aria-label={`${cm.name} — ${
+                    state === 'available' ? 'pending' : state === 'e1' || state === 'e2' ? `in ${state}` : state
+                  }`}
                   onMouseMove={(e) => moveTooltip(e, cm)}
                   onMouseLeave={() => setHover(null)}
                   onFocus={(e) => {
@@ -358,7 +362,7 @@ export function WorldMap({
                   {hover.doc.profiles.map((p) => (
                     <div key={p.accountType} className="map-tip-row">
                       <i
-                        className={`dot ${p.status === 'ACTIVE' ? 'dot-active' : 'dot-draft'}`}
+                        className={`dot dot-${p.status.toLowerCase()}`}
                         aria-hidden="true"
                       />
                       <span>{ACCOUNT_TYPE_LABELS[p.accountType]}</span>
@@ -387,7 +391,10 @@ export function WorldMap({
           <i className="legend-dot legend-partial" /> Partially onboarded
         </span>
         <span>
-          <i className="legend-dot legend-draft" /> Draft
+          <i className="legend-dot legend-e2" /> In e2
+        </span>
+        <span>
+          <i className="legend-dot legend-e1" /> In e1
         </span>
         <span>
           <i className="legend-dot legend-available" /> Pending

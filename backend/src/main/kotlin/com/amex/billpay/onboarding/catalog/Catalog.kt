@@ -32,13 +32,15 @@ data class CuratedMarket(
     val region: String,
     /** Account types this market supports. Defaults to all three. */
     val allowedAccountTypes: List<AccountType> =
-        listOf(AccountType.CONSUMER, AccountType.CORPORATE, AccountType.SMALL_BUSINESS),
+        listOf(AccountType.CONSUMER, AccountType.CORPORATE, AccountType.BUSINESS_TRAVEL_ACCOUNT),
 )
 
 data class DimensionMeta(
     val key: String,
     val label: String,
     val description: String,
+    /** False for dimensions that are strictly Y/N — the UI renders a 2-way control. */
+    val allowsBoth: Boolean = true,
 )
 
 data class AccountTypeMeta(
@@ -220,11 +222,18 @@ object Catalog {
             label = "Mandate Authorization",
             description = "Standing payment authorizations require verification during processing.",
         ),
+        DimensionMeta(
+            key = "requiresRepresentableReturn",
+            label = "Representable Return",
+            description = "A returned payment may be re-presented to the customer's bank instead " +
+                "of being written off. Only available when clearing is not fully realtime.",
+            allowsBoth = false,
+        ),
     )
 
     val accountTypes: List<AccountTypeMeta> = listOf(
         AccountTypeMeta("CONSUMER", "Consumer", "Personal card accounts — the highest-volume segment."),
         AccountTypeMeta("CORPORATE", "Corporate", "Corporate card programs — the primary split-payment scenario; shapes more of the processing than any other dimension."),
-        AccountTypeMeta("SMALL_BUSINESS", "Small Business", "Small-business card accounts blending consumer-like servicing with business controls."),
+        AccountTypeMeta("BUSINESS_TRAVEL_ACCOUNT", "Business Travel Account", "Centrally billed accounts that settle a company's travel spend without a card per traveller."),
     )
 }

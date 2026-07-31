@@ -43,16 +43,16 @@ class MarketResource(private val service: MarketService) {
     }
 
     @POST
-    @Path("/{code}/activate")
-    fun activateAll(@PathParam("code") code: String): MarketDocument =
-        service.activate(code, null)
+    @Path("/{code}/promote")
+    fun promoteAll(@PathParam("code") code: String): MarketDocument =
+        service.promote(code, null)
 
     @POST
-    @Path("/{code}/profiles/{profileId}/activate")
-    fun activateProfile(
+    @Path("/{code}/profiles/{profileId}/promote")
+    fun promoteProfile(
         @PathParam("code") code: String,
         @PathParam("profileId") profileId: String,
-    ): MarketDocument = service.activate(code, profileId)
+    ): MarketDocument = service.promote(code, profileId)
 
     @DELETE
     @Path("/{code}/profiles/{profileId}")

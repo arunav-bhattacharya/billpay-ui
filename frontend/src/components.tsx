@@ -3,8 +3,14 @@ import type { ReactNode } from 'react'
 import { api } from './api'
 import { useApp } from './AppContext'
 import amexLogo from './assets/amex.svg'
-import { ACCOUNT_TYPE_LABELS, flagEmoji } from './lib'
-import type { AccountType, CustomDimensionDef, LifecycleStatus, MarketDocument } from './types'
+import { ACCOUNT_TYPE_LABELS, DIM_LABELS, ENV_LABELS, flagEmoji } from './lib'
+import type {
+  AccountType,
+  CustomDimensionDef,
+  DimValue,
+  EnvStage,
+  MarketDocument,
+} from './types'
 
 /* ---------- Masthead ---------- */
 
@@ -15,8 +21,9 @@ export function Masthead() {
       <div className="masthead-inner">
         <div className="brand">
           <img src={amexLogo} alt="American Express" className="brand-logo" />
+          <span className="brand-rule" aria-hidden="true" />
           <span className="brand-name">
-            Billpay
+            <span className="brand-title">Billpay</span>
             <span className="brand-sub">Market Onboarding</span>
           </span>
         </div>
@@ -38,14 +45,13 @@ export function Masthead() {
   )
 }
 
-/* ---------- Status pill: active = green, draft = grey ---------- */
+/* ---------- Environment pill: e3 = green, e2 = amber, e1 = grey ---------- */
 
-export function StatusSeal({ status, small }: { status: LifecycleStatus; small?: boolean }) {
-  const active = status === 'ACTIVE'
+export function StatusSeal({ status, small }: { status: EnvStage; small?: boolean }) {
   return (
-    <span className={`seal ${active ? 'seal-active' : 'seal-draft'} ${small ? 'seal-sm' : ''}`}>
+    <span className={`seal seal-${status.toLowerCase()} ${small ? 'seal-sm' : ''}`}>
       <i className="seal-dot" aria-hidden="true" />
-      {active ? 'Active' : 'Draft'}
+      {ENV_LABELS[status]}
     </span>
   )
 }
@@ -60,8 +66,23 @@ export function Flag({ code, size = 22 }: { code: string; size?: number }) {
   )
 }
 
-export function Eyebrow({ children }: { children: ReactNode }) {
-  return <div className="eyebrow">{children}</div>
+/* ---------- Shared icons ---------- */
+
+export function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  )
+}
+
+export function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  )
 }
 
 export function ErrorNote({ message }: { message: string | null }) {
@@ -119,6 +140,55 @@ export function Modal({
       </div>
     </div>
   )
+}
+
+/* ---------- Dimension value control (wizard + profile editor) ----------
+
+   Shared so the two edit surfaces cannot drift. Width follows the segment
+   count, so the strictly-Y/N dimensions degrade to two segments with no
+   separate component and no conditional markup. */
+
+export function TriToggle({
+  value,
+  options,
+  locked,
+  small,
+  label,
+  onChange,
+}: {
+  value: DimValue
+  options: DimValue[]
+  locked?: boolean
+  small?: boolean
+  label: string
+  onChange: (v: DimValue) => void
+}) {
+  return (
+    <div
+      className={`tri ${small ? 'tri-sm' : ''} ${locked ? 'locked' : ''}`}
+      role="radiogroup"
+      aria-label={label}
+    >
+      {options.map((o) => (
+        <button
+          key={o}
+          type="button"
+          role="radio"
+          aria-checked={value === o}
+          disabled={locked}
+          className={`tri-opt ${value === o ? 'on' : ''}`}
+          onClick={() => onChange(o)}
+        >
+          {DIM_LABELS[o]}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Segment set for a dimension, from its catalog metadata. */
+export function dimOptions(meta: { allowsBoth?: boolean }): DimValue[] {
+  return meta.allowsBoth === false ? ['Y', 'N'] : ['Y', 'N', 'BOTH']
 }
 
 /* ---------- Custom dimension value input (wizard + detail panel) ---------- */
@@ -189,14 +259,29 @@ export function JsonView({ data, filename }: { data: unknown; filename: string }
   const [copied, setCopied] = useState(false)
 
   async function copy() {
-    await navigator.clipboard.writeText(json)
+    // The async clipboard API is unavailable outside secure contexts and can
+    // be denied outright; without a fallback it rejects and the button never
+    // acknowledges the click.
+    try {
+      await navigator.clipboard.writeText(json)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = json
+      ta.setAttribute('readonly', '')
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      ta.remove()
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 1600)
   }
 
   return (
     <details className="json-view">
-      <summary>Market JSON document</summary>
+      <summary>Market JSON</summary>
       <div className="json-block">
         <div className="json-head">
           <span className="json-dots" aria-hidden="true">
@@ -204,8 +289,13 @@ export function JsonView({ data, filename }: { data: unknown; filename: string }
           </span>
           <span className="json-name">{filename}</span>
           <span className="json-meta">{json.split('\n').length} lines</span>
-          <button className="json-copy" onClick={copy}>
-            {copied ? '✓ Copied' : 'Copy'}
+          <button
+            className={`json-copy ${copied ? 'copied' : ''}`}
+            onClick={copy}
+            aria-label={copied ? 'Copied' : 'Copy JSON'}
+            title={copied ? 'Copied' : 'Copy JSON'}
+          >
+            {copied ? <CheckIcon /> : <CopyIcon />}
           </button>
         </div>
         <pre dangerouslySetInnerHTML={{ __html: html }} />
