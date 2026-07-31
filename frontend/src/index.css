@@ -99,9 +99,9 @@
      capped by an inset top highlight. Pressing it shortens the wall by the
      same distance the cap travels, so the key bottoms out instead of sliding. */
   --key-face:
-    radial-gradient(120% 100% at 50% 0%, #ffffff 0%, #fdfdfd 58%, #f4f4f4 100%);
+    radial-gradient(120% 100% at 50% 0%, #ffffff 0%, #ffffff 62%, #fafafa 100%);
   --key-face-hover:
-    radial-gradient(120% 100% at 50% 0%, #ffffff 0%, #ffffff 58%, #f8f8f8 100%);
+    radial-gradient(120% 100% at 50% 0%, #ffffff 0%, #ffffff 70%, #fdfdfd 100%);
   /* Moulded wall, stepping down the neutral axis to match the canvas. */
   --key-w1: #efefef;
   --key-w2: #e8e8e8;
@@ -165,33 +165,7 @@ html {
 
 body {
   margin: 0;
-  /* The World Service background from global.americanexpress.com/overview:
-     a 320x305 line-art tile banded across the top (repeat-x, drawn at
-     378x361) with a white-to-canvas fade pulling it out of the way by the
-     halfway mark. Fixed, so it stays put as the page scrolls. */
   background-color: var(--bg);
-  /* The veil sits over the engraving across the whole page. It stays partly
-     transparent all the way down — full coverage — but heavy enough that the
-     pattern reads as paper texture behind the content, not as artwork. */
-  /* The veil is thinnest at the top (engraving reads strongest there), heavier
-     through the middle, and nearly opaque at the bottom so the pattern fades
-     out under the footer. */
-  background-image:
-    linear-gradient(
-      180deg,
-      rgba(244, 244, 244, 0.12) 0%,
-      rgba(244, 244, 244, 0.52) 34%,
-      rgba(244, 244, 244, 0.74) 62%,
-      rgba(244, 244, 244, 0.97) 100%
-    ),
-    url('./assets/worldservice-tile-gray.svg');
-  /* Amex bands this repeat-x across the top only; here it tiles both ways
-     and the fade is pushed most of the way down, so the engraving carries
-     through the whole viewport instead of just the masthead strip. */
-  background-size: 100% 100%, 460px 439px;
-  background-repeat: no-repeat, repeat;
-  background-position: 0 0;
-  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
@@ -201,6 +175,47 @@ body {
   letter-spacing: normal;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* ---- World Service engraving ----
+   From global.americanexpress.com/overview. It lives on a pseudo-element
+   rather than as a body background so it can be blended: the tile's line art
+   is #C8C9C7 at 30% over a near-white base, which is too faint to read once
+   it sits on the canvas. `multiply` darkens the strokes against the page
+   while leaving the near-white ground almost untouched, and two stacked
+   copies square that effect on the lines only.
+
+   A mask, not a veil gradient, controls the falloff — masking removes the
+   layer entirely toward the bottom, where a translucent overlay would still
+   be lightening the canvas. Fixed, so it holds still as the page scrolls. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    url('./assets/worldservice-tile-gray.svg'),
+    url('./assets/worldservice-tile-gray.svg');
+  background-size: 460px 439px, 460px 439px;
+  background-repeat: repeat, repeat;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 38%,
+    rgba(0, 0, 0, 0.55) 62%,
+    rgba(0, 0, 0, 0.18) 84%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 38%,
+    rgba(0, 0, 0, 0.55) 62%,
+    rgba(0, 0, 0, 0.18) 84%,
+    rgba(0, 0, 0, 0) 100%
+  );
 }
 
 h1,
@@ -1313,28 +1328,29 @@ select:focus {
   margin-left: auto;
 }
 
+/* Gap clears the moulded wall, which is a box-shadow and occupies no layout
+   box of its own — same reasoning as .market-grid's row-gap. */
 .api-cards {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 22px;
 }
 
 /* The category hue used to be a 3px rail down the left edge. It now lights the
    bottom-right corner as a gradient border and bleeds a little way into the
    face, so the colour belongs to the card rather than sitting beside it. */
+/* Same keycap as the market cards: moulded wall stepping right and down,
+   contact shadow, top gloss, and a whisper of the accent where light lands. */
 .api-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  /* Plain hairline during selection — the gradient edge competed with the
-     checkbox and the selected state for attention. */
-  border: 1px solid var(--key-w3);
-  border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
-  box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 4px 7px rgba(0, 23, 90, 0.12);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cat, var(--iris)) 4%, transparent) 0%, transparent 40%),
+    var(--key-face);
+  box-shadow: var(--key-shadow);
   transition: box-shadow 0.14s ease, transform 0.14s ease, background 0.14s ease;
 }
 
@@ -1354,18 +1370,21 @@ select:focus {
 }
 
 .api-card:hover {
-  box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 3px 0 var(--key-w5),
-    5px 7px 14px rgba(0, 23, 90, 0.16);
-  transform: translate(-1px, -1px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cat, var(--iris)) 6%, transparent) 0%, transparent 40%),
+    var(--key-face-hover);
+  box-shadow: var(--key-shadow-hover);
+  transform: translate(-3px, -3px);
+}
+
+.api-card:active {
+  box-shadow: var(--key-shadow-active);
+  transform: translate(4px, 4px);
 }
 
 .api-card.sel {
   border-color: var(--iris);
-  background: #fcfcff;
-  box-shadow: 0 0 0 3px var(--iris-wash);
+  box-shadow: 0 0 0 3px var(--iris-wash), var(--key-shadow);
 }
 
 .api-card.sel::before {
@@ -1471,7 +1490,7 @@ select:focus {
   background: var(--surface-alt);
   /* Card radius minus its 1px border, so the body cannot square off the
      card's bottom corners. */
-  border-radius: 0 0 13px 13px;
+  border-radius: 0 0 15px 15px;
 }
 
 .api-detail-desc {
@@ -2289,8 +2308,8 @@ select:focus {
   display: inline-flex;
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid var(--iris-border);
-  box-shadow: var(--shadow-1);
+  border: none;
+  box-shadow: 0 1px 2px rgba(0, 40, 24, 0.22);
   font-size: 12.5px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -2300,15 +2319,10 @@ select:focus {
   padding: 4px 14px;
 }
 
-.rs-onb {
-  background: var(--iris-wash);
-  color: var(--iris-deep);
-}
-
 .rs-act {
-  background: var(--green-wash);
-  color: var(--green);
-  border-left: 1px solid var(--green-border);
+  background: #04653f;
+  color: #ffffff;
+  border-left: none;
 }
 
 .market-grid {
@@ -2349,16 +2363,17 @@ select:focus {
   /* No border: the wall's first 1px step already draws the edge. A border on
      top of it reads as a second outline. */
   border: 1px solid transparent;
-  /* The region hue tints the very top of the cap, where the light lands. */
+  /* A whisper of the accent where the light lands. Any heavier and it greys
+     the top of the cap — the face is meant to read as white. */
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 9%, transparent) 0%, transparent 46%),
+    linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 4%, transparent) 0%, transparent 40%),
     var(--key-face);
   box-shadow: var(--key-shadow);
 }
 
 .market-card:not(.expanded):hover {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 13%, transparent) 0%, transparent 46%),
+    linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 6%, transparent) 0%, transparent 40%),
     var(--key-face-hover);
   box-shadow: var(--key-shadow-hover);
   transform: translate(-3px, -3px);
@@ -2821,40 +2836,32 @@ select:focus {
 .api-dir-rows {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 22px;
 }
 
 .api-dir-row {
   position: relative;
-  border: 2px solid transparent;
-  border-radius: 14px;
-  padding: 14px 18px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  padding: 16px 20px;
   background:
-    radial-gradient(80% 62% at 100% 100%, color-mix(in srgb, var(--cat, var(--iris)) 11%, transparent), transparent 68%)
-      padding-box,
-    linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%) padding-box,
-    linear-gradient(
-        315deg,
-        color-mix(in srgb, var(--cat, var(--iris)) 62%, #fff) 0%,
-        var(--cat, var(--iris)) 9%,
-        color-mix(in srgb, var(--cat, var(--iris)) 30%, transparent) 22%,
-        color-mix(in srgb, var(--cat, var(--iris)) 3%, transparent) 38%
-      )
-      border-box;
-  box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 4px 7px rgba(0, 23, 90, 0.12);
-  transition: box-shadow 0.14s ease, transform 0.14s ease;
+    linear-gradient(180deg, color-mix(in srgb, var(--cat, var(--iris)) 4%, transparent) 0%, transparent 40%),
+    var(--key-face);
+  box-shadow: var(--key-shadow);
+  transition: box-shadow 0.14s ease, transform 0.14s ease, background 0.14s ease;
 }
 
 .api-dir-row:hover {
-  box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 3px 0 var(--key-w5),
-    5px 7px 14px rgba(0, 23, 90, 0.16);
-  transform: translate(-1px, -1px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cat, var(--iris)) 6%, transparent) 0%, transparent 40%),
+    var(--key-face-hover);
+  box-shadow: var(--key-shadow-hover);
+  transform: translate(-3px, -3px);
+}
+
+.api-dir-row:active {
+  box-shadow: var(--key-shadow-active);
+  transform: translate(4px, 4px);
 }
 
 .api-dir-head {
@@ -2886,7 +2893,7 @@ select:focus {
 
 .api-dir-row .api-detail-body {
   margin: 12px -18px -14px;
-  border-radius: 0 0 13px 13px;
+  border-radius: 0 0 15px 15px;
 }
 
 .api-dir-name {

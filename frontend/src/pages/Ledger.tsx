@@ -361,10 +361,7 @@ function ApiDirectory() {
         if (apis.length === 0) return null
         return (
           <section key={cat} className="api-dir-category">
-            <h4 className={`api-cat-head cat-${cat.toLowerCase()}`}>
-              {CATEGORY_LABELS[cat]}
-              <span className="api-cat-count">{apis.length}</span>
-            </h4>
+            <h4 className={`api-cat-head cat-${cat.toLowerCase()}`}>{CATEGORY_LABELS[cat]}</h4>
             <div className="api-dir-rows">
               {apis.map((api) => {
                 const users = markets
