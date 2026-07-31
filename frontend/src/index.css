@@ -1328,29 +1328,28 @@ select:focus {
   margin-left: auto;
 }
 
-/* Gap clears the moulded wall, which is a box-shadow and occupies no layout
-   box of its own — same reasoning as .market-grid's row-gap. */
 .api-cards {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 8px;
 }
 
 /* The category hue used to be a 3px rail down the left edge. It now lights the
    bottom-right corner as a gradient border and bleeds a little way into the
    face, so the colour belongs to the card rather than sitting beside it. */
-/* Same keycap as the market cards: moulded wall stepping right and down,
-   contact shadow, top gloss, and a whisper of the accent where light lands. */
 .api-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  border: 1px solid transparent;
-  border-radius: 16px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cat, var(--iris)) 4%, transparent) 0%, transparent 40%),
-    var(--key-face);
-  box-shadow: var(--key-shadow);
+  /* Plain hairline during selection — the gradient edge competed with the
+     checkbox and the selected state for attention. */
+  border: 1px solid var(--key-w3);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 4px 7px rgba(0, 23, 90, 0.12);
   transition: box-shadow 0.14s ease, transform 0.14s ease, background 0.14s ease;
 }
 
@@ -1370,21 +1369,18 @@ select:focus {
 }
 
 .api-card:hover {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cat, var(--iris)) 6%, transparent) 0%, transparent 40%),
-    var(--key-face-hover);
-  box-shadow: var(--key-shadow-hover);
-  transform: translate(-3px, -3px);
-}
-
-.api-card:active {
-  box-shadow: var(--key-shadow-active);
-  transform: translate(4px, 4px);
+  box-shadow:
+    1px 1px 0 var(--key-w1),
+    2px 2px 0 var(--key-w3),
+    3px 3px 0 var(--key-w5),
+    5px 7px 14px rgba(0, 23, 90, 0.16);
+  transform: translate(-1px, -1px);
 }
 
 .api-card.sel {
   border-color: var(--iris);
-  box-shadow: 0 0 0 3px var(--iris-wash), var(--key-shadow);
+  background: #fcfcff;
+  box-shadow: 0 0 0 3px var(--iris-wash);
 }
 
 .api-card.sel::before {
@@ -1490,7 +1486,7 @@ select:focus {
   background: var(--surface-alt);
   /* Card radius minus its 1px border, so the body cannot square off the
      card's bottom corners. */
-  border-radius: 0 0 15px 15px;
+  border-radius: 0 0 13px 13px;
 }
 
 .api-detail-desc {
