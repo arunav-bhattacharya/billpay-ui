@@ -78,77 +78,45 @@
 
   /* Benton Sans everywhere. The system fallback is load-bearing, not
      decoration: the shipped faces cover ASCII and Latin-1 but have no
-     glyphs for → ✓ ✕ ▾ ↗ ⌂, which the UI uses. Do not reduce this to
-     'Benton Sans', sans-serif. */
+     glyphs for ↗ ⌂ ⋯ − , which the UI still prints as text. Do not reduce
+     this to 'Benton Sans', sans-serif.
+     Check marks and chevrons are drawn — as SVG and as borders — precisely
+     because falling through to a system face made them match nothing. */
   --font-display: 'Benton Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-body: 'Benton Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, 'Menlo', monospace;
 
-  /* Navy-tinted and tighter than the old violet shadows. With the
-     gradients gone these carry the depth on their own. */
-  --shadow-1: 0 1px 2px rgba(0, 23, 90, 0.06), 0 2px 8px rgba(0, 23, 90, 0.1);
-  --shadow-2: 0 2px 4px rgba(0, 23, 90, 0.08), 0 10px 28px rgba(0, 23, 90, 0.14);
-  /* Amex's own card elevation, copied verbatim from the overview page. */
-  --shadow-card: 0 2px 5px 2px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 4px 14px 3px rgba(0, 0, 0, 0.08), 0 3px 8px -1px rgba(0, 0, 0, 0.1);
+  /* ---- Elevation ----
+     Surfaces are defined by a hairline first and a shadow second. Every level
+     is a single short, navy-tinted drop: enough to lift a card off the canvas,
+     never enough to read as a separate physical object. */
+  --shadow-1: 0 1px 2px rgba(0, 23, 90, 0.05);
+  --shadow-2: 0 1px 3px rgba(0, 23, 90, 0.07), 0 4px 12px rgba(0, 23, 90, 0.06);
+  --shadow-card: 0 1px 2px rgba(0, 23, 90, 0.05);
+  --shadow-card-hover: 0 2px 6px rgba(0, 23, 90, 0.09);
+  --shadow-btn: 0 1px 2px rgba(0, 23, 90, 0.08);
 
-  /* ---- Grid cards are keycaps ----
-     Depth comes from an extruded side wall, not a blur: six hard, zero-blur
-     shadows stepped 1px at a time build the moulded side of the key, then a
-     real contact shadow grounds it. The face is domed with a soft radial and
-     capped by an inset top highlight. Pressing it shortens the wall by the
-     same distance the cap travels, so the key bottoms out instead of sliding. */
-  --key-face:
-    radial-gradient(120% 100% at 50% 0%, #ffffff 0%, #ffffff 62%, #fafafa 100%);
-  --key-face-hover:
-    radial-gradient(120% 100% at 50% 0%, #ffffff 0%, #ffffff 70%, #fdfdfd 100%);
-  /* Moulded wall, stepping down the neutral axis to match the canvas. */
-  --key-w1: #efefef;
-  --key-w2: #e8e8e8;
-  --key-w3: #e0e0e0;
-  --key-w4: #d7d7d7;
-  --key-w5: #cbcbcb;
-  --key-w6: #bebebe;
-  /* The wall steps right as well as down, so the moulding shows on two faces
-     and the cap reads as extruded toward the bottom-right rather than merely
-     lifted. Contact shadow is offset the same way. */
-  --key-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w2),
-    3px 3px 0 var(--key-w3),
-    4px 4px 0 var(--key-w4),
-    5px 5px 0 var(--key-w5),
-    6px 6px 0 var(--key-w6),
-    7px 8px 2px rgba(0, 23, 90, 0.17),
-    10px 14px 20px rgba(0, 23, 90, 0.16),
-    inset 0 1px 0 #fff;
-  /* hover raises the cap: wall grows to 9px on both faces */
-  --key-shadow-hover:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w2),
-    3px 3px 0 var(--key-w3),
-    4px 4px 0 var(--key-w4),
-    5px 5px 0 var(--key-w5),
-    6px 6px 0 var(--key-w6),
-    7px 7px 0 var(--key-w6),
-    8px 8px 0 var(--key-w6),
-    9px 9px 0 var(--key-w6),
-    10px 12px 3px rgba(0, 23, 90, 0.19),
-    14px 20px 30px rgba(0, 23, 90, 0.2),
-    inset 0 1px 0 #fff;
-  /* pressed: wall collapses to 2px on both faces */
-  --key-shadow-active:
-    1px 1px 0 var(--key-w3),
-    2px 2px 0 var(--key-w5),
-    3px 4px 2px rgba(0, 23, 90, 0.16),
-    4px 6px 8px rgba(0, 23, 90, 0.13),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --title-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 5px rgba(0, 23, 90, 0.16);
-  --title-shadow-dark: 0 1px 3px rgba(0, 0, 0, 0.38);
+  /* Grid cards keep a whisper of the moulded edge — one step, not six — so the
+     hairline still catches light without the card becoming a keycap. */
+  --key-face: #ffffff;
+  --key-face-hover: #ffffff;
+  --key-w4: #dcdcdc;
+  --key-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(0, 23, 90, 0.05);
+  --key-shadow-hover: 0 0 0 1px var(--iris-border), 0 2px 8px rgba(0, 23, 90, 0.09);
+  --key-shadow-active: 0 0 0 1px var(--iris-border), 0 1px 2px rgba(0, 23, 90, 0.06);
+
+  --title-shadow: none;
+  --title-shadow-dark: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  /* Width of the HTTP-verb pill. Everything that has to line up past it
+     derives its indent from this, so the two never drift apart. */
+  --api-verb-w: 64px;
+  --api-verb-gap: 12px;
 
   --radius: 6px;
   --radius-sm: 3px;
   --radius-lg: 8px;
+  --radius-xl: 14px;
 }
 
 * {
@@ -237,16 +205,6 @@ h1 {
   letter-spacing: -0.015em;
   line-height: 1.1;
   color: var(--navy);
-}
-
-/* Display-level headings only. At the 12–13px end a text-shadow just
-   goes muddy, so the small headings are deliberately left flat. */
-h1,
-.region-head h2,
-.detail-title h3,
-.market-card h3,
-.modal-head h2 {
-  text-shadow: var(--title-shadow);
 }
 
 .hero h1,
@@ -370,7 +328,7 @@ select:focus {
 .btn.primary {
   background: var(--iris);
   color: #fff;
-  box-shadow: 0 1px 2px rgba(0, 23, 90, 0.16), 0 3px 8px rgba(0, 111, 207, 0.28);
+  box-shadow: var(--shadow-btn);
 }
 
 .btn.primary:hover:not(:disabled) {
@@ -379,13 +337,64 @@ select:focus {
 }
 
 .btn.primary:active:not(:disabled) {
-  box-shadow: 0 1px 2px rgba(0, 23, 90, 0.2);
+  box-shadow: none;
+}
+
+/* Amex Deep Blue — the market page's primary action, and the only navy
+   control on a light canvas, so it never has to compete. */
+.btn.navy {
+  background: var(--navy);
+  color: #fff;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn.navy:hover:not(:disabled) {
+  background: #002a80;
+  box-shadow: var(--shadow-card-hover);
 }
 
 .btn.ghost {
   background: var(--card);
   border-color: var(--iris);
   color: var(--iris);
+}
+
+/* Back to the ledger: a real button, sized down so it reads as navigation
+   rather than as the page's action. */
+/* Solid Amex Bright Blue, matching Promote all profiles — the two are the
+   only page-level actions and should read as one family. */
+.btn.back-link {
+  gap: 9px;
+  padding: 7px 17px 7px 13px;
+  margin-bottom: 18px;
+  background: var(--iris);
+  border-color: var(--iris);
+  color: #fff;
+  font-size: 13.5px;
+  box-shadow: var(--shadow-btn);
+  text-decoration: none;
+}
+
+.btn.back-link:hover {
+  background: var(--iris-deep);
+  border-color: var(--iris-deep);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* One arrow, rotated to point where it is needed. Sized in em so it tracks
+   whatever text it sits beside. */
+.arrow {
+  width: 1.1em;
+  height: 1.1em;
+  flex: none;
+}
+
+.arrow-left {
+  transform: rotate(180deg);
+}
+
+.arrow-up-right {
+  transform: rotate(-45deg);
 }
 
 .btn.ghost:hover:not(:disabled) {
@@ -397,12 +406,12 @@ select:focus {
 .btn.danger {
   background: var(--red);
   color: #fff;
-  box-shadow: 0 1px 2px rgba(90, 0, 0, 0.18), 0 3px 8px rgba(192, 52, 52, 0.26);
+  box-shadow: var(--shadow-btn);
 }
 
 .btn.danger:hover:not(:disabled) {
   background: #a52a2a;
-  box-shadow: 0 2px 4px rgba(90, 0, 0, 0.22), 0 6px 14px rgba(192, 52, 52, 0.32);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .btn.ghost.delete {
@@ -427,8 +436,8 @@ select:focus {
 }
 
 .btn.lg {
-  padding: 14px 34px;
-  font-size: 16.5px;
+  padding: 12px 26px;
+  font-size: 15.5px;
   border-radius: 10px;
 }
 
@@ -544,13 +553,14 @@ select:focus {
   background: var(--iris);
 }
 
+/* Overflow stays visible: the role menu hangs below the bar. The accent rule
+   above is inset to this box anyway, so it never needed clipping. */
 .masthead {
   position: sticky;
   top: 0;
   z-index: 60;
   background: var(--navy);
   color: #fff;
-  overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 23, 90, 0.28);
 }
 
@@ -566,10 +576,24 @@ select:focus {
 /* Product lockup the way Amex builds them: the blue box logo, a hairline
    rule, then the product name — the name sits beside the mark rather than
    stacked on it, and the descriptor is a quiet second line, not a banner. */
+/* The lockup routes home, so it behaves like a link without looking like one. */
 .brand {
   display: flex;
   align-items: center;
   gap: 16px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius);
+  transition: opacity 0.15s ease;
+}
+
+.brand:hover {
+  opacity: 0.85;
+}
+
+.brand:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
 }
 
 .brand-logo {
@@ -612,54 +636,166 @@ select:focus {
   line-height: 1;
 }
 
+/* ---------- who you are acting as ---------- */
+
 .mast-right {
   margin-left: auto;
 }
 
-.role-switch {
-  display: inline-flex;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  padding: 3px;
+.role-menu {
+  position: relative;
 }
 
-.role-switch button {
+/* Plain clickable text, not a control: the role is context you glance at far
+   more often than you change. On the navy masthead it takes the same light
+   blue as the brand sub-label, with the role itself in white — Bright Blue
+   would sit too close to the background to read. */
+.role-trigger {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  padding: 4px 2px;
   border: none;
   background: none;
-  color: #a9c7e4;
-  font-size: 14px;
-  font-weight: 400;
-  padding: 7px 18px;
-  border-radius: 999px;
-  transition: background 0.15s ease, color 0.15s ease;
+  color: #93b4d8;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
 }
 
-.role-switch button.on {
-  background: #fff;
-  color: var(--mast-1);
+.role-trigger strong {
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.role-trigger:hover span:first-child,
+.role-menu.open .role-trigger span:first-child {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.role-trigger:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.role-menu.open .role-trigger .chevron {
+  transform: rotate(-135deg);
+  margin-bottom: 0;
+  margin-top: 3px;
+}
+
+.role-options {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  min-width: 290px;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  padding: 6px;
+  animation: role-open 0.14s ease;
+}
+
+@keyframes role-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.role-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+}
+
+.role-option:hover {
+  background: var(--surface-alt);
+}
+
+.role-option.on {
+  background: var(--iris-wash);
+}
+
+.role-option-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--navy);
+}
+
+.role-option.on .role-option-name {
+  color: var(--iris-deep);
+}
+
+.role-option-name .check-mark {
+  width: 15px;
+  height: 15px;
+  color: var(--iris);
+}
+
+.role-option-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
 }
 
 /* ---------- page scaffold ---------- */
 
+/* Column so the footer settles at the bottom of short pages (the not-found
+   route, an empty ledger) instead of floating mid-viewport. */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .page {
+  flex: 1;
+  width: 100%;
   max-width: 1560px;
   margin: 0 auto;
-  padding: 38px 32px 80px;
+  padding: 38px 32px 64px;
 }
 
 .footer {
   border-top: 1px solid var(--line);
-  padding: 18px 28px;
+  /* Matches .page's horizontal padding so the two rules line up. */
+  padding: 20px 32px;
+  width: 100%;
   max-width: 1560px;
   margin: 0 auto;
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: baseline;
   justify-content: space-between;
   color: var(--muted);
   font-size: 13px;
+}
+
+.footer-mark {
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+
+.footer-legal {
+  letter-spacing: 0.02em;
 }
 
 /* ---------- hero ---------- */
@@ -697,21 +833,8 @@ select:focus {
   color: #fff;
 }
 
-.hero .donut-track {
-  stroke: rgba(255, 255, 255, 0.14);
-}
-
-.hero .donut-num {
-  fill: #fff;
-}
-
-.hero .donut-sub {
-  fill: #8fb4dd;
-}
-
-.hero .donut-seg.seg-off {
-  stroke: #7d8db0;
-}
+/* The ring styles itself for navy — it renders nowhere else — so there are no
+   hero overrides for it to drift away from. See "hero progress ring". */
 
 .hero .status-legend {
   color: #a9c7e4;
@@ -733,11 +856,6 @@ select:focus {
   background: rgba(255, 255, 255, 0.16);
   box-shadow: none;
   outline-color: rgba(255, 255, 255, 0.55);
-}
-
-.hero .ldot-off {
-  background: rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 .hero .view-toggle {
@@ -809,56 +927,70 @@ select:focus {
   margin-top: 16px;
 }
 
+/* ---------- hero progress ring ----------
+   How far the Amex market list has been taken: active (e3) then in progress
+   (e1–e2), drawn clockwise from twelve o'clock. What is still pending is the
+   track itself — the ring is only as full as the work is done.
+
+   The hero is navy, so the ring carries its own on-dark palette rather than
+   the --green / --amber tokens the seals use on white. */
+.status-overview {
+  --ring-track: rgba(255, 255, 255, 0.16);
+  --ring-active: #34d27b;
+  --ring-progress: #f0cd6e;
+}
+
 .donut {
-  width: 112px;
-  height: 112px;
+  width: 118px;
+  height: 118px;
   flex: none;
 }
 
 .donut-track {
   fill: none;
-  stroke: var(--grey-wash);
-  stroke-width: 9;
+  stroke: var(--ring-track);
+  stroke-width: 7;
 }
 
 .donut-seg {
   fill: none;
-  stroke-width: 9;
-  transition: stroke-dasharray 0.4s ease, stroke-dashoffset 0.4s ease;
+  stroke-width: 7;
+  /* Round caps are what make it read as a progress ring rather than a pie
+     slice; the arc maths in Ledger.tsx allows for the overhang they add. */
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
 }
 
-/* Hero donut: active (e3) / in progress (e1+e2) / pending (not onboarded) */
-
 .donut-seg.seg-active {
-  stroke: var(--green);
-  filter: drop-shadow(0 0 5px rgba(0, 135, 103, 0.55));
+  stroke: var(--ring-active);
 }
 
 .donut-seg.seg-progress {
-  stroke: var(--amber-bright);
-  filter: drop-shadow(0 0 5px rgba(223, 164, 31, 0.55));
-}
-
-.donut-seg.seg-off {
-  stroke: var(--line-strong);
-  filter: drop-shadow(0 0 3px rgba(23, 23, 34, 0.12));
+  stroke: var(--ring-progress);
 }
 
 .donut-num {
-  font-size: 21px;
+  font-size: 26px;
   font-weight: 500;
-  fill: var(--ink);
+  fill: #fff;
   text-anchor: middle;
   font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
 }
 
 .donut-sub {
-  font-size: 8px;
+  font-size: 8.5px;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  fill: var(--muted);
+  fill: rgba(255, 255, 255, 0.62);
   text-anchor: middle;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .donut-seg {
+    transition: none;
+  }
 }
 
 .status-legend {
@@ -883,6 +1015,13 @@ select:focus {
 
 .legend-row {
   cursor: pointer;
+}
+
+/* Counts are right-aligned in a fixed column so the labels beside them all
+   start at the same x, whether the number is 6 or 15. */
+.legend-row b {
+  min-width: 1.5em;
+  text-align: right;
 }
 
 .legend-row:hover,
@@ -928,6 +1067,10 @@ select:focus {
   opacity: 1;
   visibility: visible;
   transform: translateY(-50%) translateX(0);
+  /* Taken back only once the list is up. While hidden it must not swallow the
+     pointer; while shown it has to accept it, or a list longer than its
+     max-height cannot be scrolled — the wheel would fall through to the page. */
+  pointer-events: auto;
 }
 
 .legend-pop-row {
@@ -954,17 +1097,20 @@ select:focus {
   border-radius: 50%;
 }
 
+/* The same three values the ring uses, so a legend row and its arc are
+   obviously the same thing. Pending is the ring's empty track, and reads as
+   the unfilled dot to match. */
 .ldot-active {
-  background: var(--green);
+  background: var(--ring-active);
 }
 
 .ldot-progress {
-  background: var(--amber-bright);
+  background: var(--ring-progress);
 }
 
 .ldot-off {
-  background: var(--grey-wash);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  background: var(--ring-track);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32);
 }
 
 /* ---------- inline confirm bar ---------- */
@@ -1072,6 +1218,11 @@ select:focus {
   transition: all 0.15s ease;
 }
 
+.acc-num .check-mark {
+  width: 17px;
+  height: 17px;
+}
+
 .acc-step.open .acc-num {
   border-color: var(--iris);
   background: var(--iris);
@@ -1108,7 +1259,9 @@ select:focus {
 }
 
 .acc-body {
-  padding: 18px 26px 24px 70px;
+  /* Tight to the heading above it: the first line of a step is that step's
+     instruction and belongs with its title. */
+  padding: 4px 26px 24px 70px;
   /* Steps unroll downward as you move between them. */
   animation: step-open 0.26s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
@@ -1255,24 +1408,17 @@ select:focus {
   gap: 9px;
   align-items: flex-start;
   text-align: left;
-  border: 1px solid var(--key-w3);
+  border: 1px solid var(--line);
   border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
-  box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 4px 7px rgba(0, 23, 90, 0.12);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
   padding: 16px 18px;
   transition: box-shadow 0.14s ease, transform 0.14s ease, border-color 0.14s ease;
 }
 
 .account-cell:hover:not(:disabled) {
-  box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 3px 0 var(--key-w5),
-    5px 7px 14px rgba(0, 23, 90, 0.16);
-  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--line-strong);
 }
 
 .account-cell:hover:not(:disabled) {
@@ -1281,7 +1427,7 @@ select:focus {
 
 .account-cell.sel {
   border-color: var(--iris);
-  box-shadow: 0 0 0 3px var(--iris-wash);
+  box-shadow: 0 0 0 2px var(--iris-wash);
   background: #fdfdff;
 }
 
@@ -1343,13 +1489,10 @@ select:focus {
   flex-direction: column;
   /* Plain hairline during selection — the gradient edge competed with the
      checkbox and the selected state for attention. */
-  border: 1px solid var(--key-w3);
+  border: 1px solid var(--line);
   border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
-  box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 4px 7px rgba(0, 23, 90, 0.12);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
   transition: box-shadow 0.14s ease, transform 0.14s ease, background 0.14s ease;
 }
 
@@ -1369,36 +1512,42 @@ select:focus {
 }
 
 .api-card:hover {
-  box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 3px 0 var(--key-w5),
-    5px 7px 14px rgba(0, 23, 90, 0.16);
-  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--line-strong);
 }
 
 .api-card.sel {
   border-color: var(--iris);
   background: #fcfcff;
-  box-shadow: 0 0 0 3px var(--iris-wash);
+  box-shadow: 0 0 0 2px var(--iris-wash);
 }
 
 .api-card.sel::before {
   opacity: 1;
 }
 
+/* check | verb pill | title-over-identifier, summary spanning underneath */
+/* check | verb | name, with the identifier and summary indented to the name's
+   own column so all three lines of text share one left edge.
+   The three text lines are separate grid rows rather than a nested block, so
+   `align-items: center` lines the verb up with the title itself — centring it
+   against a two-line block left it hovering in the gap, and a hand-tuned
+   offset would drift the moment the type scale changed. */
 .api-main {
   flex: 1;
   display: grid;
-  grid-template-columns: 26px 1fr;
-  grid-template-areas: 'check name' 'check endpoint';
+  grid-template-columns: 26px var(--api-verb-w) 1fr;
+  grid-template-areas:
+    'check method name'
+    '.     .      ident'
+    '.     .      endpoint';
   align-items: center;
-  column-gap: 10px;
-  row-gap: 5px;
+  column-gap: var(--api-verb-gap);
+  row-gap: 3px;
   text-align: left;
   background: none;
   border: none;
-  padding: 10px 12px 10px 16px;
+  padding: 12px 12px 12px 16px;
   border-radius: 6px;
 }
 
@@ -1411,9 +1560,13 @@ select:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
   color: #fff;
   transition: all 0.12s ease;
+}
+
+.api-check .check-mark {
+  width: 13px;
+  height: 13px;
 }
 
 .api-card.sel .api-check {
@@ -1421,13 +1574,27 @@ select:focus {
   border-color: var(--iris);
 }
 
-.api-name {
+.api-card .api-identity {
+  display: contents;
+}
+
+.api-card .api-title {
   grid-area: name;
-  font-family: var(--font-body);
+}
+
+.api-card .api-ident-name {
+  grid-area: ident;
+}
+
+.api-card .api-method {
+  grid-area: method;
+}
+
+/* The wizard card is the roomiest surface, so the title runs larger there —
+   the colour still comes from .api-title. */
+.api-card .api-title {
   font-size: 17px;
-  font-weight: 400;
   letter-spacing: 0.01em;
-  color: var(--navy);
   overflow-wrap: anywhere;
 }
 
@@ -1457,17 +1624,24 @@ select:focus {
   background: var(--iris-wash);
 }
 
-/* same tailless chevron the market cards and Market JSON use */
-.api-expand .chevron {
+/* One tailless chevron, drawn from two borders, used everywhere something
+   expands. Rotating the parent flips it, so a single shape covers both states. */
+.chevron {
   display: inline-block;
   width: 7px;
   height: 7px;
+  flex: none;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   border-radius: 1px;
+  /* points down; the box is rotated, so nudge it back onto the text baseline */
   transform: rotate(45deg);
   margin-bottom: 3px;
   transition: transform 0.15s ease;
+}
+
+.api-expand .chevron {
+  margin-bottom: 3px;
 }
 
 .api-expand .chevron.up {
@@ -1524,8 +1698,15 @@ select:focus {
   margin-bottom: 10px;
 }
 
+.api-spec-link .arrow {
+  width: 15px;
+  height: 15px;
+}
+
 .api-spec-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -1535,77 +1716,12 @@ select:focus {
   text-underline-offset: 3px;
 }
 
-/* suggested dimensions panel */
-
-.dim-name {
-  font-weight: 400;
-  font-size: 13.5px;
-  letter-spacing: 0.01em;
-  color: var(--navy);
-}
-
-/* ---------- step 3: dimensions ---------- */
-
-.dim-review {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.dim-review-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  border: 1px solid var(--key-w3);
-  border-radius: 14px;
-  padding: 18px 22px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
-  box-shadow:
-    1px 1px 0 var(--key-w1),
-    2px 2px 0 var(--key-w3),
-    3px 4px 7px rgba(0, 23, 90, 0.12);
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-}
-
-/* Selection shows in the segmented control alone — recolouring the card too
-   turned the list into a field of green and amber. */
-
-.dim-review-row.locked {
-  background: var(--surface-alt);
-}
-
-.dim-review-row.locked .dim-name,
-.dim-review-row.locked .dim-desc {
-  color: var(--muted);
-}
-
-.dim-lock-note {
+.bhv-lock-note {
   margin: 4px 0 0;
   font-size: 12.5px;
   color: var(--muted);
   font-style: italic;
-}
-
-.dim-review-main {
-  flex: 1;
-}
-
-.dim-review-row .dim-name {
-  font-size: 17px;
-}
-
-
-
-
-
-.dim-desc {
-  color: var(--muted);
-  font-size: 14px;
-  margin: 3px 0 5px;
-  max-width: 68ch;
-}
-
-/* Y / N / Both segmented control. inline-flex so a two-option dimension
+}/* Y / N / Both segmented control. inline-flex so a two-option behavior
    (Representable Return) simply renders narrower — no separate variant. */
 
 .tri {
@@ -1671,21 +1787,23 @@ select:focus {
 
 .profile-card.editing {
   border-color: var(--iris-border);
-  box-shadow: 0 0 0 3px var(--iris-wash);
+  box-shadow: 0 0 0 2px var(--iris-wash);
   background: var(--card);
 }
 
+/* Editing is a form, so it gets form spacing: three clearly separated
+   sections rather than one continuous run of controls. */
 .profile-editor {
   border-top: 1px solid var(--line);
-  margin-top: 12px;
-  padding-top: 14px;
+  margin-top: 16px;
+  padding-top: 22px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 26px;
 }
 
 .pe-section h5 {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.09em;
@@ -1695,20 +1813,43 @@ select:focus {
 
 .pe-api-groups {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 14px 14px;
+  align-items: start;
+  /* Clearance for the labels sitting above each card. */
+  margin-top: 40px;
 }
 
+/* Each category is a bounded list, so three columns of checkboxes read as
+   three lists instead of one undifferentiated field. */
 .pe-api-group {
   min-width: 0;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px 12px;
+}
+
+/* Every group label names its card from outside it — sentence case, at
+   heading size, the way a section title introduces the block below. */
+.pe-api-group,
+.pe-bhv-group {
+  position: relative;
 }
 
 .pe-cat {
   display: block;
-  font-size: 14px;
+  position: absolute;
+  top: -34px;
+  left: 0;
+  font-size: 17px;
   font-weight: 400;
-  letter-spacing: 0.01em;
-  margin-bottom: 7px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--navy);
+  border: none;
+  padding: 0;
+  margin: 0;
 }
 
 .pe-cat.cat-core,
@@ -1717,14 +1858,23 @@ select:focus {
   color: var(--navy);
 }
 
+/* Two-line rows need real separation; the hit area extends past the label so
+   the whole row is clickable, not just the words. */
 .pe-api {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
   font-size: 13.5px;
   line-height: 1.4;
-  padding: 4px 0;
+  padding: 7px 8px;
+  margin: 0 -8px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.pe-api:hover {
+  background: rgba(0, 111, 207, 0.06);
 }
 
 .pe-api span {
@@ -1732,29 +1882,51 @@ select:focus {
   overflow-wrap: anywhere;
 }
 
+.pe-api .api-identity {
+  flex: 1;
+  gap: 1px;
+}
+
+/* Compact rows: the checkbox already carries the weight of the choice. */
+.pe-api .api-title {
+  font-size: 13.5px;
+}
+
 .pe-api input {
   accent-color: var(--iris);
   width: 15px;
   height: 15px;
   flex: none;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
-.pe-dims {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 28px;
-}
-
-.pe-dim {
-  display: inline-flex;
-  align-items: center;
+/* One behavior per cell, label and control on opposite edges, so the four
+   read as a set of settings rather than a wrapped sentence. */
+.pe-behavior {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 10px;
-  font-size: 14.5px;
+}
+
+.pe-bhv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
   font-weight: 400;
 }
 
-.pe-dim.locked > span {
+.pe-bhv.locked {
+  background: transparent;
+  border-style: dashed;
+}
+
+.pe-bhv.locked > span {
   color: var(--muted);
 }
 
@@ -1763,12 +1935,15 @@ select:focus {
   justify-content: flex-end;
   gap: 10px;
   border-top: 1px solid var(--line);
-  padding-top: 12px;
+  padding-top: 16px;
 }
 
-/* ---------- admin custom dims ---------- */
+/* ---------- admin custom behaviors (onboarding wizard) ----------
 
-.admin-dims {
+   The market page defines these inside each account profile now; the wizard
+   still needs a market-level block because the market does not exist yet. */
+
+.admin-behavior {
   margin-top: 26px;
   border: 1px solid var(--iris-border);
   border-radius: var(--radius);
@@ -1776,13 +1951,14 @@ select:focus {
   padding: 18px 22px;
 }
 
-.admin-dims-head {
+.admin-behavior-head {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 4px;
 }
 
-.admin-dims-head h4 {
+.admin-behavior-head h4 {
   font-size: 17px;
 }
 
@@ -1798,12 +1974,14 @@ select:focus {
   padding: 2px 8px;
 }
 
-.custom-dim-list,
-.custom-dim-row {
-  margin-top: 10px;
+.custom-bhv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
 }
 
-.custom-dim-row {
+.custom-bhv-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1811,22 +1989,8 @@ select:focus {
   gap: 10px;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 10px 14px;
-}
-
-.custom-dim-values {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.custom-dim-value {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12.5px;
-  color: var(--muted);
 }
 
 .def-form {
@@ -1835,6 +1999,12 @@ select:focus {
   gap: 8px;
   margin-top: 14px;
   align-items: center;
+}
+
+/* The action sits at the far edge of its row, away from the fields it acts
+   on — wherever this form appears. */
+.def-form .btn {
+  margin-left: auto;
 }
 
 .def-form input {
@@ -1902,9 +2072,9 @@ select:focus {
   color: var(--ink);
 }
 
-/* APIs in Deep Blue, dimensions in Bright Blue — the same split everywhere
+/* APIs in Deep Blue, behavior in Bright Blue — the same split everywhere
    the two appear together: Review & save, and the expanded market card.
-   Dimensions read the same regardless of Y / N / Both, since the value is
+   Behavior reads the same regardless of Y / N / Both, since the value is
    already in the label and colouring it too made N look like a failure. */
 .chip.chip-api,
 .chip.chip-grad {
@@ -1913,7 +2083,15 @@ select:focus {
   color: var(--navy);
 }
 
-.chip.chip-dim {
+/* Behavior that is off stays quiet; only the flags actually set carry colour,
+   so a glance at the row counts what this market does differently. */
+.chip.chip-bhv {
+  border-color: var(--line);
+  background: var(--surface-alt);
+  color: var(--muted);
+}
+
+.chip.chip-bhv.on {
   border-color: var(--iris-border);
   background: var(--iris-wash);
   color: var(--iris);
@@ -1976,7 +2154,7 @@ select:focus {
 
 .json-block {
   border-top: 1px solid var(--line);
-  background: var(--navy);
+  background: #000000;
 }
 
 .json-head {
@@ -1984,7 +2162,7 @@ select:focus {
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  border-bottom: 1px solid rgba(120, 176, 230, 0.16);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .json-dots {
@@ -2203,7 +2381,7 @@ select:focus {
 
 .clone-cell.sel {
   border-color: var(--iris);
-  box-shadow: 0 0 0 3px var(--iris-wash);
+  box-shadow: 0 0 0 2px var(--iris-wash);
 }
 
 .clone-name {
@@ -2229,6 +2407,14 @@ select:focus {
   letter-spacing: 0.02em;
   padding: 3px 11px;
   border-radius: 999px;
+}
+
+/* On the navy banner the light washes vanish, so the seal inverts. */
+.seal.seal-dark {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  flex: none;
 }
 
 .seal-dot {
@@ -2300,12 +2486,22 @@ select:focus {
   font-weight: 400;
 }
 
+/* Only the code is set bold; what it expands to stays regular, so the
+   abbreviation is what carries down the page. Medium is the heaviest face
+   shipped — anything above it would be a browser-synthesised bold. */
+.region-head h2 b {
+  font-weight: 500;
+}
+
+/* Pushed to the right edge of the grid it summarises, so the counts line up
+   down the page instead of sitting at a different offset per region name. */
 .region-stat {
+  margin-left: auto;
   display: inline-flex;
   border-radius: 999px;
   overflow: hidden;
   border: none;
-  box-shadow: 0 1px 2px rgba(0, 40, 24, 0.22);
+  box-shadow: var(--shadow-1);
   font-size: 12.5px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -2323,148 +2519,74 @@ select:focus {
 
 .market-grid {
   display: grid;
-  /* 340px keeps the longest account-type label ("Business Travel Account")
-     on one line next to its four dimension pairs. */
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  /* Row gap carries the extra clearance for the keycap wall, which is a
-     box-shadow and so occupies no layout box of its own. Putting it here
-     rather than in a card margin keeps the row's bottom edge — which the
-     expanded tab's translate is calibrated against — where it belongs. */
-  /* Both gaps clear the moulded wall, which now steps right as well as down
-     (9px at its deepest on hover) and casts no layout box of its own. */
-  column-gap: 24px;
-  row-gap: 26px;
+  /* 260px still keeps the longest account-type label ("Business Travel") on
+     one line beside its status dot, and fits four to a row on a wide screen
+     instead of three very broad cards. */
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
 }
 
+/* The card is the link to the market's own page. It sits flat until pointed
+   at: a hairline, a whisper of elevation, and nothing else competing. */
 .market-card {
+  --card-accent: var(--rg, var(--iris));
   position: relative;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: var(--shadow-card);
-  padding: 16px 18px 12px 22px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  cursor: pointer;
-  overflow: hidden;
-  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
-}
-
-/* The 3D treatment is scoped to collapsed cards. The expanded "tab" keeps its
-   1px border: the seam geometry below depends on that exact width, and its
-   ::before/::after are taken over by the shoulder fillets. */
-.market-card:not(.expanded) {
-  --card-accent: var(--rg, var(--iris));
-  /* No border: the wall's first 1px step already draws the edge. A border on
-     top of it reads as a second outline. */
-  border: 1px solid transparent;
-  /* A whisper of the accent where the light lands. Any heavier and it greys
-     the top of the cap — the face is meant to read as white. */
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 4%, transparent) 0%, transparent 40%),
-    var(--key-face);
+  gap: 4px;
+  padding: 14px 16px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--card);
   box-shadow: var(--key-shadow);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.market-card:not(.expanded):hover {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 6%, transparent) 0%, transparent 40%),
-    var(--key-face-hover);
+.market-card:hover,
+.market-card:focus-visible {
   box-shadow: var(--key-shadow-hover);
-  transform: translate(-3px, -3px);
+  transform: translateY(-2px);
 }
 
-/* Travels exactly the distance the wall loses, so the cap bottoms out. */
-.market-card:not(.expanded):active {
+.market-card:active {
   box-shadow: var(--key-shadow-active);
-  transform: translate(4px, 4px);
+  transform: translateY(0);
 }
 
-.market-card {
-  transition: transform 0.11s ease, box-shadow 0.11s ease, background 0.11s ease;
-}
-
-/* Expanded card fuses with the detail panel below it: it becomes the "tab"
-   of a folder — squared bottom, open bottom edge, same border as the panel —
-   while the panel pulls up over the grid gap to meet it (see .detail-panel). */
-.market-card.expanded {
-  z-index: 1;
-  overflow: visible;
-  /* Plain face: the colour now lives at the bottom-left of the panel below and
-     fades upward, so the tab is white exactly where the two meet. */
-  background: linear-gradient(180deg, #ffffff 0%, #fdfdfd 100%);
-  border-color: var(--key-w4);
-  /* bottom border matches the card face (not transparent): no corner-miter
-     notch, and it paints over the panel's top border inside the overlap */
-  border-bottom-color: var(--card);
-  border-radius: 16px 16px 0 0;
-  /* A wide shadow here smudges the panel either side of the join, because the
-     clip only stops it below the tab, not left and right. The tab and panel
-     are one shape, so a shallow lip is all it needs. */
-  box-shadow: 0 -1px 3px rgba(0, 23, 90, 0.07);
-  /* Side inset must clear the shoulder fillets, which are 13px boxes sitting
-     OUTSIDE this element's edges — clip tighter than that and the arcs get
-     sliced, leaving a notch at both bottom corners. The shadow above is
-     shallow enough that 24px cannot smudge the panel. */
-  clip-path: inset(-64px -24px 0 -24px);
-  /* Sink the tab a full row gap + 2px overlap with the panel: the panel keeps
-     the grid's normal clearance from neighbouring cards and the seam (panel
-     top border) is fully buried under the tab.
-     Locked to .market-grid { row-gap } — change one and you must change the
-     other, or the overlap goes to zero and the seam shows. */
-  transform: translateY(28px);
-}
-
-/* Concave shoulder fillets: a quarter-arc of tab material that curves the
-   tab's side border into the panel's top border instead of a hard L.
-   MarketDetailPanel measures each side and sets shoulder-l / shoulder-r —
-   a side that is flush with the panel's edge gets no fillet. */
-.market-card.expanded.shoulder-l::before,
-.market-card.expanded.shoulder-r::after {
-  content: '';
+/* Hidden at rest so a grid of cards reads as a list, not a row of buttons. */
+.card-arrow {
   position: absolute;
-  bottom: -2px;
-  width: 13px;
-  height: 13px;
-  background: var(--fillet);
+  right: 14px;
+  bottom: 12px;
+  width: 18px;
+  height: 18px;
+  color: var(--iris);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.market-card:hover .card-arrow,
+.market-card:focus-visible .card-arrow {
   opacity: 1;
-}
-
-.market-card.expanded.shoulder-l::before {
-  right: 100%;
-  --fillet: radial-gradient(
-    circle at 0 0,
-    transparent 10.5px,
-    var(--key-w4) 11px,
-    var(--key-w4) 12px,
-    #ffffff 12.5px
-  );
-}
-
-.market-card.expanded.shoulder-r::after {
-  left: 100%;
-  --fillet: radial-gradient(
-    circle at 100% 0,
-    transparent 10.5px,
-    var(--key-w4) 11px,
-    var(--key-w4) 12px,
-    #ffffff 12.5px
-  );
+  transform: translateX(0);
 }
 
 .market-card-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
+  margin-bottom: 2px;
 }
 
 .market-card-top .flag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 4px;
   background: #fff;
   border: 1px solid var(--line);
@@ -2487,27 +2609,27 @@ select:focus {
   margin-left: auto;
 }
 
+/* The country is what the card is; Medium is the heaviest face shipped, so
+   anything above it would be a browser-synthesised bold. */
 .market-card h3 {
-  font-size: 17px;
-  font-weight: 400;
+  font-size: 15.5px;
+  font-weight: 500;
   letter-spacing: 0.01em;
 }
 
 .profile-rows {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
+/* No rule between account types: the status dots already separate them, and
+   the lines turned every card into a small table. */
 .profile-row {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 6px 2px;
-}
-
-.profile-row + .profile-row {
-  border-top: 1px solid var(--line);
+  padding: 2px 0;
 }
 
 .dot {
@@ -2534,190 +2656,510 @@ select:focus {
 
 .profile-row-name {
   font-weight: 400;
-  font-size: 14.5px;
+  font-size: 13.5px;
   white-space: nowrap;
 }
 
-.profile-row-dims {
-  margin-left: auto;
-  font-size: 10.5px;
-  white-space: pre;
-}
+/* ---------- market page ---------- */
 
-.market-card-foot {
-  border-top: 1px solid var(--line);
-  padding-top: 8px;
-  margin-top: 2px;
-}
-
-.card-open-hint {
-  display: inline-block;
-  color: var(--iris);
-  line-height: 0;
-  cursor: pointer;
-}
-
-/* tailless chevron drawn with borders — identical geometry in both states */
-.card-open-hint::after {
-  content: '';
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-left: 7px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  border-radius: 1px;
-  transform: rotate(45deg); /* points down */
-  vertical-align: 2px;
-  transition: transform 0.15s ease;
-}
-
-.market-card:hover .card-open-hint::after {
-  transform: translateY(2px) rotate(45deg);
-}
-
-.market-card.expanded .card-open-hint::after {
-  transform: rotate(-135deg); /* points up */
-  vertical-align: -2px;
-}
-
-.market-card.expanded:hover .card-open-hint::after {
-  transform: translateY(-2px) rotate(-135deg);
-}
-
-/* ---------- inline detail panel (spans the grid) ---------- */
-
-.detail-panel {
-  grid-column: 1 / -1;
-  /* Region colour pools in the bottom-left corner and fades up and right to
-     white, which leaves the top edge — where the tab lands — clean. */
-  background:
-    radial-gradient(
-        118% 92% at 0% 100%,
-        color-mix(in srgb, var(--rg, var(--iris)) 16%, transparent) 0%,
-        color-mix(in srgb, var(--rg, var(--iris)) 5%, transparent) 38%,
-        transparent 70%
-      ),
-    linear-gradient(180deg, #ffffff 0%, #fdfdfd 100%);
-  /* Uniform 1px: the expanded tab overlaps the panel by exactly 2px and
-     paints its own 1px white bottom border over the seam. A thicker top
-     border here peeks out below the tab as a coloured sliver. */
-  border: 1px solid var(--key-w4);
-  /* Matches the tab's 16px so the tab-plus-panel silhouette reads as one
-     rounded shape rather than a rounded lid on a squarer box. */
-  border-radius: 16px;
-  box-shadow: var(--shadow-2);
-  padding: 22px 26px;
-  animation: panel-in 0.2s ease;
-}
-
-/* In the grid, the expanded card sinks 17px (transform) onto the panel below:
-   1px overlap fuses them, and the panel's top edge keeps the full 16px row
-   gap from the other cards. The tab above already names the market, so the
-   panel drops its own title row. */
-.market-grid .detail-panel {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-/* …but a top corner the tab is NOT sitting on is free to round. The shoulder
-   flags already mark exactly that: shoulder-l means the panel extends past
-   the tab on the left, so its top-left corner is out in the open. Rounding a
-   corner the tab IS flush against would bite a notch out of the edge right
-   below it, which is why the rule above squares them by default. */
-.market-card.expanded.shoulder-l + .detail-panel {
-  border-top-left-radius: 16px;
-}
-
-.market-card.expanded.shoulder-r + .detail-panel {
-  border-top-right-radius: 16px;
-}
-
-.market-grid .detail-panel .detail-title {
-  display: none;
-}
-
-.market-grid .detail-panel .detail-actions {
-  margin-left: auto;
-}
-
-@keyframes panel-in {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.detail-panel-head {
+/* Navy is the "you are here" device: the ledger hero is navy, and so is the
+   banner that names the market you opened from it. */
+.market-banner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
+  gap: 18px;
+  padding: 24px 28px;
+  border-radius: var(--radius-xl);
+  background: var(--navy);
+  color: #fff;
+  box-shadow: var(--shadow-2);
+  margin-bottom: 12px;
 }
 
-.detail-title {
+.market-banner .flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  flex: none;
+}
+
+.market-banner-id {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.market-banner h1 {
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: #fff;
+  margin: 0;
+  text-shadow: var(--title-shadow-dark);
+}
+
+.market-banner-code {
+  color: #a8c4e8;
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+  align-self: flex-start;
+}
+
+
+
+/* Names the run of account-type cards below it, the way a region head names
+   the run of market cards on the ledger, and carries the action that adds to
+   that run. */
+/* Set well clear of the navy banner: the run of profiles is its own part of
+   the page, not a caption hanging off the market's identity. */
+.profiles-head {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  margin: 36px 0 14px;
 }
 
-.detail-title h3 {
-  font-size: 25px;
-}
-
-.detail-actions {
+/* One group holding the right edge, so the set stays put whether or not
+   Promote all and + Account Profile happen to be showing. */
+.profiles-actions {
+  margin-left: auto;
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.profile-list {
+/* Sized to sit level with + Account Profile rather than as small icon chips. */
+.profiles-actions .act-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+.profiles-actions .act-btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* The market page's two section names, set to match the region codes on the
+   ledger. Medium is the heaviest face shipped — anything above it would be a
+   browser-synthesised bold. */
+.profiles-head h2,
+.env-record-head h2 {
+  font-size: 26px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Now a bare ratio rather than a sentence, so it needs a little more size to
+   hold its own beside the heading. */
+.profiles-count {
+  font-size: 15px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- account-type section ----------
+   Readiness and configuration for one account type, kept together. */
+
+.acct-section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+
+.acct-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.acct-head h2 {
+  font-size: 21px;
+  font-weight: 400;
+  margin: 0;
+}
+
+/* Enough air that the Promote button closing the environments reads as
+   belonging to them rather than to the profile heading below it. */
+.acct-block + .acct-block {
+  margin-top: 34px;
+}
+
+/* The card's own section headings: set at the size of the APIs and Behavior
+   headings inside the profile, but tracked out in caps so they read as the
+   level above rather than as peers. */
+.block-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  /* Medium is the heaviest face shipped — 600+ would have the browser
+     synthesise a bold and smear it. */
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--navy);
+  margin: 0 0 14px;
+}
+
+/* The disclosure and the actions that act on what it holds, on one line. */
+.block-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.block-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+/* Collapsible: the whole row is the control, chevron first. */
+.block-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.block-toggle .block-title {
+  margin: 0;
+}
+
+.block-toggle .chevron {
+  color: var(--iris);
+}
+
+.block-toggle.open .chevron {
+  transform: rotate(-135deg);
+  margin-bottom: 0;
+  margin-top: 3px;
+}
+
+.block-toggle:hover .block-title {
+  color: var(--iris);
+}
+
+.acct-profile {
+  padding-top: 16px;
+}
+
+/* ---------- environment readiness ---------- */
+
+.readiness-envs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  /* Expanding one environment must not stretch the other two to match. */
+  align-items: start;
+}
+
+.env-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px 16px;
+  background: var(--card);
+  min-width: 0;
+}
+
+/* Status colour lives in one place: a top rule and the dot agree. */
+.env-onboarded {
+  --env-tone: var(--green);
+  --env-wash: var(--green-wash);
+}
+
+.env-onboarding-in-progress {
+  --env-tone: var(--amber);
+  --env-wash: var(--amber-wash);
+}
+
+.env-not-configured {
+  --env-tone: var(--grey);
+  --env-wash: var(--grey-wash);
+  background: var(--surface-alt);
+}
+
+.env-card {
+  box-shadow: inset 0 2px 0 var(--env-tone);
+}
+
+.env-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.env-id {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.env-key {
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--navy);
+}
+
+.env-name {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.env-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: var(--iris);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  align-self: center;
+  transition: background 0.15s ease;
+}
+
+.env-toggle:hover {
+  background: var(--iris-wash);
+}
+
+.env-toggle.open .chevron {
+  transform: rotate(-135deg);
+  margin-bottom: 0;
+  margin-top: 3px;
+}
+
+.env-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--env-tone);
+}
+
+.env-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--env-tone);
+  box-shadow: 0 0 0 3px var(--env-wash);
+  flex: none;
+}
+
+.env-meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Moving the profile on is an action over the whole run of environments, so it
+   sits under them — not inside the one card it happens to be leaving. */
+.env-promote {
+  margin-top: 16px;
+}
+
+/* ---------- closing an environment out ----------
+   The one place in the readiness cards that writes anything: sign-off for the
+   lower environments, and the change request production runs under. Both only
+   ever appear on the environment the profile is actually sitting in. */
+
+/* Sign-off is a step, so its control sits in the step body under the line
+   describing it rather than floating in the card. */
+.step-action {
+  margin-top: 8px;
+}
+
+.env-rfc {
+  margin-top: 12px;
+}
+
+.env-rfc label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.env-rfc-row {
+  display: flex;
+  gap: 8px;
+}
+
+.env-rfc input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  font: inherit;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+.env-rfc input:focus-visible {
+  outline: 2px solid var(--iris);
+  outline-offset: 1px;
+  border-color: var(--iris);
+}
+
+.env-rfc-done {
+  margin: 12px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+
+/* ---------- onboarding steps ---------- */
+
+.step-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* Same moulded language as the grid keycaps, one step shallower — these sit
-   inside a panel rather than on the page, so the wall is 3px not 6px. */
-.profile-card {
-  /* A cool off-white, a few steps below the panel's near-white face. The panel
-     and these cards were within two values of each other, so only the wall
-     shadow was separating them — this gives the edge something to sit against.
-     Kept on the blue axis so it reads as a shade of white next to the region
-     wash rather than as grey. */
-  background: linear-gradient(180deg, #fbfcfe 0%, #f2f5fa 100%);
-  /* No outline — the moulded wall below is the edge. */
-  border: none;
-  border-radius: 10px;
-  padding: 16px 20px;
-  box-shadow:
-    1px 1px 0 #eef1f6,
-    2px 2px 0 #e3e8f0,
-    3px 3px 0 #d5dbe6,
-    4px 5px 9px rgba(0, 23, 90, 0.15),
-    inset 0 1px 0 #fff;
+.step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
 }
 
-.profile-card-head {
+.step-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.step-name {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.step-desc {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.step-pending .step-name,
+.step-pending .step-desc {
+  color: var(--muted);
+}
+
+/* Step marks: a tick when done, a half-filled disc while running, a dashed
+   ring while waiting. One shape, three states — no words needed. */
+.mark {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+}
+
+.mark-sm {
+  width: 14px;
+  height: 14px;
+  margin-top: 0;
+}
+
+.mark-done {
+  color: var(--green);
+}
+
+.mark-running circle,
+.mark-running path {
+  stroke: var(--amber);
+  fill: none;
+}
+
+.mark-running path {
+  fill: var(--amber);
+  stroke: none;
+}
+
+.mark-waiting circle {
+  stroke: var(--line-strong);
+}
+
+/* The verify step fans out over the profile's own APIs. */
+.step-apis {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0 0 0 2px;
+  border-left: 2px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* One line per API now that the identifier has gone — the verify step can
+   run to a dozen rows, so each one earns its height. */
+.step-api {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 8px;
+  padding-left: 12px;
+  min-width: 0;
 }
 
-.profile-card-head h4 {
-  font-size: 21px;
+.step-api-title {
+  font-size: 12.5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.profile-block + .profile-block {
+.step-api.waiting .step-api-title {
+  color: var(--muted);
+}
+
+.step-api-name {
+  font-size: 10px;
+  padding: 1px 5px;
+}
+
+.step-api-count {
+  padding-left: 12px;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}.profile-block + .profile-block {
   margin-top: 20px;
 }
 
@@ -2732,27 +3174,134 @@ select:focus {
   margin: 0 0 14px;
 }
 
-.profile-dims {
+.profile-behavior {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.profile-api-group {
+/* Same bounded treatment the editor gives each API category, so Behavior and
+   APIs read alike in edit mode too. */
+.pe-bhv-group {
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+
+/* Clearance for the label above, and a real gap between one group and the
+   next so Core and Custom read as separate blocks. */
+.pe-bhv-group {
+  margin-top: 40px;
+}
+
+.pe-bhv-group + .pe-bhv-group {
+  margin-top: 48px;
+}
+
+/* Inside a bounded group the individual rows drop their own box. */
+.pe-bhv-group .pe-bhv {
+  background: none;
+  border: none;
+  padding: 6px 0;
+}
+
+/* The remove control rides with the name it removes. */
+.pe-bhv-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.pe-bhv-group .def-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* One row for a behavior, core or custom: name and description on the left,
+   the control on the right. Used by the wizard, inside the same bounded group
+   the market page editor uses, so the two surfaces match. */
+.bhv-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 13px 0;
+}
+
+.bhv-row + .bhv-row {
+  border-top: 1px solid var(--line);
+}
+
+.bhv-row-main {
+  min-width: 0;
+}
+
+.bhv-row-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14.5px;
+  color: var(--navy);
+}
+
+.bhv-row-desc {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.bhv-row.locked .bhv-row-name,
+.bhv-row.locked .bhv-row-desc {
+  color: var(--muted);
+}
+
+.bhv-lock-note {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--amber);
+}
+
+.bhv-scope-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* A custom behavior left unset stays quiet, the same way an off core flag does. */
+.chip.chip-custom {
+  border-color: var(--line);
+  background: var(--surface-alt);
+  color: var(--muted);
+}
+
+.chip.chip-custom.on {
+  border-color: var(--iris-border);
+  background: var(--iris-wash);
+  color: var(--iris-deep);
+}
+
+/* One row shape for both APIs and Behavior: the grouping label holds a fixed
+   column on the left, its members run beside it. Shared rather than copied so
+   the two sections cannot drift apart. */
+.profile-group {
   display: flex;
   gap: 14px;
   align-items: baseline;
   padding: 7px 0;
 }
 
-/* Divider between category rows only — not above the first one, and the
-   APIs/Dimensions headings stay ruleless. */
-.profile-api-group + .profile-api-group {
+/* Divider between rows only — not above the first, and the APIs/Behavior
+   headings stay ruleless. */
+.profile-group + .profile-group {
   border-top: 1px solid var(--line);
 }
 
 
-.profile-api-cat {
+.profile-group-label {
   flex: none;
   /* Sized so "Event Handlers" stays on one line at this size. */
   width: 132px;
@@ -2764,11 +3313,9 @@ select:focus {
   color: var(--muted);
 }
 
-/* All three category labels share deep Amex navy — the API chips beside them
-   still carry the per-category hue, so nothing is lost by calming the labels. */
-.profile-api-cat.cat-core,
-.profile-api-cat.cat-composite,
-.profile-api-cat.cat-event_handler {
+/* Every grouping label reads deep Amex navy — the chips beside them carry
+   whatever colour the group needs. */
+.profile-group-label {
   color: var(--navy);
 }
 
@@ -2813,9 +3360,12 @@ select:focus {
 
 /* ---------- API directory (API view) ---------- */
 
-/* category headings read larger in the directory than in the wizard */
+/* Category headings read larger in the directory than in the wizard, and are
+   set like the region names on the grid — both name the run of cards below.
+   Medium is the heaviest face shipped; above it the browser would synthesise. */
 .api-dir-category .api-cat-head {
   font-size: 26px;
+  font-weight: 500;
   padding-bottom: 0;
   margin-bottom: 22px;
 }
@@ -2863,8 +3413,7 @@ select:focus {
 .api-dir-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: var(--api-verb-gap);
 }
 
 /* The whole row is the control now; the chevron is only an affordance. */
@@ -2892,10 +3441,13 @@ select:focus {
   border-radius: 0 0 15px 15px;
 }
 
-.api-dir-name {
+.api-dir-head .api-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.api-dir-head .api-title {
   font-size: 19px;
-  font-weight: 400;
-  color: var(--navy);
 }
 
 .api-dir-summary {
@@ -2998,34 +3550,36 @@ select:focus {
   transition: fill 0.15s ease, filter 0.15s ease;
 }
 
-/* Amex markets — coloring encodes onboarding completeness */
+/* Amex markets — three states, named once here.
+   The panel is dark navy, so these run brighter than the light-theme
+   --green / --amber / --grey tokens the seals and donut use. */
+.map-panel {
+  --map-live: #27a05f;
+  --map-live-edge: #7fe0ae;
+  --map-live-dot: #34d27b;
+  --map-progress: #cfa227;
+  --map-progress-edge: #f0cd6e;
+  --map-pending: #8b93a5;
+  --map-pending-edge: #c6cdd9;
+}
+
 .map-svg .country-market {
   cursor: pointer;
 }
 
-.map-svg .country-full {
-  fill: #27a05f;
-  stroke: #7fe0ae;
+.map-svg .country-live {
+  fill: var(--map-live);
+  stroke: var(--map-live-edge);
 }
 
-.map-svg .country-partial {
-  fill: url(#partial-stripes);
-  stroke: #6fcf9c;
+.map-svg .country-progress {
+  fill: var(--map-progress);
+  stroke: var(--map-progress-edge);
 }
 
-.map-svg .country-e2 {
-  fill: #cfa227;
-  stroke: #f0cd6e;
-}
-
-.map-svg .country-e1 {
-  fill: #6d737d;
-  stroke: #aab1bd;
-}
-
-.map-svg .country-available {
-  fill: #8b93a5;
-  stroke: #c6cdd9;
+.map-svg .country-pending {
+  fill: var(--map-pending);
+  stroke: var(--map-pending-edge);
 }
 
 .map-svg .country-market:hover {
@@ -3045,40 +3599,69 @@ select:focus {
   transition: r 0.12s ease;
 }
 
+/* Hovering opens the tooltip, and the tooltip is what is being read — so the
+   marker steps back rather than swelling to compete with it. */
 .marker:hover .marker-dot,
 .marker:focus-visible .marker-dot {
-  r: 7;
+  r: 4;
 }
 
-.marker-full .marker-dot {
-  fill: #34d27b;
+.marker-pending:hover .marker-dot,
+.marker-pending:focus-visible .marker-dot {
+  r: 3;
+}
+
+.marker-live .marker-dot {
+  fill: var(--map-live-dot);
   stroke: #0f3f2c;
 }
 
-.marker-partial .marker-dot {
-  fill: #2fae6e;
-  stroke: #0f3f2c;
-  stroke-dasharray: 2.4 1.6;
-}
-
-.marker-e2 .marker-dot {
+.marker-progress .marker-dot {
   fill: var(--amber-bright);
   stroke: #6b520e;
 }
 
-.marker-e1 .marker-dot {
-  fill: #aab1bd;
-  stroke: #4a5059;
-}
-
-.marker-available .marker-dot {
+.marker-pending .marker-dot {
   fill: rgba(255, 255, 255, 0.18);
-  stroke: #d6dce8;
+  stroke: var(--map-pending-edge);
   stroke-dasharray: 2 1.6;
 }
 
 .marker:focus-visible .marker-dot {
   stroke: #fff;
+}
+
+/* ISO code pinned beside every onboarded market. The halo is painted under
+   the glyph so the label survives whatever country it lands on. */
+.marker-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  fill: #ffffff;
+  stroke: #06183a;
+  paint-order: stroke;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+  user-select: none;
+  transition: font-size 0.12s ease, stroke-width 0.12s ease;
+}
+
+/* Steps back with the dot; the halo thins with it so the glyph does not go
+   heavy as it shrinks. */
+.marker:hover .marker-label,
+.marker:focus-visible .marker-label {
+  font-size: 8.5px;
+  stroke-width: 2.5px;
+}
+
+.marker-live .marker-label {
+  fill: #d8ffe9;
+}
+
+.marker-progress .marker-label {
+  fill: #ffeec2;
 }
 
 /* zoom controls */
@@ -3225,37 +3808,24 @@ select:focus {
   border-radius: 3px;
 }
 
-.legend-full {
-  background: #27a05f;
+.legend-live {
+  background: var(--map-live);
 }
 
-.legend-partial {
-  background: repeating-linear-gradient(45deg, #2fae6e 0 3px, #1e5a44 3px 6px);
-}
-
-.legend-e2 {
-  background: var(--amber-bright);
+.legend-progress {
+  background: var(--map-progress);
   border: 1px solid #b28a12;
 }
 
-.legend-e1 {
-  background: #6d737d;
-  border: 1px solid #aab1bd;
-}
-
-.legend-available {
-  background: #8b93a5;
-  border: 1px dashed #d6dce8;
+.legend-pending {
+  background: var(--map-pending);
+  border: 1px dashed var(--map-pending-edge);
 }
 
 .map-legend-hint {
   margin-left: auto;
   color: #6f9cc8;
   font-size: 11px;
-}
-
-.map-detail {
-  margin-top: 18px;
 }
 
 /* ---------- empty state / flag ---------- */
@@ -3277,16 +3847,529 @@ select:focus {
   line-height: 1;
 }
 
+/* ---------- market page rhythm ---------- */
+
+.market-page > section,
+.market-page > details {
+  margin-bottom: 22px;
+}
+
+/* ---------- environment record ----------
+   Configuration is stored once, but each environment holds only the profiles
+   promoted into it and only the changes made at that stage. One selector
+   governs both cards below it — they answer the same question about the same
+   environment, and letting them disagree would be a trap. */
+
+/* One card, like the account-type sections above it, holding the two things
+   an environment carries as flush rows. */
+.env-record {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+/* Heading set like Profiles, then what it holds, then the control that scopes
+   it — each on its own line, reading down into the card it governs. */
+.env-record-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 36px 0 14px;
+}
+
+.env-record-head .env-tabs {
+  margin-top: 8px;
+}
+
+.env-record-lede {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* Three two-character labels; the control should take exactly the room they
+   need and no more. */
+.env-tabs {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  overflow: hidden;
+}
+
+.env-tab {
+  min-width: 44px;
+  padding: 5px 12px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.env-tab:last-child {
+  border-right: 0;
+}
+
+.env-tab:hover:not(.on) {
+  background: var(--iris-wash);
+  color: var(--iris);
+}
+
+/* Navy is where you are, as everywhere else in the app. */
+.env-tab.on {
+  background: var(--navy);
+  color: #fff;
+}
+
+/* An environment nothing has reached yet is still worth opening — it says so
+   rather than leaving a dead tab — but it should not invite the click. */
+.env-tab.empty:not(.on) {
+  color: var(--muted);
+}
+
+.env-record-empty {
+  margin: 0;
+  padding: 18px 22px;
+  background: var(--surface-alt);
+  font-size: 14px;
+}
+
+/* Both disclosures are rows of the card now, not cards of their own: the
+   surrounding border is the card's, so they keep only the hairline that
+   separates them. */
+.env-record > .revisions,
+.env-record > .json-view {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* The card's own border already draws the top edge. */
+.env-record > :first-child {
+  border-top: 0;
+}
+
+.env-record > .revisions > summary,
+.env-record > .json-view > summary {
+  padding: 13px 22px;
+}
+
+/* ---------- revision history ---------- */
+
+/* The same disclosure card as Market Json below it — two collapsed panels at
+   the foot of the page should not be two different shapes. */
+.revisions {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.revisions > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px;
+  font-weight: 400;
+  font-size: 14.5px;
+  color: var(--iris);
+}
+
+.revisions[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.revisions > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The same chevron Market Json draws, on the same side — a printed ▸ came
+   from the system fallback and matched nothing else. */
+.revisions > summary::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  border-radius: 1px;
+  transform: rotate(45deg);
+  margin-bottom: 3px;
+  transition: transform 0.15s ease;
+}
+
+.revisions[open] > summary::after {
+  transform: rotate(-135deg);
+  margin-bottom: 0;
+  margin-top: 3px;
+}
+
+.rev-count {
+  background: var(--iris-wash);
+  border: 1px solid var(--iris-border);
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-size: 11.5px;
+  color: var(--iris-deep);
+}
+
+.revisions-body {
+  padding: 4px 20px 16px;
+}
+
+.rev-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.rev-row:last-child {
+  border-bottom: none;
+}
+
+.rev-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rev-action {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--grey-wash);
+  border: 1px solid var(--grey-border);
+  color: var(--grey);
+  flex: none;
+}
+
+.act-created .rev-action,
+.act-cloned .rev-action {
+  background: var(--iris-wash);
+  border-color: var(--iris-border);
+  color: var(--iris-deep);
+}
+
+/* Sign-off and promotion both close something out, so they read the same. */
+.act-promoted .rev-action,
+.act-verified .rev-action {
+  background: var(--green-wash);
+  border-color: var(--green-border);
+  color: var(--green);
+}
+
+/* An approval that came from outside the app. */
+.act-rfc-recorded .rev-action {
+  background: var(--amber-wash);
+  border-color: var(--amber-border);
+  color: var(--amber);
+}
+
+.act-profile-deleted .rev-action {
+  background: var(--red-wash);
+  border-color: #eec9c9;
+  color: var(--red);
+}
+
+.rev-summary {
+  flex: 1;
+  min-width: 200px;
+  font-size: 14px;
+}
+
+.rev-actor {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+}
+
+.rev-when {
+  display: flex;
+  gap: 10px;
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.rev-ago::before {
+  content: '·';
+  margin-right: 10px;
+}
+
+.rev-diff {
+  margin-top: 9px;
+}
+
+.rev-diff > summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--iris);
+  list-style: none;
+}
+
+.rev-diff > summary::-webkit-details-marker {
+  display: none;
+}
+
+.rev-diff > summary::before {
+  content: '▸';
+  margin-right: 5px;
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.rev-diff[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+/* Only the changed lines, with a couple either side for orientation. */
+.rev-diff-block {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.rev-diff-block pre {
+  max-height: 360px;
+  overflow: auto;
+  padding: 12px 0;
+}
+
+.jd-line {
+  display: block;
+  padding: 0 16px 0 0;
+  white-space: pre;
+}
+
+.jd-sign {
+  display: inline-block;
+  width: 22px;
+  padding-left: 8px;
+  color: rgba(255, 255, 255, 0.35);
+  user-select: none;
+}
+
+.jd-add {
+  background: rgba(0, 135, 103, 0.22);
+}
+
+.jd-add .jd-sign {
+  color: #4ad395;
+}
+
+.jd-del {
+  background: rgba(192, 52, 52, 0.22);
+}
+
+.jd-del .jd-sign {
+  color: #f08a8a;
+}
+
+/* Elided run of unchanged lines. */
+.jd-gap {
+  display: block;
+  padding: 2px 0 2px 8px;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.3em;
+  user-select: none;
+}
+
+.rev-diff-empty {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+/* ---------- bulk selection ---------- */
+
+/* One control for the whole list, ruled off from the categories it governs.
+   The rule is what says it acts on everything below, not just the first
+   category. */
+.api-bulk {
+  display: flex;
+  align-items: center;
+  margin-bottom: 22px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* The box and its count are one target — the count is the label, so there is
+   no separate word to read or to click. */
+.api-bulk-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  /* Negative left margin puts the box on the same edge as the text above and
+     the rows below, despite its own padding. */
+  margin-left: -10px;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.api-bulk-toggle:hover {
+  background: var(--iris-wash);
+}
+
+.api-bulk-count {
+  font-size: 14.5px;
+  color: var(--iris);
+  font-variant-numeric: tabular-nums;
+}
+
+.api-bulk-count strong {
+  font-weight: 500;
+}
+
+.selection-box {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+.selection-box rect {
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+.sel-none rect {
+  fill: #ffffff;
+  stroke: var(--line-strong);
+  stroke-width: 1.8;
+}
+
+.api-bulk-toggle:hover .sel-none rect {
+  stroke: var(--iris);
+}
+
+/* Partial stays in the blue family, a tone down from a full selection: the
+   dash already says it is partial, so the colour need not say it twice. */
+.sel-partial rect {
+  fill: #7fb3e3;
+}
+
+.sel-all rect {
+  fill: var(--iris);
+}
+
+/* ---------- API identity (title over versioned name) ---------- */
+
+.api-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+
+/* The plain-language name sits in Deep Blue like every other heading; the
+   versioned identifier beneath it takes Bright Blue at regular weight, since
+   that is the string you actually reach for. */
+.api-title {
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--navy);
+}
+
+.api-ident-name {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--iris);
+}
+
+/* The verb is metadata about the endpoint, not part of its name, so it must
+   not push the name around. A uniform width turns it into a gutter: the pills
+   line up in a column and every title starts at the same x, whether the verb
+   is GET or DELETE. */
+/* Both marks scale to their container and take colour from `currentColor`. */
+.check-mark,
+.tick-icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+.api-method {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--api-verb-w);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--grey-wash);
+  border: 1px solid var(--grey-border);
+  color: var(--grey);
+  flex: none;
+  align-self: center;
+}
+
+.api-method.m-post {
+  background: var(--green-wash);
+  border-color: var(--green-border);
+  color: var(--green);
+}
+
+.api-method.m-get {
+  background: var(--iris-wash);
+  border-color: var(--iris-border);
+  color: var(--iris-deep);
+}
+
+.api-method.m-put {
+  background: var(--amber-wash);
+  border-color: var(--amber-border);
+  color: var(--amber);
+}
+
+.api-method.m-delete {
+  background: var(--red-wash);
+  border-color: #eec9c9;
+  color: var(--red);
+}
+
+.api-method.m-event {
+  background: var(--teal-wash, var(--grey-wash));
+  border-color: var(--grey-border);
+  color: var(--teal, var(--grey));
+}
+
+.prefill-hint {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ---------- responsive ---------- */
 
 @media (max-width: 960px) {
   .apis-layout {
     grid-template-columns: 1fr;
-  }
-
-  .dim-panel {
-    position: static;
-    order: -1;
   }
 
   .split-cols {
@@ -3302,13 +4385,26 @@ select:focus {
     gap: 12px;
   }
 
-  .mast-right {
-    margin-left: 0;
+  .role-options {
+    min-width: 240px;
   }
 
-  .page-head {
-    flex-direction: column;
-    align-items: flex-start;
+  /* One environment per row: three columns of steps is unreadable here. */
+  .readiness-envs {
+    grid-template-columns: 1fr;
+  }
+
+  .market-banner {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .market-banner h1 {
+    font-size: 25px;
+  }
+
+  .acct-head {
+    row-gap: 8px;
   }
 }
 

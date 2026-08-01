@@ -1,6 +1,7 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useApp } from '../AppContext'
-import { ApiDetailBody, ErrorNote, Flag, StatusSeal } from '../components'
+import { ApiDetailBody, ApiIdentity, Arrow, ErrorNote, Flag, StatusSeal } from '../components'
 import {
   ACCOUNT_TYPE_LABELS,
   CATEGORY_LABELS,
@@ -11,8 +12,6 @@ import {
   REGION_ORDER,
 } from '../lib'
 import type { EnvStage, MarketDocument } from '../types'
-import { MarketDetailPanel } from './MarketDetailPanel'
-import { OnboardingPanel } from './OnboardingPanel'
 import { WorldMap } from './WorldMap'
 
 const VIEW_CAPTIONS: Record<'grid' | 'map' | 'apis', { label: string; text: string }> = {
@@ -30,13 +29,21 @@ const VIEW_CAPTIONS: Record<'grid' | 'map' | 'apis', { label: string; text: stri
   },
 }
 
-/** The whole app on one page: stats, onboarding panel, region ledger with inline detail. */
+type LedgerView = 'grid' | 'map' | 'apis'
+
+/** The market ledger: stats plus the grid, map or API directory. */
 export function Ledger() {
   const { markets, loading, loadError, catalog } = useApp()
-  const [onboarding, setOnboarding] = useState<{ presetMarket: string | null } | null>(null)
-  const [expanded, setExpanded] = useState<string | null>(null)
-  const [view, setView] = useState<'grid' | 'map' | 'apis'>('grid')
-  const mapDetailRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+  // The view lives in the URL so coming back from a market page lands on the
+  // one the user left, and the back button steps through it.
+  const [params, setParams] = useSearchParams()
+  const raw = params.get('view')
+  const view: LedgerView = raw === 'map' || raw === 'apis' ? raw : 'grid'
+
+  function setView(next: LedgerView) {
+    setParams(next === 'grid' ? {} : { view: next }, { replace: true })
+  }
 
   // The hero speaks in plain terms: e3 is live, anything earlier is still in flight.
   const activeMarkets = markets.filter((m) => m.status === 'E3')
@@ -46,18 +53,8 @@ export function Ledger() {
   )
   const regions = REGION_ORDER.filter((r) => markets.some((m) => m.market.region === r))
 
-  // In map view the edit panel lives below the map — bring it into view on selection.
-  useEffect(() => {
-    if (view === 'map' && expanded) {
-      mapDetailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }, [view, expanded])
-
   function openOnboarding(presetMarket: string | null) {
-    // Onboarding always happens against the grid, including when it was
-    // entered by clicking a country on the map.
-    setView('grid')
-    setOnboarding({ presetMarket })
+    navigate(presetMarket ? `/onboard/${presetMarket}` : '/onboard')
   }
 
   return (
@@ -86,11 +83,9 @@ export function Ledger() {
               APIs
             </button>
           </div>
-          {!onboarding && (
-            <button className="btn primary lg" onClick={() => openOnboarding(null)}>
-              Onboard
-            </button>
-          )}
+          <button className="btn primary lg" onClick={() => openOnboarding(null)}>
+            Onboard
+          </button>
         </div>
         <p className="view-caption" aria-live="polite">
           <strong>{VIEW_CAPTIONS[view].label}</strong>{VIEW_CAPTIONS[view].text}
@@ -99,37 +94,13 @@ export function Ledger() {
 
       <ErrorNote message={loadError} />
 
-      {onboarding && (
-        <OnboardingPanel
-          key={onboarding.presetMarket ?? 'new'}
-          presetMarket={onboarding.presetMarket}
-          onClose={() => setOnboarding(null)}
-          onDone={(code) => {
-            setOnboarding(null)
-            setExpanded(code)
-          }}
-        />
-      )}
-
       {view === 'apis' ? (
         <ApiDirectory />
       ) : view === 'map' ? (
-        <>
-          <WorldMap
-            onSelect={(code) => setExpanded(expanded === code ? null : code)}
-            onOnboard={(code) => openOnboarding(code)}
-          />
-          {expanded && markets.some((m) => m.market.code === expanded) && (
-            <div className="map-detail" ref={mapDetailRef}>
-              <MarketDetailPanel
-                market={markets.find((m) => m.market.code === expanded)!}
-                onClose={() => setExpanded(null)}
-                onAddAccountType={(code) => openOnboarding(code)}
-                onCloned={(target) => setExpanded(target)}
-              />
-            </div>
-          )}
-        </>
+        <WorldMap
+          onSelect={(code) => navigate(`/markets/${code}`)}
+          onOnboard={(code) => openOnboarding(code)}
+        />
       ) : loading ? (
         <p className="muted">Loading markets…</p>
       ) : markets.length === 0 ? (
@@ -146,30 +117,19 @@ export function Ledger() {
           return (
             <section key={region} className="region-section">
               <div className={`region-head region-${region.toLowerCase()}`}>
-                <h2>{REGION_NAMES[region] ?? region}</h2>
+                <h2>
+                  <b>{region}</b>
+                  {REGION_NAMES[region] ? `: ${REGION_NAMES[region]}` : ''}
+                </h2>
                 <span className="region-stat">
                   <span className="rs-seg rs-act">
-                    {regionMarkets.filter((m) => m.status === 'E3').length} in e3
+                    Active: {regionMarkets.filter((m) => m.status === 'E3').length}
                   </span>
                 </span>
               </div>
               <div className="market-grid">
                 {regionMarkets.map((m) => (
-                  <Fragment key={m.market.code}>
-                    <MarketCard
-                      market={m}
-                      expanded={expanded === m.market.code}
-                      onToggle={() => setExpanded(expanded === m.market.code ? null : m.market.code)}
-                    />
-                    {expanded === m.market.code && (
-                      <MarketDetailPanel
-                        market={m}
-                        onClose={() => setExpanded(null)}
-                        onAddAccountType={(code) => openOnboarding(code)}
-                        onCloned={(target) => setExpanded(target)}
-                      />
-                    )}
-                  </Fragment>
+                  <MarketCard key={m.market.code} market={m} />
                 ))}
               </div>
             </section>
@@ -202,31 +162,38 @@ function StatusOverview({
   // put while the cursor moves away to read it.
   const [pinned, setPinned] = useState<string | null>(null)
   const total = active.length + inProgress.length + pending.length || 1
-  const R = 30
+  const R = 38
   const C = 2 * Math.PI * R
+  // Pending is the unfilled track rather than a fourth colour: what is left to
+  // onboard is exactly the part of the ring not yet drawn, which is what makes
+  // this read as progress instead of a pie chart.
   const segments = [
     { n: active.length, cls: 'seg-active' },
     { n: inProgress.length, cls: 'seg-progress' },
-    { n: pending.length, cls: 'seg-off' },
   ].filter((s) => s.n > 0)
-  const gap = segments.length > 1 ? 2.5 : 0
+
+  // A round cap adds half a stroke at each end, so a drawn arc measures
+  // STROKE longer than its dash. Take that back, plus a hairline of daylight
+  // between neighbours, and clamp so a single market still shows as a dot.
+  const STROKE = 7
+  const GAP = segments.length > 1 ? 4 : 0
 
   let acc = 0
   const arcs = segments.map((s) => {
     const share = (s.n / total) * C
     const arc = {
       cls: s.cls,
-      dasharray: `${Math.max(share - gap, 1)} ${C}`,
-      dashoffset: -acc,
+      dasharray: `${Math.max(share - STROKE - GAP, 0.01)} ${C}`,
+      dashoffset: -(acc + STROKE / 2),
     }
     acc += share
     return arc
   })
 
   const rows: { dot: string; count: number; label: string; list: MarketRef[] }[] = [
-    { dot: 'ldot-active', count: active.length, label: 'active', list: active },
-    { dot: 'ldot-progress', count: inProgress.length, label: 'in progress', list: inProgress },
-    { dot: 'ldot-off', count: pending.length, label: 'pending', list: pending },
+    { dot: 'ldot-active', count: active.length, label: 'Active', list: active },
+    { dot: 'ldot-progress', count: inProgress.length, label: 'In progress', list: inProgress },
+    { dot: 'ldot-off', count: pending.length, label: 'Pending', list: pending },
   ]
 
   return (
@@ -234,25 +201,27 @@ function StatusOverview({
       className="status-overview"
       aria-label={`${active.length} active, ${inProgress.length} in progress, ${pending.length} pending`}
     >
-      <svg viewBox="0 0 80 80" className="donut" aria-hidden="true">
-        <circle className="donut-track" cx="40" cy="40" r={R} />
-        <g transform="rotate(-90 40 40)">
+      <svg viewBox="0 0 100 100" className="donut" aria-hidden="true">
+        <circle className="donut-track" cx="50" cy="50" r={R} />
+        {/* Starts at twelve o'clock and fills clockwise, the way a progress
+            ring is read. */}
+        <g transform="rotate(-90 50 50)">
           {arcs.map((a, i) => (
             <circle
               key={i}
               className={`donut-seg ${a.cls}`}
-              cx="40"
-              cy="40"
+              cx="50"
+              cy="50"
               r={R}
               strokeDasharray={a.dasharray}
               strokeDashoffset={a.dashoffset}
             />
           ))}
         </g>
-        <text x="40" y="39" className="donut-num">
+        <text x="50" y="49" className="donut-num">
           {active.length}
         </text>
-        <text x="40" y="53" className="donut-sub">
+        <text x="50" y="64" className="donut-sub">
           active
         </text>
       </svg>
@@ -265,6 +234,9 @@ function StatusOverview({
             role="button"
             aria-pressed={pinned === r.label}
             onClick={() => setPinned(pinned === r.label ? null : r.label)}
+            /* Moving onto another status drops the pin: two lists open at once
+               would overlap, and the one under the cursor is the one wanted. */
+            onMouseEnter={() => setPinned((p) => (p === r.label ? p : null))}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
@@ -290,28 +262,12 @@ function StatusOverview({
   )
 }
 
-function MarketCard({
-  market,
-  expanded,
-  onToggle,
-}: {
-  market: MarketDocument
-  expanded: boolean
-  onToggle: () => void
-}) {
+function MarketCard({ market }: { market: MarketDocument }) {
   return (
-    <article
-      className={`market-card st-${market.status.toLowerCase()} region-${market.market.region.toLowerCase()} ${expanded ? 'expanded' : ''}`}
-      onClick={onToggle}
-      role="button"
-      tabIndex={0}
-      aria-expanded={expanded}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onToggle()
-        }
-      }}
+    <Link
+      className={`market-card st-${market.status.toLowerCase()} region-${market.market.region.toLowerCase()}`}
+      to={`/markets/${market.market.code}`}
+      aria-label={`${market.market.name} market details`}
     >
       <div className="market-card-top">
         <Flag code={market.market.code} size={22} />
@@ -324,7 +280,7 @@ function MarketCard({
         <StatusSeal status={market.status} small />
       </div>
 
-      {/* Each account type carries its own dimensions — shown per profile. */}
+      {/* Each account type carries its own behavior — shown per profile. */}
       <div className="profile-rows">
         {market.profiles.map((p) => (
           <div key={p.accountType} className="profile-row">
@@ -334,16 +290,9 @@ function MarketCard({
         ))}
       </div>
 
-      <div className="market-card-foot">
-        {/* The chevron alone carries the state — it points down to expand,
-            up to collapse, so the words were saying it twice. */}
-        <span
-          className="card-open-hint"
-          role="button"
-          aria-label={expanded ? 'Collapse details' : 'Show details'}
-        />
-      </div>
-    </article>
+      {/* Nothing at rest; hovering reveals the arrow to the market's page. */}
+      <Arrow className="card-arrow" />
+    </Link>
   )
 }
 
@@ -399,8 +348,11 @@ function ApiDirectory() {
                       }
                     }}
                   >
+                    {/* No verb pill here: this view is about which markets
+                        take an API, and the method is already spelled out in
+                        the endpoint line inside the expanded detail. */}
                     <div className="api-dir-head">
-                      <span className="api-dir-name">{api.name}</span>
+                      <ApiIdentity spec={api} />
                       <span className="api-dir-count">
                         {users.length} {users.length === 1 ? 'market' : 'markets'}
                       </span>

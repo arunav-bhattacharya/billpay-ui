@@ -16,14 +16,29 @@ interface AppState {
 const Ctx = createContext<AppState | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>('OPERATOR')
+  // Admin by default: it is the fuller view, and an operator-only session
+  // silently hides the custom-behavior tooling rather than explaining it.
+  const [role, setRole] = useState<Role>('ADMIN')
   const [catalog, setCatalog] = useState<Catalog | null>(null)
+  // Every mutating request is attributed to whoever the toggle says is acting.
+  useEffect(() => api.setRole(role), [role])
   const [markets, setMarkets] = useState<MarketDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
+  /**
+   * Re-reads the market list. Callers surface their own failures for actions
+   * they initiated, so a refresh that fails only records the load error — and
+   * a refresh that succeeds clears one left over from a previous attempt.
+   */
   const refreshMarkets = useCallback(async () => {
-    setMarkets(await api.markets())
+    try {
+      setMarkets(await api.markets())
+      setLoadError(null)
+    } catch (e) {
+      setLoadError((e as Error).message)
+      throw e
+    }
   }, [])
 
   useEffect(() => {

@@ -14,7 +14,9 @@ class CatalogResource {
     fun catalog(): Map<String, Any> = mapOf(
         "apis" to Catalog.apis,
         "markets" to Catalog.markets,
-        "dimensions" to Catalog.dimensions,
+        // Response key predates the behavior rename; the UI still reads `dimensions`.
+        "dimensions" to Catalog.behaviors,
         "accountTypes" to Catalog.accountTypes,
+        "environmentNames" to Catalog.environmentNames,
     )
 }

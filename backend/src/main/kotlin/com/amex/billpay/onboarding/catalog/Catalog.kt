@@ -7,11 +7,14 @@ enum class ApiCategory { CORE, COMPOSITE, EVENT_HANDLER }
 /**
  * One-Data API specification.
  *
- * [suggests] lists the dimension flags this API typically calls for — shown as
- * guidance in the UI; dimensions are always selected manually.
+ * [title] is the plain-language headline; [name] is the versioned identifier.
+ * [suggests] lists the behavior flags this API typically calls for — shown as
+ * guidance in the UI; behavior is always selected manually. Its values are the
+ * persisted `requires*` keys, which kept their names through the rename.
  */
 data class ApiSpec(
     val name: String,
+    val title: String,
     val category: ApiCategory,
     val method: String,
     val path: String,
@@ -35,11 +38,12 @@ data class CuratedMarket(
         listOf(AccountType.CONSUMER, AccountType.CORPORATE, AccountType.BUSINESS_TRAVEL_ACCOUNT),
 )
 
-data class DimensionMeta(
+data class BehaviorMeta(
+    /** One of the persisted `requires*` keys — see [ApiSpec.suggests]. */
     val key: String,
     val label: String,
     val description: String,
-    /** False for dimensions that are strictly Y/N — the UI renders a 2-way control. */
+    /** False for behaviors that are strictly Y/N — the UI renders a 2-way control. */
     val allowsBoth: Boolean = true,
 )
 
@@ -56,6 +60,7 @@ object Catalog {
         // ---- Core ----
         ApiSpec(
             name = "CreatePayment.v3",
+            title = "Create a payment",
             category = ApiCategory.CORE,
             method = "POST", path = "/payments",
             summary = "Initiate a payment — immediately, or scheduled for a future date.",
@@ -64,6 +69,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "UpdatePayment.v1",
+            title = "Update a payment",
             category = ApiCategory.CORE,
             method = "PUT", path = "/payments/{payment-id}",
             summary = "Modify a scheduled payment.",
@@ -72,6 +78,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "DeletePayment.v1",
+            title = "Delete a payment",
             category = ApiCategory.CORE,
             method = "DELETE", path = "/payments/{payment-id}",
             summary = "Terminate a scheduled or accepted payment.",
@@ -80,6 +87,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "ReadPayments.v1",
+            title = "Read payments for an account",
             category = ApiCategory.CORE,
             method = "GET", path = "/payments/account/{account-id}",
             summary = "Retrieve all payments for an account.",
@@ -88,6 +96,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "ReadPaymentEventsById.v1",
+            title = "Read a payment and its events",
             category = ApiCategory.CORE,
             method = "GET", path = "/payments/{payment-id}",
             summary = "Fetch a payment with its full lifecycle events.",
@@ -96,6 +105,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "CreateCreditBalanceRefund.v1",
+            title = "Create a credit-balance refund",
             category = ApiCategory.CORE,
             method = "POST", path = "/refunds",
             summary = "Return funds to the customer from a credit balance.",
@@ -104,6 +114,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "CreateInboundPayment.v1",
+            title = "Create an inbound payment",
             category = ApiCategory.CORE,
             method = "POST", path = "/payments/inbound",
             summary = "Record a payment initiated or confirmed by a third party.",
@@ -112,6 +123,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "CreatePaymentIntent.v1",
+            title = "Create a payment intent",
             category = ApiCategory.CORE,
             method = "POST", path = "/payments/intent",
             summary = "Register an intent that becomes a payment on bank confirmation.",
@@ -123,6 +135,7 @@ object Catalog {
         // ---- Composite ----
         ApiSpec(
             name = "CreatePaymentInstallment.v1",
+            title = "Create a payment installment plan",
             category = ApiCategory.COMPOSITE,
             method = "POST", path = "/payment-installments",
             summary = "A payment plus a future installment plan in one call.",
@@ -133,6 +146,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "CreateBillpayTransactionFromAccountsReceivable.v1",
+            title = "Create a payment from Accounts Receivable",
             category = ApiCategory.COMPOSITE,
             method = "POST", path = "/payments",
             summary = "Payment originated by the Accounts Receivable platform.",
@@ -144,6 +158,7 @@ object Catalog {
         // ---- Event Handlers ----
         ApiSpec(
             name = "MoneyMovementEventHandler.v1",
+            title = "Handle money-movement events",
             category = ApiCategory.EVENT_HANDLER,
             method = "EVENT", path = "clearing rail (MR/M3)",
             summary = "Brings in money-movement events from the clearing rail — returns and settlement.",
@@ -153,6 +168,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "AccountsReceivableTransactionEventHandler.v1",
+            title = "Handle Accounts Receivable posting events",
             category = ApiCategory.EVENT_HANDLER,
             method = "EVENT", path = "GAR platform",
             summary = "Consume posting events from the Accounts Receivable (GAR) system.",
@@ -162,6 +178,7 @@ object Catalog {
         ),
         ApiSpec(
             name = "OpentoBuyUpdatePaymentEventHandler.v1",
+            title = "Handle Open-To-Buy update events",
             category = ApiCategory.EVENT_HANDLER,
             method = "EVENT", path = "AMP platform",
             summary = "Process Open-To-Buy (AMP) update events.",
@@ -177,7 +194,7 @@ object Catalog {
         CuratedMarket("CA", "Canada", "CAD", "AMER"),
         CuratedMarket("MX", "Mexico", "MXN", "AMER"),
         CuratedMarket("AR", "Argentina", "ARS", "AMER"),
-        CuratedMarket("PR", "Puerto Rico & USVI", "USD", "AMER"),
+        CuratedMarket("PR", "Puerto Rico", "USD", "AMER"),
         CuratedMarket("GB", "United Kingdom", "GBP", "EMEA"),
         CuratedMarket("DE", "Germany", "EUR", "EMEA"),
         CuratedMarket("FR", "France", "EUR", "EMEA"),
@@ -204,27 +221,26 @@ object Catalog {
 
     val marketsByCode: Map<String, CuratedMarket> = markets.associateBy { it.code }
 
-    val dimensions: List<DimensionMeta> = listOf(
-        DimensionMeta(
+    val behaviors: List<BehaviorMeta> = listOf(
+        BehaviorMeta(
             // Key stays requiresArPosting: it is persisted in every stored
             // document, and only the display label changed.
             key = "requiresArPosting",
             label = "Good-faith Credit",
-            description = "Processed payments must be reported to Accounts Receivable, the system " +
-                "tracking cardmember debt.",
+            description = "Payments need to be reported to Accounts Receivable",
         ),
-        DimensionMeta(
+        BehaviorMeta(
             key = "requiresRealtimeClearing",
             label = "Realtime Clearing",
             description = "Payments clear the customer's bank in realtime rather than through " +
                 "periodic batches.",
         ),
-        DimensionMeta(
+        BehaviorMeta(
             key = "requiresMandateAuthorization",
             label = "Mandate Authorization",
             description = "Standing payment authorizations require verification during processing.",
         ),
-        DimensionMeta(
+        BehaviorMeta(
             key = "requiresRepresentableReturn",
             label = "Representable Return",
             description = "A returned payment may be re-presented to the customer's bank instead " +
@@ -235,7 +251,69 @@ object Catalog {
 
     val accountTypes: List<AccountTypeMeta> = listOf(
         AccountTypeMeta("CONSUMER", "Consumer", "Personal card accounts — the highest-volume segment."),
-        AccountTypeMeta("CORPORATE", "Corporate", "Corporate card programs — the primary split-payment scenario; shapes more of the processing than any other dimension."),
-        AccountTypeMeta("BUSINESS_TRAVEL_ACCOUNT", "Business Travel Account", "Centrally billed accounts that settle a company's travel spend without a card per traveller."),
+        AccountTypeMeta("CORPORATE", "Corporate", "Corporate card programs — the primary split-payment scenario; shapes more of the processing than any other behavior."),
+        // Key stays BUSINESS_TRAVEL_ACCOUNT: it is persisted in every stored
+        // document, and only the display label was shortened.
+        AccountTypeMeta("BUSINESS_TRAVEL_ACCOUNT", "Business Travel", "Centrally billed accounts that settle a company's travel spend without a card per traveller."),
+    )
+
+    // ---- environment readiness ----
+
+    const val STEP_MARKET_PROFILE = "MARKET_PROFILE"
+    const val STEP_TEST_PROFILE = "TEST_PROFILE"
+    const val STEP_VERIFY_PROFILES = "VERIFY_PROFILES"
+    const val STEP_RFC = "RFC"
+    const val STEP_SIGN_OFF = "SIGN_OFF"
+
+    /**
+     * The last step in every environment, and the only one a person closes by
+     * hand. Deliberately separate from verification: the checks passing is not
+     * the same as somebody accepting the result.
+     */
+    val signOffStep: Triple<String, String, String> = Triple(
+        STEP_SIGN_OFF,
+        "Sign off",
+        "Accepts this environment and releases the profile for promotion",
+    )
+
+    /**
+     * Production takes one step the environments below it do not: a ServiceNow
+     * change request has to authorise the release before anything is put in.
+     * It runs first, so the market profile waits on it.
+     */
+    val rfcStep: Triple<String, String, String> = Triple(
+        STEP_RFC,
+        "Request for Change",
+        "Validates the ServiceNow change request authorising this release",
+    )
+
+    /**
+     * The steps that take a profile from nothing to onboarded in one
+     * environment, in order. The last one fans out over the profile's own APIs,
+     * so it is the only step whose size varies by market.
+     */
+    val readinessSteps: List<Triple<String, String, String>> = listOf(
+        Triple(
+            STEP_MARKET_PROFILE,
+            "Market profile",
+            "Sets up the market's API and behavior configuration",
+        ),
+        Triple(
+            STEP_TEST_PROFILE,
+            "Test profile",
+            "Builds the set of tests the new market has to pass",
+        ),
+        Triple(
+            STEP_VERIFY_PROFILES,
+            "Verify profile",
+            "Runs every onboarded API against the test profile",
+        ),
+    )
+
+    /** Environment display names used alongside the e1/e2/e3 short forms. */
+    val environmentNames: Map<String, String> = mapOf(
+        "E1" to "Development",
+        "E2" to "Testing",
+        "E3" to "Production",
     )
 }

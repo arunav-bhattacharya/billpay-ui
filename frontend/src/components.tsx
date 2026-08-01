@@ -1,56 +1,138 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from './api'
 import { useApp } from './AppContext'
 import amexLogo from './assets/amex.svg'
-import { ACCOUNT_TYPE_LABELS, DIM_LABELS, ENV_LABELS, flagEmoji } from './lib'
+import { ACCOUNT_TYPE_LABELS, BEHAVIOR_VALUE_LABELS, ENV_LABELS, flagEmoji } from './lib'
 import type {
   AccountType,
   ApiSpec,
-  CustomDimensionDef,
-  DimValue,
+  BehaviorValue,
+  CustomBehaviorDef,
   EnvStage,
   MarketDocument,
+  Role,
 } from './types'
 
 /* ---------- Masthead ---------- */
 
 export function Masthead() {
-  const { role, setRole } = useApp()
   return (
     <header className="masthead">
       <div className="masthead-inner">
-        <div className="brand">
+        {/* The lockup is the way home from anywhere in the app. */}
+        <Link className="brand" to="/" aria-label="Billpay Market Onboarding — back to markets">
           <img src={amexLogo} alt="American Express" className="brand-logo" />
           <span className="brand-rule" aria-hidden="true" />
           <span className="brand-name">
             <span className="brand-title">Billpay</span>
             <span className="brand-sub">Market Onboarding</span>
           </span>
-        </div>
+        </Link>
         <div className="mast-right">
-          <div className="role-switch" role="group" aria-label="Profile">
-            <button
-              className={role === 'OPERATOR' ? 'on' : ''}
-              onClick={() => setRole('OPERATOR')}
-            >
-              Operator
-            </button>
-            <button className={role === 'ADMIN' ? 'on' : ''} onClick={() => setRole('ADMIN')}>
-              Admin
-            </button>
-          </div>
+          <RoleMenu />
         </div>
       </div>
     </header>
   )
 }
 
+/* ---------- Who you are acting as ---------- */
+
+const ROLE_LABELS: Record<Role, string> = {
+  OPERATOR: 'Operator',
+  ADMIN: 'Admin',
+}
+
+const ROLE_NOTES: Record<Role, string> = {
+  OPERATOR: 'Onboards markets and edits account profiles.',
+  ADMIN: 'Also defines the custom behaviors a market carries.',
+}
+
+const ROLES: Role[] = ['OPERATOR', 'ADMIN']
+
+/**
+ * Who the session is acting as. Lives in the masthead alongside the brand,
+ * since it is session context rather than part of any one page. Every mutating
+ * request is attributed to whoever is named here.
+ */
+function RoleMenu() {
+  const { role, setRole } = useApp()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEscape(() => setOpen(false))
+
+  // A menu that stays open after you have clicked elsewhere is a menu you
+  // have to dismiss twice.
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener('pointerdown', onDown)
+    return () => window.removeEventListener('pointerdown', onDown)
+  }, [open])
+
+  return (
+    <div className={`role-menu ${open ? 'open' : ''}`} ref={ref}>
+      <button
+        className="role-trigger"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span>
+          Logged in as <strong>{ROLE_LABELS[role]}</strong>
+        </span>
+        <span className="chevron" aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div className="role-options" role="menu" aria-label="Switch role">
+          {ROLES.map((r) => (
+            <button
+              key={r}
+              role="menuitemradio"
+              aria-checked={role === r}
+              className={`role-option ${role === r ? 'on' : ''}`}
+              onClick={() => {
+                setRole(r)
+                setOpen(false)
+              }}
+            >
+              <span className="role-option-name">
+                {ROLE_LABELS[r]}
+                {role === r && <CheckMark />}
+              </span>
+              <span className="role-option-note">{ROLE_NOTES[r]}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ---------- Environment pill: e3 = green, e2 = amber, e1 = grey ---------- */
 
-export function StatusSeal({ status, small }: { status: EnvStage; small?: boolean }) {
+export function StatusSeal({
+  status,
+  small,
+  onDark,
+}: {
+  status: EnvStage
+  small?: boolean
+  /** Inverted fill for the navy banner, where the light washes disappear. */
+  onDark?: boolean
+}) {
   return (
-    <span className={`seal seal-${status.toLowerCase()} ${small ? 'seal-sm' : ''}`}>
+    <span
+      className={`seal seal-${status.toLowerCase()} ${small ? 'seal-sm' : ''} ${
+        onDark ? 'seal-dark' : ''
+      }`}
+    >
       <i className="seal-dot" aria-hidden="true" />
       {ENV_LABELS[status]}
     </span>
@@ -86,15 +168,70 @@ export function CloseIcon() {
   )
 }
 
-/** Filled green tick — "already onboarded", distinct from the outline CheckIcon. */
-export function TickIcon() {
+/* ---------- The check mark ----------
+
+   One geometry, drawn everywhere something is done. There used to be five:
+   three SVG paths with different angles and weights, plus two places printing
+   a literal ✓ — a character Benton Sans has no glyph for, so those fell
+   through to whatever the operating system supplies and matched nothing else
+   on the page. */
+
+const CHECK_PATH = 'M5.6 12.5 10.1 17 18.4 7.8'
+
+function CheckPath({ stroke = 'currentColor' }: { stroke?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="11" fill="currentColor" />
+    <path
+      d={CHECK_PATH}
+      fill="none"
+      stroke={stroke}
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  )
+}
+
+/** Bare check. Takes its colour from `currentColor`. */
+export function CheckMark({ className }: { className?: string }) {
+  return (
+    <svg
+      className={`check-mark${className ? ` ${className}` : ''}`}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <CheckPath />
+    </svg>
+  )
+}
+
+/* ---------- The arrow ----------
+
+   One geometry, rotated to point where it is needed. There were three: two
+   near-identical CSS constructions built from borders at different sizes, and
+   a printed ↗ that came from the system font and matched neither. Drawn at
+   the same weight as the check mark so the two read as one family. */
+
+export type ArrowDirection = 'right' | 'left' | 'up-right'
+
+export function Arrow({
+  direction = 'right',
+  className,
+}: {
+  direction?: ArrowDirection
+  className?: string
+}) {
+  return (
+    <svg
+      className={`arrow arrow-${direction}${className ? ` ${className}` : ''}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M4.5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
       <path
-        d="M7 12.4l3.4 3.3L17 9"
-        stroke="#fff"
-        strokeWidth="2.4"
+        d="M12.8 6.3 18.5 12l-5.7 5.7"
+        stroke="currentColor"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -102,10 +239,43 @@ export function TickIcon() {
   )
 }
 
-export function CheckIcon() {
+export type SelectionState = 'none' | 'partial' | 'all'
+
+/**
+ * The box that governs a whole list — the same rounded square the rows use,
+ * carrying all three states it can be in: empty, a dash for a partial
+ * selection, and the shared check once everything is on.
+ */
+export function SelectionBox({ state }: { state: SelectionState }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 6 9 17l-5-5" />
+    <svg className={`selection-box sel-${state}`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      {state === 'all' && (
+        <g transform="translate(12 12) scale(0.6) translate(-12 -12)">
+          <CheckPath stroke="#fff" />
+        </g>
+      )}
+      {state === 'partial' && (
+        <path d="M8 12h8" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
+      )}
+    </svg>
+  )
+}
+
+/** The same check on a filled disc — "already onboarded", "step complete". */
+export function TickIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={`tick-icon${className ? ` ${className}` : ''}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="11" fill="currentColor" />
+      {/* Same path, inset so it sits comfortably inside the disc. */}
+      <g transform="translate(12 12) scale(0.78) translate(-12 -12)">
+        <CheckPath stroke="#fff" />
+      </g>
     </svg>
   )
 }
@@ -167,10 +337,10 @@ export function Modal({
   )
 }
 
-/* ---------- Dimension value control (wizard + profile editor) ----------
+/* ---------- Behavior value control (wizard + profile editor) ----------
 
    Shared so the two edit surfaces cannot drift. Width follows the segment
-   count, so the strictly-Y/N dimensions degrade to two segments with no
+   count, so the strictly-Y/N behaviors degrade to two segments with no
    separate component and no conditional markup. */
 
 export function TriToggle({
@@ -181,12 +351,12 @@ export function TriToggle({
   label,
   onChange,
 }: {
-  value: DimValue
-  options: DimValue[]
+  value: BehaviorValue
+  options: BehaviorValue[]
   locked?: boolean
   small?: boolean
   label: string
-  onChange: (v: DimValue) => void
+  onChange: (v: BehaviorValue) => void
 }) {
   return (
     <div
@@ -204,16 +374,35 @@ export function TriToggle({
           className={`tri-opt ${value === o ? 'on' : ''}`}
           onClick={() => onChange(o)}
         >
-          {DIM_LABELS[o]}
+          {BEHAVIOR_VALUE_LABELS[o]}
         </button>
       ))}
     </div>
   )
 }
 
-/** Segment set for a dimension, from its catalog metadata. */
-export function dimOptions(meta: { allowsBoth?: boolean }): DimValue[] {
+/** Segment set for a behavior, from its catalog metadata. */
+export function behaviorOptions(meta: { allowsBoth?: boolean }): BehaviorValue[] {
   return meta.allowsBoth === false ? ['Y', 'N'] : ['Y', 'N', 'BOTH']
+}
+
+/* ---------- API identity (wizard, profile editor, API view) ----------
+
+   One shape for naming an API everywhere: the verb pill leads, then the
+   plain-language title, with the versioned identifier beneath it in mono as
+   the thing you paste into code. */
+
+export function ApiMethodBadge({ method }: { method: string }) {
+  return <span className={`api-method m-${method.toLowerCase()}`}>{method}</span>
+}
+
+export function ApiIdentity({ spec }: { spec: ApiSpec }) {
+  return (
+    <span className="api-identity">
+      <span className="api-title">{spec.title}</span>
+      <span className="api-ident-name mono-tag">{spec.name}</span>
+    </span>
+  )
 }
 
 /* ---------- API detail body (wizard selection + API view) ----------
@@ -231,20 +420,21 @@ export function ApiDetailBody({ spec }: { spec: ApiSpec }) {
         </span>
       </div>
       <a className="api-spec-link" href={spec.specUrl} target="_blank" rel="noreferrer">
-        View API spec ↗
+        View API spec
+        <Arrow direction="up-right" />
       </a>
     </div>
   )
 }
 
-/* ---------- Custom dimension value input (wizard + detail panel) ---------- */
+/* ---------- Custom behavior value input (wizard + market page) ---------- */
 
-export function CustomDimValueInput({
+export function CustomBehaviorValueInput({
   def,
   value,
   onChange,
 }: {
-  def: CustomDimensionDef
+  def: CustomBehaviorDef
   value: string
   onChange: (v: string) => void
 }) {
@@ -299,8 +489,11 @@ function highlightJson(json: string): string {
   )
 }
 
-export function JsonView({ data, filename }: { data: unknown; filename: string }) {
-  const json = useMemo(() => JSON.stringify(data, null, 2), [data])
+/**
+ * The rendered JSON pane, without the disclosure around it — the market view
+ * wraps it in a `<details>`, the revision diffs place two side by side.
+ */
+export function JsonBlock({ json, filename }: { json: string; filename: string }) {
   const html = useMemo(() => highlightJson(json), [json])
   const [copied, setCopied] = useState(false)
 
@@ -326,26 +519,34 @@ export function JsonView({ data, filename }: { data: unknown; filename: string }
   }
 
   return (
-    <details className="json-view">
-      <summary>Market JSON</summary>
-      <div className="json-block">
-        <div className="json-head">
-          <span className="json-dots" aria-hidden="true">
-            <i /> <i /> <i />
-          </span>
-          <span className="json-name">{filename}</span>
-          <span className="json-meta">{json.split('\n').length} lines</span>
-          <button
-            className={`json-copy ${copied ? 'copied' : ''}`}
-            onClick={copy}
-            aria-label={copied ? 'Copied' : 'Copy JSON'}
-            title={copied ? 'Copied' : 'Copy JSON'}
-          >
-            {copied ? <CheckIcon /> : <CopyIcon />}
-          </button>
-        </div>
-        <pre dangerouslySetInnerHTML={{ __html: html }} />
+    <div className="json-block">
+      <div className="json-head">
+        <span className="json-dots" aria-hidden="true">
+          <i /> <i /> <i />
+        </span>
+        <span className="json-name">{filename}</span>
+        <span className="json-meta">{json.split('\n').length} lines</span>
+        <button
+          className={`json-copy ${copied ? 'copied' : ''}`}
+          onClick={copy}
+          aria-label={copied ? 'Copied' : 'Copy JSON'}
+          title={copied ? 'Copied' : 'Copy JSON'}
+        >
+          {copied ? <CheckMark /> : <CopyIcon />}
+        </button>
       </div>
+      <pre dangerouslySetInnerHTML={{ __html: html }} />
+    </div>
+  )
+}
+
+export function JsonView({ data, filename }: { data: unknown; filename: string }) {
+  const json = useMemo(() => JSON.stringify(data, null, 2), [data])
+
+  return (
+    <details className="json-view">
+      <summary>Market profile</summary>
+      <JsonBlock json={json} filename={filename} />
     </details>
   )
 }
@@ -395,9 +596,9 @@ export function CloneDialog({
   return (
     <Modal title={`Clone ${source.market.code} configuration`} onClose={onClose}>
       <p className="modal-lede">
-        Copies the selected profiles — API selections, dimensions and custom-dimension
-        definitions — from <strong>{source.market.name}</strong>. Cloned profiles start as
-        drafts.
+        Copies the selected profiles — API selections, behavior and custom-behavior
+        definitions — from <strong>{source.market.name}</strong>. Cloned profiles start in
+        e1.
       </p>
 
       <h3 className="modal-section">Profiles to include</h3>
