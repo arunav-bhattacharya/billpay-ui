@@ -6,8 +6,8 @@ import type { FeatureCollection, Geometry } from 'geojson'
 import worldData from 'world-atlas/countries-110m.json'
 import { useApp } from '../AppContext'
 import { Flag, StatusSeal } from '../components'
-import { ACCOUNT_TYPE_LABELS, DIMENSION_SHORT, yn } from '../lib'
-import { DIMENSION_KEYS } from '../types'
+import { ACCOUNT_TYPE_LABELS, BEHAVIOR_SHORT, yn } from '../lib'
+import { BEHAVIOR_KEYS } from '../types'
 import type { CuratedMarket, MarketDocument } from '../types'
 
 /** Marker anchor (lon/lat) and ISO-3166 numeric id per Amex market. */
@@ -46,20 +46,19 @@ const H = 500
 const MIN_K = 1
 const MAX_K = 8
 /**
- * Map coloring encodes environment reached, then onboarding completeness:
- *  full    — in e3, all supported account types onboarded → solid green
- *  partial — in e3, some account types onboarded          → striped green
- *  e2      — onboarded, furthest profile is in e2         → amber
- *  e1      — onboarded, still entirely in e1              → grey
- *  available — Amex market not onboarded                  → muted grey, clickable
+ * Map coloring reads at a glance, in three states:
+ *  live     — reached e3 → green
+ *  progress — onboarded, still in e1 or e2 → yellow
+ *  pending  — an Amex market not onboarded → grey, clickable
+ *
+ * Onboarded markets carry their ISO code so the map can be read without
+ * hovering; pending ones stay unlabelled so the live estate stands out.
  */
-type MarketState = 'full' | 'partial' | 'e2' | 'e1' | 'available'
+type MarketState = 'live' | 'progress' | 'pending'
 
-function stateOf(doc: MarketDocument | undefined, supportedTypes: number): MarketState {
-  if (!doc) return 'available'
-  if (doc.status === 'E1') return 'e1'
-  if (doc.status === 'E2') return 'e2'
-  return doc.profiles.length >= supportedTypes ? 'full' : 'partial'
+function stateOf(doc: MarketDocument | undefined): MarketState {
+  if (!doc) return 'pending'
+  return doc.status === 'E3' ? 'live' : 'progress'
 }
 
 interface Hover {
@@ -241,17 +240,6 @@ export function WorldMap({
               <stop offset="60%" stopColor="#07204a" />
               <stop offset="100%" stopColor="#041638" />
             </radialGradient>
-            {/* striped green: partially onboarded markets */}
-            <pattern
-              id="partial-stripes"
-              width="6"
-              height="6"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(45)"
-            >
-              <rect width="6" height="6" fill="#1e5a44" />
-              <rect width="3" height="6" fill="#2fae6e" />
-            </pattern>
           </defs>
 
           <g transform={`translate(${t.x}, ${t.y}) scale(${t.k})`}>
@@ -261,9 +249,7 @@ export function WorldMap({
             {countryPaths.map((c, i) => {
               const code = isoToCode.get(c.id)
               const curated = code ? curatedByCode.get(code) : undefined
-              const state = curated
-                ? stateOf(byCode.get(curated.code), curated.allowedAccountTypes.length)
-                : null
+              const state = curated ? stateOf(byCode.get(curated.code)) : null
               return (
                 <path
                   key={`${c.id}-${i}`}
@@ -282,7 +268,8 @@ export function WorldMap({
               if (!geo) return null
               const pos = projection([geo.lon, geo.lat])
               if (!pos) return null
-              const state = stateOf(byCode.get(cm.code), cm.allowedAccountTypes.length)
+              const doc = byCode.get(cm.code)
+              const state = stateOf(doc)
               return (
                 <g
                   key={cm.code}
@@ -291,7 +278,11 @@ export function WorldMap({
                   tabIndex={0}
                   role="button"
                   aria-label={`${cm.name} — ${
-                    state === 'available' ? 'pending' : state === 'e1' || state === 'e2' ? `in ${state}` : state
+                    state === 'pending'
+                      ? 'pending'
+                      : state === 'live'
+                        ? 'live in e3'
+                        : `in progress, ${doc!.status.toLowerCase()}`
                   }`}
                   onMouseMove={(e) => moveTooltip(e, cm)}
                   onMouseLeave={() => setHover(null)}
@@ -315,8 +306,15 @@ export function WorldMap({
                     }
                   }}
                 >
-                  {(state === 'full' || state === 'partial') && <circle className="pulse" r="7" />}
-                  <circle className="marker-dot" r={state === 'available' ? 3.5 : 5} />
+                  {state === 'live' && <circle className="pulse" r="7" />}
+                  <circle className="marker-dot" r={state === 'pending' ? 3.5 : 5} />
+                  {/* Onboarded markets are labelled; the counter-scale above
+                      keeps the code the same size at every zoom level. */}
+                  {state !== 'pending' && (
+                    <text className="marker-label" x="8" y="3.6">
+                      {cm.code}
+                    </text>
+                  )}
                 </g>
               )
             })}
@@ -367,8 +365,8 @@ export function WorldMap({
                       />
                       <span>{ACCOUNT_TYPE_LABELS[p.accountType]}</span>
                       <span className="mono-tag">
-                        {DIMENSION_KEYS.map(
-                          (k) => `${DIMENSION_SHORT[k]}:${yn(p.dimensions[k])}`,
+                        {BEHAVIOR_KEYS.map(
+                          (k) => `${BEHAVIOR_SHORT[k]}:${yn(p.dimensions[k])}`,
                         ).join(' ')}
                       </span>
                     </div>
@@ -385,19 +383,13 @@ export function WorldMap({
 
       <div className="map-legend" aria-hidden="true">
         <span>
-          <i className="legend-dot legend-full" /> Fully onboarded
+          <i className="legend-dot legend-live" /> Live in e3
         </span>
         <span>
-          <i className="legend-dot legend-partial" /> Partially onboarded
+          <i className="legend-dot legend-progress" /> In progress (e1–e2)
         </span>
         <span>
-          <i className="legend-dot legend-e2" /> In e2
-        </span>
-        <span>
-          <i className="legend-dot legend-e1" /> In e1
-        </span>
-        <span>
-          <i className="legend-dot legend-available" /> Pending
+          <i className="legend-dot legend-pending" /> Pending
         </span>
         <span className="map-legend-hint mono-tag">scroll to zoom · drag to pan when zoomed</span>
       </div>

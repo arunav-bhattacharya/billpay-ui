@@ -2,10 +2,10 @@ package com.amex.billpay.onboarding.seed
 
 import com.amex.billpay.onboarding.entity.MarketEntity
 import com.amex.billpay.onboarding.model.AccountType
-import com.amex.billpay.onboarding.model.CustomDimensionDef
-import com.amex.billpay.onboarding.model.CustomDimensionType
-import com.amex.billpay.onboarding.model.DimValue
-import com.amex.billpay.onboarding.model.Dimensions
+import com.amex.billpay.onboarding.model.Behavior
+import com.amex.billpay.onboarding.model.BehaviorValue
+import com.amex.billpay.onboarding.model.CustomBehaviorDef
+import com.amex.billpay.onboarding.model.CustomBehaviorType
 import com.amex.billpay.onboarding.model.EnvStage
 import com.amex.billpay.onboarding.model.MarketDocument
 import com.amex.billpay.onboarding.model.MarketInfo
@@ -22,17 +22,24 @@ class SeedData(private val service: MarketService) {
 
     @Transactional
     fun onStart(@Observes event: StartupEvent) {
-        if (MarketEntity.count() > 0) return
-        Log.info("Empty database — seeding demo markets (US, GB, JP)")
+        if (MarketEntity.count() == 0L) {
+            Log.info("Empty database — seeding demo markets (US, GB, JP)")
+            seedDemoMarkets()
+        }
+        // Markets stored before the revision history existed have no entries;
+        // give each one the CREATED record it would have got.
+        service.backfillRevisions()
+    }
 
+    private fun seedDemoMarkets() {
         service.create(
             MarketDocument(
                 market = MarketInfo(code = "US"),
                 customDimensionDefs = listOf(
-                    CustomDimensionDef(
+                    CustomBehaviorDef(
                         key = "settlementWindow",
                         label = "Settlement Window",
-                        type = CustomDimensionType.ENUM,
+                        type = CustomBehaviorType.ENUM,
                         allowedValues = listOf("T+0", "T+1", "T+2"),
                         description = "How quickly cleared funds settle to the AR ledger.",
                     ),
@@ -47,7 +54,7 @@ class SeedData(private val service: MarketService) {
                             "CreateBillpayTransactionFromAccountsReceivable.v1",
                             "AccountsReceivableTransactionEventHandler.v1",
                         ),
-                        dimensions = Dimensions(requiresArPosting = DimValue.Y),
+                        dimensions = Behavior(requiresArPosting = BehaviorValue.Y),
                         customDimensions = mapOf("settlementWindow" to "T+1"),
                     ),
                     MarketProfile(
@@ -60,11 +67,12 @@ class SeedData(private val service: MarketService) {
                             "CreateBillpayTransactionFromAccountsReceivable.v1",
                             "AccountsReceivableTransactionEventHandler.v1",
                         ),
-                        dimensions = Dimensions(requiresArPosting = DimValue.Y, requiresMandateAuthorization = DimValue.Y),
+                        dimensions = Behavior(requiresArPosting = BehaviorValue.Y, requiresMandateAuthorization = BehaviorValue.Y),
                         customDimensions = mapOf("settlementWindow" to "T+0"),
                     ),
                 ),
-            )
+            ),
+            actor = "SYSTEM",
         )
 
         service.create(
@@ -79,10 +87,11 @@ class SeedData(private val service: MarketService) {
                             "ReadPayments.v1", "ReadPaymentEventsById.v1", "CreateCreditBalanceRefund.v1",
                             "CreatePaymentIntent.v1", "MoneyMovementEventHandler.v1",
                         ),
-                        dimensions = Dimensions(requiresRealtimeClearing = DimValue.Y),
+                        dimensions = Behavior(requiresRealtimeClearing = BehaviorValue.Y),
                     ),
                 ),
-            )
+            ),
+            actor = "SYSTEM",
         )
 
         service.create(
@@ -95,10 +104,11 @@ class SeedData(private val service: MarketService) {
                         apis = listOf(
                             "CreatePayment.v3", "ReadPayments.v1", "ReadPaymentEventsById.v1",
                         ),
-                        dimensions = Dimensions(),
+                        dimensions = Behavior(),
                     ),
                 ),
-            )
+            ),
+            actor = "SYSTEM",
         )
     }
 }
