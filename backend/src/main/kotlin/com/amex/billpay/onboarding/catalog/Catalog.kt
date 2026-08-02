@@ -8,9 +8,6 @@ enum class ApiCategory { CORE, COMPOSITE, EVENT_HANDLER }
  * One-Data API specification.
  *
  * [title] is the plain-language headline; [name] is the versioned identifier.
- * [suggests] lists the behavior flags this API typically calls for — shown as
- * guidance in the UI; behavior is always selected manually. Its values are the
- * persisted `requires*` keys, which kept their names through the rename.
  */
 data class ApiSpec(
     val name: String,
@@ -20,7 +17,6 @@ data class ApiSpec(
     val path: String,
     val summary: String,
     val description: String,
-    val suggests: List<String> = emptyList(),
 ) {
     /** Deep link into the API Explorer, which keys its pages on [name] verbatim. */
     val specUrl: String
@@ -38,7 +34,7 @@ data class CuratedMarket(
 )
 
 data class BehaviorMeta(
-    /** One of the persisted `requires*` keys — see [ApiSpec.suggests]. */
+    /** One of the persisted `requires*` keys. */
     val key: String,
     val label: String,
     val description: String,
@@ -128,7 +124,6 @@ object Catalog {
             summary = "Register an intent that becomes a payment on bank confirmation.",
             description = "Registers a payment intent that converts to a payment once the customer's bank " +
                 "confirms in realtime. Markets selecting it typically clear in realtime.",
-            suggests = listOf("requiresRealtimeClearing"),
         ),
 
         // ---- Composite ----
@@ -141,7 +136,6 @@ object Catalog {
             description = "Creates a payment together with a future installment plan in a single call. " +
                 "Standing installment authorizations must be verified, so it typically calls for " +
                 "mandate authorization.",
-            suggests = listOf("requiresMandateAuthorization"),
         ),
         ApiSpec(
             name = "CreateBillpayTransactionFromAccountsReceivable.v1",
@@ -151,7 +145,6 @@ object Catalog {
             summary = "Payment originated by the Accounts Receivable platform.",
             description = "Accepts future-dated payments originated by the Accounts Receivable platform. " +
                 "AR is the system of record for these, so AR posting is the usual companion.",
-            suggests = listOf("requiresArPosting"),
         ),
 
         // ---- Event Handlers ----
@@ -163,7 +156,6 @@ object Catalog {
             summary = "Brings in money-movement events from the clearing rail — returns and settlement.",
             description = "Consumes money-movement events (returns, settlement) from the MR/M3 clearing " +
                 "rail. Required when the market clears payments in realtime.",
-            suggests = listOf("requiresRealtimeClearing"),
         ),
         ApiSpec(
             name = "AccountsReceivableTransactionEventHandler.v1",
@@ -173,7 +165,6 @@ object Catalog {
             summary = "Consume posting events from the Accounts Receivable (GAR) system.",
             description = "Consumes posting confirmations from the GAR Accounts Receivable system so " +
                 "Billpay can track cardmember debt updates. Markets consuming it typically post to AR.",
-            suggests = listOf("requiresArPosting"),
         ),
         ApiSpec(
             name = "OpentoBuyUpdatePaymentEventHandler.v1",
@@ -306,12 +297,5 @@ object Catalog {
             "Verify profile",
             "Runs every onboarded API against the test profile",
         ),
-    )
-
-    /** Environment display names used alongside the e1/e2/e3 short forms. */
-    val environmentNames: Map<String, String> = mapOf(
-        "E1" to "Development",
-        "E2" to "Testing",
-        "E3" to "Production",
     )
 }

@@ -69,6 +69,17 @@ class MarketService(
     private fun readConfig(entity: MarketEntity): MarketConfig =
         objectMapper.readValue(entity.configJson, MarketConfig::class.java)
 
+    /**
+     * Store an edited config and stamp the market as changed, returning the
+     * instant it happened — which is also the instant the revision is filed
+     * under, so a change and its history entry cannot disagree.
+     */
+    private fun writeBack(entity: MarketEntity, config: MarketConfig): Instant {
+        entity.configJson = objectMapper.writeValueAsString(config)
+        entity.updatedAt = Instant.now()
+        return entity.updatedAt
+    }
+
     // ---- queries ----
 
     fun listAll(): List<MarketDocument> =
@@ -265,52 +276,29 @@ class MarketService(
         entity.delete()
     }
 
-    /**
-     * Advance profiles one environment. With no [profileId] every profile that
-     * still has somewhere to go and has been signed off moves up a stage;
-     * profiles already at E3 are left alone, and the call only fails when
-     * nothing could be promoted.
-     */
+    /** Advance one profile to the next environment. */
     @Transactional
-    fun promote(code: String, profileId: String?, actor: String = "OPERATOR"): MarketDocument {
+    fun promote(code: String, profileId: String, actor: String = "OPERATOR"): MarketDocument {
         val entity = requireEntity(code)
         val config = readConfig(entity)
-        val targets = config.profiles.filter { profileId == null || it.id == profileId }
-        if (profileId != null && targets.isEmpty()) {
-            throw WebApplicationException("Profile '$profileId' not found in market '$code'", Response.Status.NOT_FOUND)
-        }
-        if (targets.none { it.status.next() != null }) {
-            throw WebApplicationException(
-                if (profileId != null) "Profile is already in ${EnvStage.E3}"
-                else "Every profile in '$code' is already in ${EnvStage.E3}",
-                Response.Status.CONFLICT,
+        val profile = requireProfile(config, profileId, code)
+        val next = profile.status.next()
+            ?: throw WebApplicationException(
+                "Profile is already in ${EnvStage.E3}", Response.Status.CONFLICT
             )
-        }
         // An environment has to be signed off before anything leaves it: that
         // is what makes the readiness the UI shows a gate rather than a label.
-        if (targets.none { it.status.next() != null && Readiness.isSignedOff(it) }) {
+        if (!Readiness.isSignedOff(profile)) {
             throw WebApplicationException(
-                if (profileId != null) {
-                    "${RevisionSummary.accountTypeLabel(targets.first().accountType)} has not been " +
-                        "verified in ${targets.first().status.name.lowercase()} yet"
-                } else {
-                    "No profile in '$code' has been verified in the environment it is in"
-                },
+                "${RevisionSummary.accountTypeLabel(profile.accountType)} has not been " +
+                    "verified in ${profile.status.name.lowercase()} yet",
                 Response.Status.CONFLICT,
             )
         }
-        fun canPromote(p: MarketProfile) =
-            (profileId == null || p.id == profileId) && p.status.next() != null && Readiness.isSignedOff(p)
-
-        val profiles = config.profiles.map {
-            if (canPromote(it)) it.copy(status = it.status.next()!!) else it
-        }
-        val after = config.copy(profiles = profiles)
-        entity.configJson = objectMapper.writeValueAsString(after)
-        entity.updatedAt = Instant.now()
-
-        val movedIds = config.profiles.filter { canPromote(it) }.map { it.id }.toSet()
-        val moved = profiles.filter { it.id in movedIds }
+        val moved = profile.copy(status = next)
+        val after = config.copy(
+            profiles = config.profiles.map { if (it.id == profileId) moved else it }
+        )
         record(
             code = entity.code,
             action = RevisionAction.PROMOTED,
@@ -318,9 +306,9 @@ class MarketService(
             summary = RevisionSummary.promoted(moved),
             // `moved` already carries the new stage, so a promotion is filed
             // under the environment it arrives in, not the one it left.
-            envs = envsOf(moved),
-            at = entity.updatedAt,
-            profileLabel = moved.singleOrNull()?.let { RevisionSummary.accountTypeLabel(it.accountType) },
+            envs = listOf(next),
+            at = writeBack(entity, after),
+            profileLabel = RevisionSummary.accountTypeLabel(profile.accountType),
             before = config,
             after = after,
         )
@@ -348,15 +336,13 @@ class MarketService(
                 if (it.id == profileId) it.copy(verifiedIn = it.status) else it
             }
         )
-        entity.configJson = objectMapper.writeValueAsString(after)
-        entity.updatedAt = Instant.now()
         record(
             code = entity.code,
             action = RevisionAction.VERIFIED,
             actor = actor,
             summary = RevisionSummary.verified(profile),
             envs = listOf(profile.status),
-            at = entity.updatedAt,
+            at = writeBack(entity, after),
             profileLabel = RevisionSummary.accountTypeLabel(profile.accountType),
             before = config,
             after = after,
@@ -400,15 +386,13 @@ class MarketService(
                 if (it.id == profileId) it.copy(rfcNumber = number) else it
             }
         )
-        entity.configJson = objectMapper.writeValueAsString(after)
-        entity.updatedAt = Instant.now()
         record(
             code = entity.code,
             action = RevisionAction.RFC_RECORDED,
             actor = actor,
             summary = RevisionSummary.rfcRecorded(profile, number),
             envs = listOf(EnvStage.E3),
-            at = entity.updatedAt,
+            at = writeBack(entity, after),
             profileLabel = RevisionSummary.accountTypeLabel(profile.accountType),
             before = config,
             after = after,
@@ -427,18 +411,15 @@ class MarketService(
     fun deleteProfile(code: String, profileId: String, actor: String = "OPERATOR"): MarketDocument {
         val entity = requireEntity(code)
         val config = readConfig(entity)
-        val removed = config.profiles.find { it.id == profileId }
-            ?: throw WebApplicationException("Profile '$profileId' not found in market '$code'", Response.Status.NOT_FOUND)
+        val removed = requireProfile(config, profileId, code)
         val after = config.copy(profiles = config.profiles.filterNot { it.id == profileId })
-        entity.configJson = objectMapper.writeValueAsString(after)
-        entity.updatedAt = Instant.now()
         record(
             code = entity.code,
             action = RevisionAction.PROFILE_DELETED,
             actor = actor,
             summary = RevisionSummary.profileDeleted(removed),
             envs = envsOf(listOf(removed)),
-            at = entity.updatedAt,
+            at = writeBack(entity, after),
             profileLabel = RevisionSummary.accountTypeLabel(removed.accountType),
             before = config,
             after = after,

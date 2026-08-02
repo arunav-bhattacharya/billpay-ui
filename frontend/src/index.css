@@ -67,14 +67,9 @@
 
   --copper: #c2703d;
   --copper-wash: #faf0e8;
-  --teal: #0e8a9e;
-  --teal-wash: #e6f5f8;
 
   --red: #c03434;
   --red-wash: #faecec;
-
-  --mast-1: #00175a;
-  --mast-2: #00175a;
 
   /* Benton Sans everywhere. The system fallback is load-bearing, not
      decoration: the shipped faces cover ASCII and Latin-1 but have no
@@ -92,7 +87,6 @@
      never enough to read as a separate physical object. */
   --shadow-1: 0 1px 2px rgba(0, 23, 90, 0.05);
   --shadow-2: 0 1px 3px rgba(0, 23, 90, 0.07), 0 4px 12px rgba(0, 23, 90, 0.06);
-  --shadow-card: 0 1px 2px rgba(0, 23, 90, 0.05);
   --shadow-card-hover: 0 2px 6px rgba(0, 23, 90, 0.09);
   --shadow-btn: 0 1px 2px rgba(0, 23, 90, 0.08);
 
@@ -105,7 +99,6 @@
   --key-shadow-hover: 0 0 0 1px var(--iris-border), 0 2px 8px rgba(0, 23, 90, 0.09);
   --key-shadow-active: 0 0 0 1px var(--iris-border), 0 1px 2px rgba(0, 23, 90, 0.06);
 
-  --title-shadow: none;
   --title-shadow-dark: 0 1px 2px rgba(0, 0, 0, 0.3);
 
   /* An API row is: padding, check box, gap, then text. The expanded body
@@ -417,25 +410,9 @@ select:focus {
   box-shadow: var(--shadow-card-hover);
 }
 
-.btn.ghost.delete {
-  color: var(--red);
-}
-
-.btn.ghost.delete:hover:not(:disabled) {
-  border-color: var(--red);
-  background: var(--red-wash);
-  color: var(--red);
-}
-
 .btn.sm {
   padding: 5px 12px;
   font-size: 13px;
-}
-
-.btn.xs {
-  padding: 3px 10px;
-  font-size: 12px;
-  border-radius: var(--radius-sm);
 }
 
 .btn.lg {
@@ -930,13 +907,6 @@ select:focus {
   }
 }
 
-.status-overview {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-top: 16px;
-}
-
 /* ---------- hero progress ring ----------
    How far the Amex market list has been taken: active (e3) then in progress
    (e1–e2), drawn clockwise from twelve o'clock. What is still pending is the
@@ -945,6 +915,11 @@ select:focus {
    The hero is navy, so the ring carries its own on-dark palette rather than
    the --green / --amber tokens the seals use on white. */
 .status-overview {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 16px;
+
   --ring-track: rgba(255, 255, 255, 0.16);
   --ring-active: #34d27b;
   --ring-progress: #f0cd6e;
@@ -1017,14 +992,10 @@ select:focus {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  cursor: default;
+  cursor: pointer;
   border-radius: 6px;
   padding: 2px 6px;
   margin-left: -6px;
-}
-
-.legend-row {
-  cursor: pointer;
 }
 
 /* Counts are right-aligned in a fixed column so the labels beside them all
@@ -1457,10 +1428,6 @@ select:focus {
 
 /* ---------- step 2: APIs ---------- */
 
-.apis-layout {
-  display: block;
-}
-
 .api-category {
   margin-bottom: 38px;
 }
@@ -1757,12 +1724,7 @@ select:focus {
   transform: translate(1px, -1px);
 }
 
-.bhv-lock-note {
-  margin: 4px 0 0;
-  font-size: 12.5px;
-  color: var(--muted);
-  font-style: italic;
-}/* Y / N / Both segmented control. inline-flex so a two-option behavior
+/* Y / N / Both segmented control. inline-flex so a two-option behavior
    (Representable Return) simply renders narrower — no separate variant. */
 
 .tri {
@@ -1826,12 +1788,6 @@ select:focus {
 
 /* ---------- inline profile editor ---------- */
 
-.profile-card.editing {
-  border-color: var(--iris-border);
-  box-shadow: 0 0 0 2px var(--iris-wash);
-  background: var(--card);
-}
-
 /* Editing is a form, so it gets form spacing: three clearly separated
    sections rather than one continuous run of controls. */
 .profile-editor {
@@ -1862,20 +1818,16 @@ select:focus {
 }
 
 /* Each category is a bounded list, so three columns of checkboxes read as
-   three lists instead of one undifferentiated field. */
+   three lists instead of one undifferentiated field. Positioned because every
+   group label names its card from outside it — sentence case, at heading size,
+   the way a section title introduces the block below. */
 .pe-api-group {
+  position: relative;
   min-width: 0;
   background: var(--surface-alt);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 14px 16px 12px;
-}
-
-/* Every group label names its card from outside it — sentence case, at
-   heading size, the way a section title introduces the block below. */
-.pe-api-group,
-.pe-bhv-group {
-  position: relative;
 }
 
 .pe-cat {
@@ -1943,34 +1895,6 @@ select:focus {
 
 /* One behavior per cell, label and control on opposite edges, so the four
    read as a set of settings rather than a wrapped sentence. */
-.pe-behavior {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 10px;
-}
-
-.pe-bhv {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 14px;
-  background: var(--surface-alt);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  font-size: 14px;
-  font-weight: 400;
-}
-
-.pe-bhv.locked {
-  background: transparent;
-  border-style: dashed;
-}
-
-.pe-bhv.locked > span {
-  color: var(--muted);
-}
-
 .pe-actions {
   display: flex;
   justify-content: flex-end;
@@ -1979,60 +1903,7 @@ select:focus {
   padding-top: 16px;
 }
 
-/* ---------- admin custom behaviors (onboarding wizard) ----------
-
-   The market page defines these inside each account profile now; the wizard
-   still needs a market-level block because the market does not exist yet. */
-
-.admin-behavior {
-  margin-top: 26px;
-  border: 1px solid var(--iris-border);
-  border-radius: var(--radius);
-  background: var(--iris-wash);
-  padding: 18px 22px;
-}
-
-.admin-behavior-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-
-.admin-behavior-head h4 {
-  font-size: 17px;
-}
-
-.admin-badge {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #fff;
-  background: var(--iris);
-  border-radius: var(--radius-sm);
-  padding: 2px 8px;
-}
-
-.custom-bhv-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.custom-bhv-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-}
+/* ---------- defining a custom behavior (wizard + profile editor) ---------- */
 
 .def-form {
   display: flex;
@@ -2124,6 +1995,12 @@ select:focus {
   color: var(--navy);
 }
 
+/* The read-only inventory on a market page: same ground, no edge. */
+.chip.chip-grad {
+  border-color: transparent;
+  font-weight: 400;
+}
+
 /* Behavior that is off stays quiet; only the flags actually set carry colour,
    so a glance at the row counts what this market does differently. */
 .chip.chip-bhv {
@@ -2136,17 +2013,6 @@ select:focus {
   border-color: var(--iris-border);
   background: var(--iris-wash);
   color: var(--iris);
-}
-
-.chip.chip-grad {
-  border: 1px solid transparent;
-  font-weight: 400;
-}
-
-.chip.chip-custom {
-  border-color: var(--iris-border);
-  background: var(--iris-wash);
-  color: var(--iris-deep);
 }
 
 .json-view {
@@ -2311,9 +2177,6 @@ select:focus {
   backdrop-filter: blur(2px);
   z-index: 100;
   display: flex;
-}
-
-.modal-backdrop {
   align-items: center;
   justify-content: center;
 }
@@ -2570,7 +2433,6 @@ select:focus {
 /* The card is the link to the market's own page. It sits flat until pointed
    at: a hairline, a whisper of elevation, and nothing else competing. */
 .market-card {
-  --card-accent: var(--rg, var(--iris));
   position: relative;
   display: flex;
   flex-direction: column;
@@ -2924,9 +2786,10 @@ select:focus {
   padding: 14px 16px 16px;
   background: var(--card);
   min-width: 0;
+  box-shadow: inset 0 2px 0 var(--env-tone);
 }
 
-/* Status colour lives in one place: a top rule and the dot agree. */
+/* Status colour lives in one place: the top rule above and the dot agree. */
 .env-onboarded {
   --env-tone: var(--green);
   --env-wash: var(--green-wash);
@@ -2941,10 +2804,6 @@ select:focus {
   --env-tone: var(--grey);
   --env-wash: var(--grey-wash);
   background: var(--surface-alt);
-}
-
-.env-card {
-  box-shadow: inset 0 2px 0 var(--env-tone);
 }
 
 .env-card-head {
@@ -3189,18 +3048,15 @@ select:focus {
   color: var(--muted);
 }
 
-.step-api-name {
-  font-size: 10px;
-  padding: 1px 5px;
-}
-
 .step-api-count {
   padding-left: 12px;
   margin-top: 2px;
   font-size: 11.5px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
-}.profile-block + .profile-block {
+}
+
+.profile-block + .profile-block {
   margin-top: 20px;
 }
 
@@ -3215,55 +3071,21 @@ select:focus {
   margin: 0 0 14px;
 }
 
-.profile-behavior {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
 /* Same bounded treatment the editor gives each API category, so Behavior and
-   APIs read alike in edit mode too. */
+   APIs read alike in edit mode too. The top margin is clearance for the label
+   sitting above, and one group needs a real gap from the next so Core and
+   Custom read as separate blocks. */
 .pe-bhv-group {
+  position: relative;
   background: var(--surface-alt);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 14px 16px;
-}
-
-/* Clearance for the label above, and a real gap between one group and the
-   next so Core and Custom read as separate blocks. */
-.pe-bhv-group {
   margin-top: 40px;
 }
 
 .pe-bhv-group + .pe-bhv-group {
   margin-top: 48px;
-}
-
-/* Inside a bounded group the individual rows drop their own box. */
-.pe-bhv-group .pe-bhv {
-  background: none;
-  border: none;
-  padding: 6px 0;
-}
-
-/* Same stack the wizard uses: the definition and its value on one line, the
-   requirement it was asked for underneath. */
-.pe-bhv-custom + .pe-bhv-custom {
-  margin-top: 6px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-}
-
-.pe-bhv-custom .pe-bhv {
-  padding-bottom: 0;
-}
-
-/* The remove control rides with the name it removes. */
-.pe-bhv-name {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 10px;
 }
 
 /* No rule above it — the space is enough to separate the add form from the
@@ -3274,8 +3096,8 @@ select:focus {
 }
 
 /* One row for a behavior, core or custom: name and description on the left,
-   the control on the right. Used by the wizard, inside the same bounded group
-   the market page editor uses, so the two surfaces match. */
+   the control on the right. One shape for both surfaces — the wizard takes it
+   as-is, the market page editor adds `.compact`. */
 .bhv-row {
   display: flex;
   align-items: flex-start;
@@ -3286,6 +3108,28 @@ select:focus {
 
 .bhv-row + .bhv-row {
   border-top: 1px solid var(--line);
+}
+
+/* Compact: the profile editor is adjusting settings, not explaining them, so
+   the description and lock note move into the row's tooltip and what is left
+   sits on one line. */
+.bhv-row.compact {
+  align-items: center;
+  gap: 16px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+/* Core behaviors there are a two-up grid rather than a stack, so the rule that
+   separates stacked rows would be drawing lines between grid cells. */
+.pe-behavior {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 10px;
+}
+
+.pe-behavior .bhv-row + .bhv-row {
+  border-top: none;
 }
 
 .bhv-row-main {
@@ -3418,7 +3262,8 @@ select:focus {
   border-top: 1px solid var(--line);
 }
 
-
+/* Every grouping label reads deep Amex navy — the chips beside them carry
+   whatever colour the group needs. */
 .profile-group-label {
   flex: none;
   /* Sized so "Event Handlers" stays on one line at this size. */
@@ -3428,12 +3273,6 @@ select:focus {
   font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
-  color: var(--muted);
-}
-
-/* Every grouping label reads deep Amex navy — the chips beside them carry
-   whatever colour the group needs. */
-.profile-group-label {
   color: var(--navy);
 }
 
@@ -3513,6 +3352,8 @@ select:focus {
     var(--key-face);
   box-shadow: var(--key-shadow);
   transition: box-shadow 0.14s ease, transform 0.14s ease, background 0.14s ease;
+  /* The whole row is the control; the chevron is only an affordance. */
+  cursor: pointer;
 }
 
 .api-dir-row:hover {
@@ -3532,11 +3373,6 @@ select:focus {
   display: flex;
   align-items: center;
   gap: var(--api-gap);
-}
-
-/* The whole row is the control now; the chevron is only an affordance. */
-.api-dir-row {
-  cursor: pointer;
 }
 
 .api-dir-head .api-expand {
@@ -3626,6 +3462,17 @@ select:focus {
   border-radius: var(--radius);
   box-shadow: var(--shadow-2);
   padding: 18px 18px 12px;
+
+  /* Amex markets — three states, named once here. The panel is dark navy, so
+     these run brighter than the light-theme --green / --amber / --grey tokens
+     the seals and donut use. */
+  --map-live: #27a05f;
+  --map-live-edge: #7fe0ae;
+  --map-live-dot: #34d27b;
+  --map-progress: #cfa227;
+  --map-progress-edge: #f0cd6e;
+  --map-pending: #8b93a5;
+  --map-pending-edge: #c6cdd9;
 }
 
 .map-wrap {
@@ -3666,19 +3513,6 @@ select:focus {
   stroke: #3f6ea8;
   stroke-width: 0.75;
   transition: fill 0.15s ease, filter 0.15s ease;
-}
-
-/* Amex markets — three states, named once here.
-   The panel is dark navy, so these run brighter than the light-theme
-   --green / --amber / --grey tokens the seals and donut use. */
-.map-panel {
-  --map-live: #27a05f;
-  --map-live-edge: #7fe0ae;
-  --map-live-dot: #34d27b;
-  --map-progress: #cfa227;
-  --map-progress-edge: #f0cd6e;
-  --map-pending: #8b93a5;
-  --map-pending-edge: #c6cdd9;
 }
 
 .map-svg .country-market {
@@ -4438,10 +4272,6 @@ select:focus {
 /* ---------- responsive ---------- */
 
 @media (max-width: 960px) {
-  .apis-layout {
-    grid-template-columns: 1fr;
-  }
-
   .split-cols {
     grid-template-columns: 1fr;
   }

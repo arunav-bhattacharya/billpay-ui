@@ -3,18 +3,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useApp } from '../AppContext'
 import {
-  ApiIdentity,
-  Arrow,
-  behaviorOptions,
-  CloneDialog,
-  CopyIcon,
-  CustomBehaviorValueInput,
-  ErrorNote,
-  Flag,
-  JsonView,
-  StatusSeal,
-  TriToggle,
-} from '../components'
+  BehaviorRow,
+  CustomBehaviorDefForm,
+  CustomBehaviorRow,
+} from '../behavior'
+import { ApiIdentity, CloneDialog, ErrorNote, JsonView, StatusSeal } from '../components'
+import { Arrow, CopyIcon, Flag, PencilIcon, TrashIcon } from '../icons'
 import {
   ACCOUNT_TYPE_LABELS,
   BEHAVIOR_VALUE_LABELS,
@@ -23,19 +17,16 @@ import {
   ENV_LABELS,
   ENV_NAMES,
   ENV_ORDER,
-  isBehaviorLocked,
   isSignedOff,
   nextEnv,
   projectToEnv,
   reaches,
-  setBehavior,
   yn,
 } from '../lib'
 import type {
   AccountType,
   Behavior,
   CustomBehaviorDef,
-  CustomBehaviorType,
   EnvStage,
   MarketDocument,
   MarketProfile,
@@ -613,27 +604,6 @@ function AccountTypeSection({
   )
 }
 
-/* ---------- action icons ---------- */
-
-function PencilIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-    </svg>
-  )
-}
-
-function TrashIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <line x1="10" y1="11" x2="10" y2="17" />
-      <line x1="14" y1="11" x2="14" y2="17" />
-    </svg>
-  )
-}
-
 /* ---------- Inline profile editor: APIs, behavior, custom values ---------- */
 
 function ProfileEditor({
@@ -658,37 +628,9 @@ function ProfileEditor({
   // Definitions are market-scoped but edited here, so they travel with the
   // save rather than needing a second trip.
   const [defs, setDefs] = useState<CustomBehaviorDef[]>(market.customDimensionDefs)
-  const [defKey, setDefKey] = useState('')
-  const [defLabel, setDefLabel] = useState('')
-  const [defType, setDefType] = useState<CustomBehaviorType>('BOOLEAN')
-  const [defValues, setDefValues] = useState('')
-  const [defError, setDefError] = useState<string | null>(null)
 
   function toggleApi(name: string) {
     setApis((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]))
-  }
-
-  function addDef() {
-    const key = defKey.trim()
-    if (!key || !defLabel.trim()) {
-      setDefError('Key and label are required.')
-      return
-    }
-    if (defs.some((d) => d.key === key)) {
-      setDefError(`'${key}' is already defined.`)
-      return
-    }
-    const allowedValues =
-      defType === 'ENUM' ? defValues.split(',').map((v) => v.trim()).filter(Boolean) : []
-    if (defType === 'ENUM' && allowedValues.length === 0) {
-      setDefError('Enum behaviors need at least one allowed value.')
-      return
-    }
-    setDefError(null)
-    setDefs([...defs, { key, label: defLabel.trim(), type: defType, allowedValues }])
-    setDefKey('')
-    setDefLabel('')
-    setDefValues('')
   }
 
   function removeDef(key: string) {
@@ -728,29 +670,18 @@ function ProfileEditor({
 
         <div className="pe-bhv-group">
           <span className="pe-cat">Core</span>
+          {/* Two-up grid rather than the wizard's stack: these are settings
+              being adjusted, not explained. */}
           <div className="pe-behavior">
-            {(catalog?.dimensions ?? []).map((b) => {
-              const locked = isBehaviorLocked(b.key, behavior)
-              return (
-                <div
-                  key={b.key}
-                  className={`pe-bhv ${locked ? 'locked' : ''}`}
-                  title={
-                    locked ? 'Only available when clearing is not fully realtime.' : b.description
-                  }
-                >
-                  <span>{b.label}</span>
-                  <TriToggle
-                    value={behavior[b.key]}
-                    options={behaviorOptions(b)}
-                    locked={locked}
-                    small
-                    label={b.label}
-                    onChange={(next) => setBehaviorState(setBehavior(behavior, b.key, next))}
-                  />
-                </div>
-              )
-            })}
+            {(catalog?.dimensions ?? []).map((b) => (
+              <BehaviorRow
+                key={b.key}
+                meta={b}
+                behavior={behavior}
+                compact
+                onChange={setBehaviorState}
+              />
+            ))}
           </div>
         </div>
 
@@ -758,82 +689,23 @@ function ProfileEditor({
           <div className="pe-bhv-group">
             <span className="pe-cat">Custom</span>
             {defs.map((def) => (
-              <div key={def.key} className="pe-bhv-custom">
-                <div className="pe-bhv">
-                  <span className="pe-bhv-name">
-                    {def.label}
-                    <button
-                      className="link-btn danger"
-                      onClick={() => removeDef(def.key)}
-                      aria-label={`Remove the ${def.label} behavior from this market`}
-                    >
-                      remove
-                    </button>
-                  </span>
-                  <CustomBehaviorValueInput
-                    def={def}
-                    value={customValues[def.key] ?? ''}
-                    onChange={(v) => setCustomValues({ ...customValues, [def.key]: v })}
-                  />
-                </div>
-
-                {/* What the market asked for, in its own words. Definitions are
-                    market-scoped, so this reads the same wherever the behavior
-                    is shown. */}
-                <div className="bhv-detail">
-                  <label htmlFor={`bhv-detail-${def.key}`}>Requirement</label>
-                  <textarea
-                    id={`bhv-detail-${def.key}`}
-                    rows={3}
-                    placeholder="What this behavior has to do, and why this market needs it."
-                    value={def.description ?? ''}
-                    onChange={(e) =>
-                      setDefs(
-                        defs.map((d) =>
-                          d.key === def.key ? { ...d, description: e.target.value } : d,
-                        ),
-                      )
-                    }
-                  />
-                </div>
-              </div>
+              <CustomBehaviorRow
+                key={def.key}
+                def={def}
+                value={customValues[def.key] ?? ''}
+                compact
+                onValue={(v) => setCustomValues({ ...customValues, [def.key]: v })}
+                onDescription={(description) =>
+                  setDefs(defs.map((d) => (d.key === def.key ? { ...d, description } : d)))
+                }
+                onRemove={() => removeDef(def.key)}
+              />
             ))}
 
-            <div className="def-form">
-              <input
-                placeholder="key (camelCase)"
-                value={defKey}
-                onChange={(e) => setDefKey(e.target.value)}
-                aria-label="Behavior key"
-              />
-              <input
-                placeholder="Label"
-                value={defLabel}
-                onChange={(e) => setDefLabel(e.target.value)}
-                aria-label="Behavior label"
-              />
-              <select
-                value={defType}
-                onChange={(e) => setDefType(e.target.value as CustomBehaviorType)}
-                aria-label="Behavior type"
-              >
-                <option value="BOOLEAN">Boolean</option>
-                <option value="ENUM">Enum</option>
-                <option value="TEXT">Text</option>
-              </select>
-              {defType === 'ENUM' && (
-                <input
-                  placeholder="Allowed values, comma-separated"
-                  value={defValues}
-                  onChange={(e) => setDefValues(e.target.value)}
-                  aria-label="Allowed values"
-                />
-              )}
-              <button className="btn sm ghost" onClick={addDef} aria-label="Add custom behavior">
-                Add
-              </button>
-            </div>
-            <ErrorNote message={defError} />
+            <CustomBehaviorDefForm
+              existingKeys={defs.map((d) => d.key)}
+              onAdd={(def) => setDefs([...defs, def])}
+            />
 
             <p className="bhv-scope-note">
               Values are set per account profile; adding or removing a behavior changes it for

@@ -64,13 +64,6 @@ class MarketResource(private val service: MarketService) {
     }
 
     @POST
-    @Path("/{code}/promote")
-    fun promoteAll(
-        @PathParam("code") code: String,
-        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
-    ): MarketDocument = service.promote(code, null, actor)
-
-    @POST
     @Path("/{code}/profiles/{profileId}/promote")
     fun promoteProfile(
         @PathParam("code") code: String,

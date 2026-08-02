@@ -150,6 +150,11 @@ export function isBehaviorLocked(key: BehaviorKey, behavior: Behavior): boolean 
   return key === 'requiresRepresentableReturn' && behavior.requiresRealtimeClearing === 'Y'
 }
 
+/** Segment set for a behavior, from its catalog metadata. */
+export function behaviorOptions(meta: { allowsBoth?: boolean }): BehaviorValue[] {
+  return meta.allowsBoth === false ? ['Y', 'N'] : ['Y', 'N', 'BOTH']
+}
+
 /**
  * The single write path for behavior. Every edit surface goes through this
  * so the Representable Return rule cannot drift between them.
