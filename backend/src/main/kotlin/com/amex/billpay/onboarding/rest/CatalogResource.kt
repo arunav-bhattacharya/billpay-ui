@@ -17,6 +17,5 @@ class CatalogResource {
         // Response key predates the behavior rename; the UI still reads `dimensions`.
         "dimensions" to Catalog.behaviors,
         "accountTypes" to Catalog.accountTypes,
-        "environmentNames" to Catalog.environmentNames,
     )
 }

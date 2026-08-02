@@ -42,12 +42,9 @@ object RevisionSummary {
     fun rfcRecorded(profile: MarketProfile, rfcNumber: String): String =
         "${accountTypeLabel(profile.accountType)} — change request $rfcNumber approved"
 
-    fun promoted(promoted: List<MarketProfile>): String = when (promoted.size) {
-        1 -> "${accountTypeLabel(promoted[0].accountType)} promoted to " +
-            promoted[0].status.name.lowercase()
-        else -> "${promoted.size} profiles promoted (" +
-            promoted.joinToString { "${accountTypeLabel(it.accountType)} → ${it.status.name.lowercase()}" } + ")"
-    }
+    /** [promoted] already carries the stage it arrived in, not the one it left. */
+    fun promoted(promoted: MarketProfile): String =
+        "${accountTypeLabel(promoted.accountType)} promoted to ${promoted.status.name.lowercase()}"
 
     /** Diffs profiles and custom-behavior definitions; falls back to a generic line. */
     fun updated(before: MarketConfig, after: MarketConfig): String {

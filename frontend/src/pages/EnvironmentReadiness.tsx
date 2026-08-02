@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { TickIcon } from '../components'
+import { TickIcon } from '../icons'
 import { ENV_NAMES, formatDateTime } from '../lib'
 import type {
   EnvOnboardingState,

@@ -148,8 +148,6 @@ export interface ApiSpec {
   path: string
   summary: string
   description: string
-  /** Behaviors this API typically calls for — guidance only, never auto-selected. */
-  suggests: BehaviorKey[]
   /** Deep link into the API Explorer page for this function. */
   specUrl: string
 }
@@ -183,7 +181,6 @@ export interface Catalog {
   /** Wire key predates the behavior rename — these are behavior definitions. */
   dimensions: BehaviorMeta[]
   accountTypes: AccountTypeMeta[]
-  environmentNames: Record<EnvStage, string>
 }
 
 export const BEHAVIOR_KEYS: BehaviorKey[] = [

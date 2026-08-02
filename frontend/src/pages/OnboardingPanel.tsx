@@ -1,38 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../AppContext'
-import {
-  ApiDetailBody,
-  ApiIdentity,
-  behaviorOptions,
-  CheckMark,
-  CloseIcon,
-  CustomBehaviorValueInput,
-  ErrorNote,
-  Flag,
-  JsonView,
-  SelectionBox,
-  TickIcon,
-  TriToggle,
-} from '../components'
+import { BehaviorRow, CustomBehaviorDefForm, CustomBehaviorRow } from '../behavior'
+import { ApiDetailBody, ApiIdentity, ErrorNote, JsonView } from '../components'
+import { CheckMark, CloseIcon, Flag, SelectionBox, TickIcon } from '../icons'
+import type { SelectionState } from '../icons'
 import {
   ACCOUNT_TYPE_LABELS,
   BEHAVIOR_VALUE_LABELS,
   byAccountType,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
-  isBehaviorLocked,
-  setBehavior,
   yn,
 } from '../lib'
-import type { SelectionState } from '../components'
 import { BEHAVIOR_KEYS, DEFAULT_BEHAVIOR } from '../types'
 import type {
   AccountType,
   ApiSpec,
   Behavior,
   CustomBehaviorDef,
-  CustomBehaviorType,
   MarketDocument,
   MarketProfile,
 } from '../types'
@@ -479,83 +465,81 @@ function StepApis({
   const selection: SelectionState = chosen === 0 ? 'none' : chosen === total ? 'all' : 'partial'
 
   return (
-    <div className="apis-layout">
-      <div className="apis-list">
-        <p className="step-hint">Select all the APIs to be onboarded for this market</p>
-        {prefilled && (
-          <p className="step-hint prefill-hint">
-            Started with the {DEFAULT_APIS.length} APIs every market so far has taken — change
-            anything that does not apply.
-          </p>
-        )}
+    <div className="apis-list">
+      <p className="step-hint">Select all the APIs to be onboarded for this market</p>
+      {prefilled && (
+        <p className="step-hint prefill-hint">
+          Started with the {DEFAULT_APIS.length} APIs every market so far has taken — change
+          anything that does not apply.
+        </p>
+      )}
 
-        {/* One box for the whole list. The count is its label, so there is
-            nothing to read twice. */}
-        <div className="api-bulk">
-          <button
-            className="api-bulk-toggle"
-            role="checkbox"
-            aria-checked={selection === 'all' ? true : selection === 'none' ? false : 'mixed'}
-            aria-label={selection === 'all' ? 'Clear every API' : 'Select every API'}
-            onClick={selection === 'all' ? onClearAll : onSelectAll}
-          >
-            <SelectionBox state={selection} />
-            <span className="api-bulk-count">
-              <strong>{chosen}</strong> of {total} selected
-            </span>
-          </button>
-        </div>
-        {CATEGORY_ORDER.map((cat) => (
-          <div key={cat} className="api-category">
-            <h4 className={`api-cat-head cat-${cat.toLowerCase()}`}>
-              {CATEGORY_LABELS[cat]}
-              <span className="api-cat-count">
-                {catalog.apis.filter((a) => a.category === cat && selectedApis.includes(a.name)).length}
-                {' / '}
-                {catalog.apis.filter((a) => a.category === cat).length}
-              </span>
-            </h4>
-            <div className="api-cards">
-              {catalog.apis
-                .filter((a) => a.category === cat)
-                .map((spec) => {
-                  const sel = selectedApis.includes(spec.name)
-                  const open = openApi === spec.name
-                  return (
-                    <div
-                      key={spec.name}
-                      className={`api-card cat-${cat.toLowerCase()} ${sel ? 'sel' : ''} ${open ? 'open' : ''}`}
-                    >
-                      <div className="api-row">
-                        <button
-                          className="api-main"
-                          aria-pressed={sel}
-                          onClick={() => onToggle(spec.name)}
-                        >
-                          <span className="api-check" aria-hidden="true">
-                            {sel && <CheckMark />}
-                          </span>
-                          <ApiIdentity spec={spec} />
-                          <span className="api-summary">{spec.summary}</span>
-                        </button>
-                        <button
-                          className="api-expand"
-                          aria-expanded={open}
-                          aria-label={`${spec.name} details`}
-                          onClick={() => setOpenApi(open ? null : spec.name)}
-                        >
-                          <span className={`chevron ${open ? 'up' : ''}`} aria-hidden="true" />
-                        </button>
-                      </div>
-
-                      {open && <ApiDetailBody spec={spec} />}
-                    </div>
-                  )
-                })}
-            </div>
-          </div>
-        ))}
+      {/* One box for the whole list. The count is its label, so there is
+          nothing to read twice. */}
+      <div className="api-bulk">
+        <button
+          className="api-bulk-toggle"
+          role="checkbox"
+          aria-checked={selection === 'all' ? true : selection === 'none' ? false : 'mixed'}
+          aria-label={selection === 'all' ? 'Clear every API' : 'Select every API'}
+          onClick={selection === 'all' ? onClearAll : onSelectAll}
+        >
+          <SelectionBox state={selection} />
+          <span className="api-bulk-count">
+            <strong>{chosen}</strong> of {total} selected
+          </span>
+        </button>
       </div>
+      {CATEGORY_ORDER.map((cat) => (
+        <div key={cat} className="api-category">
+          <h4 className={`api-cat-head cat-${cat.toLowerCase()}`}>
+            {CATEGORY_LABELS[cat]}
+            <span className="api-cat-count">
+              {catalog.apis.filter((a) => a.category === cat && selectedApis.includes(a.name)).length}
+              {' / '}
+              {catalog.apis.filter((a) => a.category === cat).length}
+            </span>
+          </h4>
+          <div className="api-cards">
+            {catalog.apis
+              .filter((a) => a.category === cat)
+              .map((spec) => {
+                const sel = selectedApis.includes(spec.name)
+                const open = openApi === spec.name
+                return (
+                  <div
+                    key={spec.name}
+                    className={`api-card cat-${cat.toLowerCase()} ${sel ? 'sel' : ''} ${open ? 'open' : ''}`}
+                  >
+                    <div className="api-row">
+                      <button
+                        className="api-main"
+                        aria-pressed={sel}
+                        onClick={() => onToggle(spec.name)}
+                      >
+                        <span className="api-check" aria-hidden="true">
+                          {sel && <CheckMark />}
+                        </span>
+                        <ApiIdentity spec={spec} />
+                        <span className="api-summary">{spec.summary}</span>
+                      </button>
+                      <button
+                        className="api-expand"
+                        aria-expanded={open}
+                        aria-label={`${spec.name} details`}
+                        onClick={() => setOpenApi(open ? null : spec.name)}
+                      >
+                        <span className={`chevron ${open ? 'up' : ''}`} aria-hidden="true" />
+                      </button>
+                    </div>
+
+                    {open && <ApiDetailBody spec={spec} />}
+                  </div>
+                )
+              })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -595,30 +579,9 @@ function StepBehavior({
           same whether you are onboarding it or editing it later. */}
       <div className="pe-bhv-group">
         <span className="pe-cat">Core</span>
-        {catalog.dimensions.map((d) => {
-          const v = behavior[d.key]
-          const locked = isBehaviorLocked(d.key, behavior)
-          return (
-            <div key={d.key} className={`bhv-row ${locked ? 'locked' : ''}`}>
-              <div className="bhv-row-main">
-                <span className="bhv-row-name">{d.label}</span>
-                <p className="bhv-row-desc">{d.description}</p>
-                {locked && (
-                  <p className="bhv-lock-note">
-                    Only available when clearing is not fully realtime.
-                  </p>
-                )}
-              </div>
-              <TriToggle
-                value={v}
-                options={behaviorOptions(d)}
-                locked={locked}
-                label={d.label}
-                onChange={(next) => setBehaviorState(setBehavior(behavior, d.key, next))}
-              />
-            </div>
-          )
-        })}
+        {catalog.dimensions.map((d) => (
+          <BehaviorRow key={d.key} meta={d} behavior={behavior} onChange={setBehaviorState} />
+        ))}
       </div>
 
       {isAdmin ? (
@@ -657,131 +620,46 @@ function AdminCustomBehavior({
   customValues: Record<string, string>
   setCustomValues: (v: Record<string, string>) => void
 }) {
-  const [key, setKey] = useState('')
-  const [label, setLabel] = useState('')
-  const [type, setType] = useState<CustomBehaviorType>('BOOLEAN')
-  const [values, setValues] = useState('')
-  const [error, setError] = useState<string | null>(null)
-
   const allDefs = [...existingDefs, ...newDefs]
-
-  function addDef() {
-    const k = key.trim()
-    if (!k || !label.trim()) {
-      setError('Key and label are required.')
-      return
-    }
-    if (allDefs.some((d) => d.key === k)) {
-      setError(`'${k}' is already defined.`)
-      return
-    }
-    const allowedValues =
-      type === 'ENUM' ? values.split(',').map((v) => v.trim()).filter(Boolean) : []
-    if (type === 'ENUM' && allowedValues.length === 0) {
-      setError('Enum behaviors need at least one allowed value.')
-      return
-    }
-    setNewDefs([...newDefs, { key: k, label: label.trim(), type, allowedValues }])
-    setKey('')
-    setLabel('')
-    setValues('')
-    setError(null)
-  }
 
   return (
     <>
-    <div className="pe-bhv-group">
-      <span className="pe-cat">Custom</span>
+      <div className="pe-bhv-group">
+        <span className="pe-cat">Custom</span>
 
-      {allDefs.map((def) => {
-        // Only what is being defined here can still be written; anything the
-        // market already carries was agreed before this wizard opened.
-        const draft = newDefs.includes(def)
-        return (
-          <div key={def.key} className="bhv-row bhv-row-custom">
-            <div className="bhv-row-head">
-              <div className="bhv-row-main">
-                <span className="bhv-row-name">
-                  {def.label}
-                  {draft && (
-                    <button
-                      className="link-btn danger"
-                      onClick={() => setNewDefs(newDefs.filter((d) => d !== def))}
-                      aria-label={`Remove the ${def.label} behavior`}
-                    >
-                      remove
-                    </button>
-                  )}
-                </span>
-                <p className="bhv-row-desc mono-tag">
-                  {def.key} · {def.type}
-                  {def.type === 'ENUM' ? ` (${def.allowedValues.join(', ')})` : ''}
-                </p>
-              </div>
-              <CustomBehaviorValueInput
-                def={def}
-                value={customValues[def.key] ?? ''}
-                onChange={(v) => setCustomValues({ ...customValues, [def.key]: v })}
-              />
-            </div>
+        {allDefs.map((def) => {
+          // Only what is being defined here can still be written; anything the
+          // market already carries was agreed before this wizard opened.
+          const draft = newDefs.includes(def)
+          return (
+            <CustomBehaviorRow
+              key={def.key}
+              def={def}
+              value={customValues[def.key] ?? ''}
+              onValue={(v) => setCustomValues({ ...customValues, [def.key]: v })}
+              onDescription={
+                draft
+                  ? (description) =>
+                      setNewDefs(newDefs.map((d) => (d === def ? { ...d, description } : d)))
+                  : undefined
+              }
+              onRemove={draft ? () => setNewDefs(newDefs.filter((d) => d !== def)) : undefined}
+            />
+          )
+        })}
 
-            {/* What the market actually needs, in the requester's own words —
-                the development team reads this before the profile is built. */}
-            <div className="bhv-detail">
-              <label htmlFor={`bhv-detail-${def.key}`}>Requirement</label>
-              {draft ? (
-                <textarea
-                  id={`bhv-detail-${def.key}`}
-                  rows={3}
-                  placeholder="What this behavior has to do, and why this market needs it."
-                  value={def.description ?? ''}
-                  onChange={(e) =>
-                    setNewDefs(
-                      newDefs.map((d) =>
-                        d === def ? { ...d, description: e.target.value } : d,
-                      ),
-                    )
-                  }
-                />
-              ) : (
-                <p className="bhv-detail-text">
-                  {def.description || 'No requirement was recorded for this behavior.'}
-                </p>
-              )}
-            </div>
-          </div>
-        )
-      })}
-
-      <div className="def-form">
-        <input placeholder="key (camelCase)" value={key} onChange={(e) => setKey(e.target.value)} aria-label="Behavior key" />
-        <input placeholder="Label" value={label} onChange={(e) => setLabel(e.target.value)} aria-label="Behavior label" />
-        <select value={type} onChange={(e) => setType(e.target.value as CustomBehaviorType)} aria-label="Behavior type">
-          <option value="BOOLEAN">Boolean</option>
-          <option value="ENUM">Enum</option>
-          <option value="TEXT">Text</option>
-        </select>
-        {type === 'ENUM' && (
-          <input
-            placeholder="Allowed values, comma-separated"
-            value={values}
-            onChange={(e) => setValues(e.target.value)}
-            aria-label="Allowed values"
-          />
-        )}
-        <button className="btn sm ghost" onClick={addDef} aria-label="Add custom behavior">
-          Add
-        </button>
+        <CustomBehaviorDefForm
+          existingKeys={allDefs.map((d) => d.key)}
+          onAdd={(def) => setNewDefs([...newDefs, def])}
+        />
       </div>
-      <ErrorNote message={error} />
-    </div>
 
-    {/* Outside the card: this is about what happens to the market after it is
-        saved, not about any one behavior in the list. */}
-    <p className="bhv-scope-note">
-      Market-specific behaviors are only available to Admins and it may need additional
-      build. A profile will be onboarded after the development team reviews it.
-    </p>
+      {/* Outside the card: this is about what happens to the market after it is
+          saved, not about any one behavior in the list. */}
+      <p className="bhv-scope-note">
+        Market-specific behaviors are only available to Admins and it may need additional
+        build. A profile will be onboarded after the development team reviews it.
+      </p>
     </>
   )
 }

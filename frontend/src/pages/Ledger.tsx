@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useApp } from '../AppContext'
-import { ApiDetailBody, ApiIdentity, Arrow, ErrorNote, Flag, StatusSeal } from '../components'
+import { ApiDetailBody, ApiIdentity, ErrorNote, StatusSeal } from '../components'
+import { Arrow, Flag } from '../icons'
 import {
   ACCOUNT_TYPE_LABELS,
   CATEGORY_LABELS,
