@@ -4,7 +4,6 @@ import { useApp } from '../AppContext'
 import {
   ApiDetailBody,
   ApiIdentity,
-  ApiMethodBadge,
   behaviorOptions,
   CheckMark,
   CloseIcon,
@@ -536,7 +535,6 @@ function StepApis({
                           <span className="api-check" aria-hidden="true">
                             {sel && <CheckMark />}
                           </span>
-                          <ApiMethodBadge method={spec.method} />
                           <ApiIdentity spec={spec} />
                           <span className="api-summary">{spec.summary}</span>
                         </button>
@@ -606,7 +604,9 @@ function StepBehavior({
                 <span className="bhv-row-name">{d.label}</span>
                 <p className="bhv-row-desc">{d.description}</p>
                 {locked && (
-                  <p className="bhv-lock-note">No returns in realtime clearing</p>
+                  <p className="bhv-lock-note">
+                    Only available when clearing is not fully realtime.
+                  </p>
                 )}
               </div>
               <TriToggle
@@ -689,42 +689,69 @@ function AdminCustomBehavior({
   }
 
   return (
+    <>
     <div className="pe-bhv-group">
       <span className="pe-cat">Custom</span>
 
-      {allDefs.length === 0 ? (
-        <p className="muted">
-          Nothing market-specific yet — define one below if this market needs it.
-        </p>
-      ) : (
-        allDefs.map((def) => (
-          <div key={def.key} className="bhv-row">
-            <div className="bhv-row-main">
-              <span className="bhv-row-name">
-                {def.label}
-                {newDefs.includes(def) && (
-                  <button
-                    className="link-btn danger"
-                    onClick={() => setNewDefs(newDefs.filter((d) => d !== def))}
-                    aria-label={`Remove the ${def.label} behavior`}
-                  >
-                    remove
-                  </button>
-                )}
-              </span>
-              <p className="bhv-row-desc mono-tag">
-                {def.key} · {def.type}
-                {def.type === 'ENUM' ? ` (${def.allowedValues.join(', ')})` : ''}
-              </p>
+      {allDefs.map((def) => {
+        // Only what is being defined here can still be written; anything the
+        // market already carries was agreed before this wizard opened.
+        const draft = newDefs.includes(def)
+        return (
+          <div key={def.key} className="bhv-row bhv-row-custom">
+            <div className="bhv-row-head">
+              <div className="bhv-row-main">
+                <span className="bhv-row-name">
+                  {def.label}
+                  {draft && (
+                    <button
+                      className="link-btn danger"
+                      onClick={() => setNewDefs(newDefs.filter((d) => d !== def))}
+                      aria-label={`Remove the ${def.label} behavior`}
+                    >
+                      remove
+                    </button>
+                  )}
+                </span>
+                <p className="bhv-row-desc mono-tag">
+                  {def.key} · {def.type}
+                  {def.type === 'ENUM' ? ` (${def.allowedValues.join(', ')})` : ''}
+                </p>
+              </div>
+              <CustomBehaviorValueInput
+                def={def}
+                value={customValues[def.key] ?? ''}
+                onChange={(v) => setCustomValues({ ...customValues, [def.key]: v })}
+              />
             </div>
-            <CustomBehaviorValueInput
-              def={def}
-              value={customValues[def.key] ?? ''}
-              onChange={(v) => setCustomValues({ ...customValues, [def.key]: v })}
-            />
+
+            {/* What the market actually needs, in the requester's own words —
+                the development team reads this before the profile is built. */}
+            <div className="bhv-detail">
+              <label htmlFor={`bhv-detail-${def.key}`}>Requirement</label>
+              {draft ? (
+                <textarea
+                  id={`bhv-detail-${def.key}`}
+                  rows={3}
+                  placeholder="What this behavior has to do, and why this market needs it."
+                  value={def.description ?? ''}
+                  onChange={(e) =>
+                    setNewDefs(
+                      newDefs.map((d) =>
+                        d === def ? { ...d, description: e.target.value } : d,
+                      ),
+                    )
+                  }
+                />
+              ) : (
+                <p className="bhv-detail-text">
+                  {def.description || 'No requirement was recorded for this behavior.'}
+                </p>
+              )}
+            </div>
           </div>
-        ))
-      )}
+        )
+      })}
 
       <div className="def-form">
         <input placeholder="key (camelCase)" value={key} onChange={(e) => setKey(e.target.value)} aria-label="Behavior key" />
@@ -747,11 +774,15 @@ function AdminCustomBehavior({
         </button>
       </div>
       <ErrorNote message={error} />
-      <p className="bhv-scope-note">
-        Market-specific behaviors, hidden from operators. Definitions apply to the whole
-        market; values are set per account profile.
-      </p>
     </div>
+
+    {/* Outside the card: this is about what happens to the market after it is
+        saved, not about any one behavior in the list. */}
+    <p className="bhv-scope-note">
+      Market-specific behaviors are only available to Admins and it may need additional
+      build. A profile will be onboarded after the development team reviews it.
+    </p>
+    </>
   )
 }
 

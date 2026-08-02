@@ -108,10 +108,13 @@
   --title-shadow: none;
   --title-shadow-dark: 0 1px 2px rgba(0, 0, 0, 0.3);
 
-  /* Width of the HTTP-verb pill. Everything that has to line up past it
-     derives its indent from this, so the two never drift apart. */
-  --api-verb-w: 64px;
-  --api-verb-gap: 12px;
+  /* An API row is: padding, check box, gap, then text. The expanded body
+     under it has to start at the same x, so that offset is computed once
+     rather than copied as a literal that drifts. */
+  --api-row-pad: 16px;
+  --api-check-w: 26px;
+  --api-gap: 12px;
+  --api-text-indent: calc(var(--api-row-pad) + var(--api-check-w) + var(--api-gap));
 
   --radius: 6px;
   --radius-sm: 3px;
@@ -526,6 +529,8 @@ select:focus {
   background: var(--grey-wash);
 }
 
+/* Sits quiet beside the name it acts on and underlines only on approach —
+   the same hover-revealed affordance the rest of the app uses. */
 .link-btn {
   background: none;
   border: none;
@@ -533,6 +538,11 @@ select:focus {
   margin-left: 8px;
   color: var(--iris-deep);
   font-size: 13px;
+  cursor: pointer;
+}
+
+.link-btn:hover,
+.link-btn:focus-visible {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -1536,18 +1546,18 @@ select:focus {
 .api-main {
   flex: 1;
   display: grid;
-  grid-template-columns: 26px var(--api-verb-w) 1fr;
+  grid-template-columns: var(--api-check-w) 1fr;
   grid-template-areas:
-    'check method name'
-    '.     .      ident'
-    '.     .      endpoint';
+    'check name'
+    '.     ident'
+    '.     endpoint';
   align-items: center;
-  column-gap: var(--api-verb-gap);
+  column-gap: var(--api-gap);
   row-gap: 3px;
   text-align: left;
   background: none;
   border: none;
-  padding: 12px 12px 12px 16px;
+  padding: 12px 12px 12px var(--api-row-pad);
   border-radius: 6px;
 }
 
@@ -1584,10 +1594,7 @@ select:focus {
 
 .api-card .api-ident-name {
   grid-area: ident;
-}
-
-.api-card .api-method {
-  grid-area: method;
+  font-size: 13.5px;
 }
 
 /* The wizard card is the roomiest surface, so the title runs larger there —
@@ -1599,8 +1606,12 @@ select:focus {
 }
 
 /* brief description shown while the card is collapsed */
+/* The title and the versioned name under it are one identity and stay tight
+   together; the description is a separate thing, so it gets air above it
+   rather than sitting on the row gap the pair uses. */
 .api-summary {
   grid-area: endpoint;
+  margin-top: 7px;
   font-family: var(--font-body);
   font-size: 13.5px;
   line-height: 1.45;
@@ -1654,9 +1665,10 @@ select:focus {
 
 .api-detail-body {
   border-top: 1px solid var(--line);
-  padding: 14px 20px 16px 52px;
-  font-size: 15.5px;
-  line-height: 1.6;
+  /* Lines up under the row's text, not at an indent of its own. */
+  padding: 14px 20px 16px var(--api-text-indent);
+  font-size: 13.5px;
+  line-height: 1.5;
   background: var(--surface-alt);
   /* Card radius minus its 1px border, so the body cannot square off the
      card's bottom corners. */
@@ -1664,7 +1676,8 @@ select:focus {
 }
 
 .api-detail-desc {
-  font-size: 15px;
+  /* Set with the summary it expands on — a drill-down reading larger than the
+     line above it inverts the hierarchy. */
   color: var(--muted);
   margin: 0 0 12px;
   max-width: 78ch;
@@ -3206,6 +3219,18 @@ select:focus {
   padding: 6px 0;
 }
 
+/* Same stack the wizard uses: the definition and its value on one line, the
+   requirement it was asked for underneath. */
+.pe-bhv-custom + .pe-bhv-custom {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.pe-bhv-custom .pe-bhv {
+  padding-bottom: 0;
+}
+
 /* The remove control rides with the name it removes. */
 .pe-bhv-name {
   display: inline-flex;
@@ -3213,10 +3238,11 @@ select:focus {
   gap: 10px;
 }
 
+/* No rule above it — the space is enough to separate the add form from the
+   behaviors listed above, and a line across the card reads as a division the
+   card does not actually have. */
 .pe-bhv-group .def-form {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+  margin-top: 18px;
 }
 
 /* One row for a behavior, core or custom: name and description on the left,
@@ -3265,9 +3291,73 @@ select:focus {
   color: var(--amber);
 }
 
+/* Sits outside the card now — it describes what happens to the market, not
+   any one behavior in the list above it. */
 .bhv-scope-note {
-  margin: 10px 0 0;
-  font-size: 12px;
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  max-width: 78ch;
+}
+
+/* A custom behavior is a request, so it stacks: the definition and its value
+   on one line, then the requirement it was asked for underneath. */
+.bhv-row-custom {
+  display: block;
+}
+
+.bhv-row-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.bhv-detail {
+  margin-top: 10px;
+}
+
+.bhv-detail label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bhv-detail textarea {
+  display: block;
+  width: 100%;
+  max-width: 78ch;
+  padding: 9px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  resize: vertical;
+}
+
+.bhv-detail textarea::placeholder {
+  color: var(--muted);
+}
+
+.bhv-detail textarea:focus-visible {
+  outline: 2px solid var(--iris);
+  outline-offset: 1px;
+  border-color: var(--iris);
+}
+
+/* Already agreed before this wizard opened, so it reads rather than edits. */
+.bhv-detail-text {
+  margin: 0;
+  max-width: 78ch;
+  font-size: 13.5px;
+  line-height: 1.5;
   color: var(--muted);
 }
 
@@ -3413,7 +3503,7 @@ select:focus {
 .api-dir-head {
   display: flex;
   align-items: center;
-  gap: var(--api-verb-gap);
+  gap: var(--api-gap);
 }
 
 /* The whole row is the control now; the chevron is only an affordance. */
@@ -4309,54 +4399,6 @@ select:focus {
   flex: none;
 }
 
-.api-method {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--api-verb-w);
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  line-height: 1.4;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--grey-wash);
-  border: 1px solid var(--grey-border);
-  color: var(--grey);
-  flex: none;
-  align-self: center;
-}
-
-.api-method.m-post {
-  background: var(--green-wash);
-  border-color: var(--green-border);
-  color: var(--green);
-}
-
-.api-method.m-get {
-  background: var(--iris-wash);
-  border-color: var(--iris-border);
-  color: var(--iris-deep);
-}
-
-.api-method.m-put {
-  background: var(--amber-wash);
-  border-color: var(--amber-border);
-  color: var(--amber);
-}
-
-.api-method.m-delete {
-  background: var(--red-wash);
-  border-color: #eec9c9;
-  color: var(--red);
-}
-
-.api-method.m-event {
-  background: var(--teal-wash, var(--grey-wash));
-  border-color: var(--grey-border);
-  color: var(--teal, var(--grey));
-}
 
 .prefill-hint {
   display: flex;

@@ -388,13 +388,10 @@ export function behaviorOptions(meta: { allowsBoth?: boolean }): BehaviorValue[]
 
 /* ---------- API identity (wizard, profile editor, API view) ----------
 
-   One shape for naming an API everywhere: the verb pill leads, then the
-   plain-language title, with the versioned identifier beneath it in mono as
-   the thing you paste into code. */
-
-export function ApiMethodBadge({ method }: { method: string }) {
-  return <span className={`api-method m-${method.toLowerCase()}`}>{method}</span>
-}
+   One shape for naming an API everywhere: the plain-language title, with the
+   versioned identifier beneath it in mono as the thing you paste into code.
+   The HTTP verb is not part of it — it belongs to the endpoint, which the
+   detail body spells out in full. */
 
 export function ApiIdentity({ spec }: { spec: ApiSpec }) {
   return (
