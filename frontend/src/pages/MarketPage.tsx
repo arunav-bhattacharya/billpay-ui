@@ -735,7 +735,9 @@ function ProfileEditor({
                 <div
                   key={b.key}
                   className={`pe-bhv ${locked ? 'locked' : ''}`}
-                  title={locked ? 'No returns in realtime clearing' : b.description}
+                  title={
+                    locked ? 'Only available when clearing is not fully realtime.' : b.description
+                  }
                 >
                   <span>{b.label}</span>
                   <TriToggle
@@ -755,31 +757,47 @@ function ProfileEditor({
         {role === 'ADMIN' && (
           <div className="pe-bhv-group">
             <span className="pe-cat">Custom</span>
-            {defs.length === 0 ? (
-              <p className="muted">No custom behaviors defined for {market.market.name} yet.</p>
-            ) : (
-              <div className="pe-behavior">
-                {defs.map((def) => (
-                  <div key={def.key} className="pe-bhv" title={def.description ?? def.key}>
-                    <span className="pe-bhv-name">
-                      {def.label}
-                      <button
-                        className="link-btn danger"
-                        onClick={() => removeDef(def.key)}
-                        aria-label={`Remove the ${def.label} behavior from this market`}
-                      >
-                        remove
-                      </button>
-                    </span>
-                    <CustomBehaviorValueInput
-                      def={def}
-                      value={customValues[def.key] ?? ''}
-                      onChange={(v) => setCustomValues({ ...customValues, [def.key]: v })}
-                    />
-                  </div>
-                ))}
+            {defs.map((def) => (
+              <div key={def.key} className="pe-bhv-custom">
+                <div className="pe-bhv">
+                  <span className="pe-bhv-name">
+                    {def.label}
+                    <button
+                      className="link-btn danger"
+                      onClick={() => removeDef(def.key)}
+                      aria-label={`Remove the ${def.label} behavior from this market`}
+                    >
+                      remove
+                    </button>
+                  </span>
+                  <CustomBehaviorValueInput
+                    def={def}
+                    value={customValues[def.key] ?? ''}
+                    onChange={(v) => setCustomValues({ ...customValues, [def.key]: v })}
+                  />
+                </div>
+
+                {/* What the market asked for, in its own words. Definitions are
+                    market-scoped, so this reads the same wherever the behavior
+                    is shown. */}
+                <div className="bhv-detail">
+                  <label htmlFor={`bhv-detail-${def.key}`}>Requirement</label>
+                  <textarea
+                    id={`bhv-detail-${def.key}`}
+                    rows={3}
+                    placeholder="What this behavior has to do, and why this market needs it."
+                    value={def.description ?? ''}
+                    onChange={(e) =>
+                      setDefs(
+                        defs.map((d) =>
+                          d.key === def.key ? { ...d, description: e.target.value } : d,
+                        ),
+                      )
+                    }
+                  />
+                </div>
               </div>
-            )}
+            ))}
 
             <div className="def-form">
               <input

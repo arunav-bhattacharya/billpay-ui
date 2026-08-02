@@ -243,8 +243,7 @@ object Catalog {
         BehaviorMeta(
             key = "requiresRepresentableReturn",
             label = "Representable Return",
-            description = "A returned payment may be re-presented to the customer's bank instead " +
-                "of being written off. Only available when clearing is not fully realtime.",
+            description = "A returned payment may be re-presented to the customer's bank for clearing.",
             allowsBoth = false,
         ),
     )

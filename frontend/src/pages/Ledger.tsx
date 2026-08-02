@@ -17,7 +17,7 @@ import { WorldMap } from './WorldMap'
 const VIEW_CAPTIONS: Record<'grid' | 'map' | 'apis', { label: string; text: string }> = {
   grid: {
     label: 'Grid View',
-    text: 'List of all onboarded markets.',
+    text: 'Region based view for all markets',
   },
   map: {
     label: 'World View',
