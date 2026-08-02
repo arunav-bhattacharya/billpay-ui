@@ -31,6 +31,12 @@ backend/data/
 *.log
 logs/
 
+# --- Screen recordings ---
+# Demo captures run to hundreds of MB, past GitHub's 100 MB per-file limit.
+# billpay-demo.mp4 predates this rule and is small enough to stay tracked.
+*.mp4
+!billpay-demo.mp4
+
 # --- Claude scratch ---
 .claude/settings.local.json
 
