@@ -22,10 +22,9 @@ data class ApiSpec(
     val description: String,
     val suggests: List<String> = emptyList(),
 ) {
-    /** Deep link into the One-Data API spec book. */
+    /** Deep link into the API Explorer, which keys its pages on [name] verbatim. */
     val specUrl: String
-        get() = "https://arunav-bhattacharya.github.io/billpay-book/docs/build/api-spec/one-data#" +
-            name.lowercase().filter { it.isLetterOrDigit() }
+        get() = "https://explorer.aexp.com/functions/$name"
 }
 
 data class CuratedMarket(

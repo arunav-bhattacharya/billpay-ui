@@ -150,7 +150,7 @@ export interface ApiSpec {
   description: string
   /** Behaviors this API typically calls for — guidance only, never auto-selected. */
   suggests: BehaviorKey[]
-  /** Deep link into the One-Data API spec book. */
+  /** Deep link into the API Explorer page for this function. */
   specUrl: string
 }
 
