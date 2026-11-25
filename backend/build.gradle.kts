@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     kotlin("jvm")
     kotlin("plugin.allopen")
@@ -33,10 +31,6 @@ dependencies {
 group = "com.amex.billpay"
 version = "1.0.0-SNAPSHOT"
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
 
 allOpen {
     annotation("jakarta.ws.rs.Path")
@@ -45,9 +39,10 @@ allOpen {
     annotation("io.quarkus.test.junit.QuarkusTest")
 }
 
+// JDK 25, as billpay-core (its build-logic sets jvmToolchain(25)).
 kotlin {
+    jvmToolchain(25)
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_21
         javaParameters = true
     }
 }
