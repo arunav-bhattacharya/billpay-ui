@@ -14,9 +14,6 @@ import java.security.MessageDigest
  * The release JSON: a profile frozen as billpay-core's Router reads it from MARKET_CONFIG_VERSION.CONFIG_DA (wiki,
  * "The release JSON"; billpay-core `ReleaseConfig`). Keys with no value are left out, so billpay-core's own default
  * applies, and the corporate-only and bank-confirmation keys only go with a profile they apply to.
- *
- * Not sent: the market's custom behaviors. No release key holds them yet, `TODO(contract)`, and a custom behavior
- * needs a build anyway.
  */
 object ReleaseJson {
 

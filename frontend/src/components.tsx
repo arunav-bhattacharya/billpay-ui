@@ -47,15 +47,15 @@ export function Masthead() {
 
 const ROLE_LABELS: Record<Role, string> = {
   OPERATOR: 'Operator',
-  ADMIN: 'Admin',
+  APPROVER: 'Approver',
 }
 
 const ROLE_NOTES: Record<Role, string> = {
-  OPERATOR: 'Onboards markets and edits account profiles.',
-  ADMIN: 'Also defines the custom behaviors a market carries.',
+  OPERATOR: 'Authors market profiles and their Operations settings.',
+  APPROVER: 'Releases what someone else authored. Maker-checker: nobody releases their own change.',
 }
 
-const ROLES: Role[] = ['OPERATOR', 'ADMIN']
+const ROLES: Role[] = ['OPERATOR', 'APPROVER']
 
 /**
  * Who the session is acting as. Lives in the masthead alongside the brand,
@@ -120,26 +120,26 @@ function RoleMenu() {
   )
 }
 
-/* ---------- Environment pill: e3 = green, e2 = amber, e1 = grey ---------- */
+/* ---------- Where something is live: e3 green, e2 amber, e1 grey, and draft when it is live nowhere ---------- */
 
 export function StatusSeal({
-  status,
+  stage,
   small,
   onDark,
 }: {
-  status: EnvStage
+  /** The furthest environment a version is live in, or null when none is. */
+  stage: EnvStage | null
   small?: boolean
   /** Inverted fill for the navy banner, where the light washes disappear. */
   onDark?: boolean
 }) {
   return (
     <span
-      className={`seal seal-${status.toLowerCase()} ${small ? 'seal-sm' : ''} ${
-        onDark ? 'seal-dark' : ''
-      }`}
+      className={`seal seal-${stage ? stage.toLowerCase() : 'draft'} ${small ? 'seal-sm' : ''} ${onDark ? 'seal-dark' : ''}`}
+      title={stage ? `Live in ${ENV_LABELS[stage]}` : 'Not live in any environment yet'}
     >
       <i className="seal-dot" aria-hidden="true" />
-      {ENV_LABELS[status]}
+      {stage ? `live in ${ENV_LABELS[stage]}` : 'draft'}
     </span>
   )
 }
@@ -369,9 +369,9 @@ export function CloneDialog({
   return (
     <Modal title={`Clone ${source.market.code} configuration`} onClose={onClose}>
       <p className="modal-lede">
-        Copies the selected profiles — API selections, behavior and custom-behavior
-        definitions — from <strong>{source.market.name}</strong>. Cloned profiles start in
-        e1.
+        Copies the selected profiles (APIs, behaviors and Operations settings) from{' '}
+        <strong>{source.market.name}</strong>. Cloned profiles start as drafts in e1, without the source market's test
+        accounts.
       </p>
 
       <h3 className="modal-section">Profiles to include</h3>

@@ -28,7 +28,7 @@ class MarketEntity : PanacheEntity() {
     @Column(nullable = false, length = 16)
     lateinit var region: String
 
-    /** JSON document holding customDimensionDefs + profiles. */
+    /** The market's profiles, as a JSON document ([com.amex.billpay.onboarding.model.MarketConfig]). */
     @Lob
     @Column(name = "config_json", nullable = false)
     lateinit var configJson: String

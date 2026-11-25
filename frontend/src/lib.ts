@@ -7,9 +7,9 @@ import type {
   BehaviorValue,
   Capabilities,
   Capability,
-  EnvMarketDocument,
   EnvStage,
   MarketDocument,
+  MarketProfile,
   OperationsSettings,
   ReleaseStatus,
 } from './types'
@@ -98,32 +98,14 @@ export function nextEnv(env: EnvStage): EnvStage | null {
   return ENV_ORDER[ENV_ORDER.indexOf(env) + 1] ?? null
 }
 
-/** True once a profile at `status` has been promoted as far as `env`. */
-export function reaches(status: EnvStage, env: EnvStage): boolean {
-  return ENV_ORDER.indexOf(status) >= ENV_ORDER.indexOf(env)
+/** The furthest environment a profile's version is live in, from its readiness; null when none is. */
+export function profileLive(market: MarketDocument, profile: MarketProfile): EnvStage | null {
+  return market.readiness?.find((r) => r.profileId === profile.id)?.liveIn ?? null
 }
 
-/**
- * The market as one environment holds it.
- *
- * Configuration is stored once, but a profile only exists in the environments
- * it has been promoted through — so Production carries a strictly smaller
- * document than Development, and each environment's readiness is its own.
- */
-export function projectToEnv(doc: MarketDocument, env: EnvStage): EnvMarketDocument {
-  const profiles = doc.profiles.filter((p) => reaches(p.status, env))
-  const ids = new Set(profiles.map((p) => p.id))
-  return {
-    market: doc.market,
-    environment: env,
-    customDimensionDefs: doc.customDimensionDefs,
-    profiles,
-    readiness: doc.readiness
-      ?.filter((r) => ids.has(r.profileId))
-      .map((r) => ({ ...r, environments: r.environments.filter((e) => e.env === env) })),
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
-  }
+/** CSS suffix for a live stage: e1, e2, e3, or draft. */
+export function stageClass(stage: EnvStage | null | undefined): string {
+  return stage ? stage.toLowerCase() : 'draft'
 }
 
 export const REGION_ORDER = ['AMER', 'EMEA', 'APAC']
@@ -139,16 +121,9 @@ export const REGION_NAMES: Record<string, string> = {
   APAC: 'Asia Pacific',
 }
 
-/**
- * Compact one-character rendering for the dense card and tooltip rows.
- * Also called on custom-behavior values, which are stored as the strings
- * 'true' / 'false' — keep those arms.
- */
-export function yn(v: BehaviorValue | boolean | string): string {
-  if (typeof v === 'boolean') return v ? 'Y' : 'N'
-  if (v === 'true') return 'Y'
-  if (v === 'BOTH') return 'B'
-  return v === 'Y' ? 'Y' : 'N'
+/** One character for a behavior, for the dense map tooltip rows: Y, N, or B for BOTH. */
+export function yn(v: BehaviorValue): string {
+  return v === 'BOTH' ? 'B' : v
 }
 
 /** Whether an account type can take a behavior at all; any other holds it at N (catalog `accountTypes`). */

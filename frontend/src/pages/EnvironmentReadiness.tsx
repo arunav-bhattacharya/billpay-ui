@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { api } from '../api'
 import { useApp } from '../appState'
+import { ErrorNote, JsonBlock, Modal } from '../components'
 import { TickIcon } from '../icons'
 import {
   ACCOUNT_TYPE_LABELS,
@@ -169,6 +170,8 @@ function Lane({
               )}
             </p>
 
+            <VersionJson market={market} profile={profile} version={current.version} env={env.env} />
+
             {current.lastError && <p className="ver-warn">{current.lastError}</p>}
             {current.status === 'FAILED' && current.reason && (
               <p className="ver-error">
@@ -230,6 +233,7 @@ function Lane({
                 Live{paused ? ', paused' : ''}
               </span>
             </header>
+            <VersionJson market={market} profile={profile} version={live.version} env={env.env} />
             {promotable && (
               <div className="ver-actions">
                 <button className="btn sm navy" disabled={actions.busy} onClick={() => actions.onPromote(env.env)}>
@@ -267,6 +271,46 @@ function Lane({
           </ul>
         )}
       </section>
+    </>
+  )
+}
+
+/**
+ * A version's release JSON, exactly as it was frozen and sent: what this environment holds for the profile, which is
+ * the thing to read when asking what runs here.
+ */
+function VersionJson({ market, profile, version, env }: { market: MarketDocument; profile: MarketProfile; version: number; env: EnvStage }) {
+  const [json, setJson] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  function show() {
+    setOpen(true)
+    if (json || !profile.id) return
+    api
+      .releases(market.market.code, profile.id)
+      .then((all) => {
+        const r = all.find((x) => x.version === version)
+        setJson(r ? JSON.stringify(r.config, null, 2) : null)
+        if (!r) setError(`v${version} has no frozen release`)
+      })
+      .catch((e: Error) => setError(e.message))
+  }
+  return (
+    <>
+      <button className="link-btn ver-json" onClick={show}>
+        Release JSON
+      </button>
+      {open && (
+        <Modal title={`${market.market.name} · ${ACCOUNT_TYPE_LABELS[profile.accountType]} · v${version} in ${ENV_LABELS[env]}`} onClose={() => setOpen(false)}>
+          <p className="modal-lede">The release as it was frozen and sent: what billpay-core's Router reads for this version.</p>
+          <ErrorNote message={error} />
+          {json ? (
+            <JsonBlock json={json} filename={`${market.market.code.toLowerCase()}-${profile.accountType.toLowerCase()}-v${version}.json`} />
+          ) : (
+            !error && <p className="muted">Loading…</p>
+          )}
+        </Modal>
+      )}
     </>
   )
 }

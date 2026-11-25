@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useApp } from '../appState'
 import { api } from '../api'
 import { ErrorNote, JsonDiff } from '../components'
 import { ENV_LABELS, formatDateTime, formatRelative } from '../lib'
@@ -22,61 +23,40 @@ const ACTION_LABELS: Record<RevisionAction, string> = {
 }
 
 /**
- * What was done to this market in one environment.
- *
- * The whole history arrives in a single request and is filtered here: it is
- * tens of rows, and switching environments should not cost a round trip.
- * Collapsed on arrival and fetched on first open — most visits to a market
- * page are not about the history, so it should not cost a request until
- * someone asks.
+ * What was done to the market, newest first, narrowed to one environment when [env] names one. The whole history
+ * arrives in one request and is filtered here: it is tens of rows, and switching environments shouldn't cost a round
+ * trip. It is read again whenever the market changes.
  */
-export function RevisionHistory({ marketCode, env }: { marketCode: string; env: EnvStage }) {
+export function RevisionHistory({ marketCode, env }: { marketCode: string; env: EnvStage | null }) {
+  const { markets } = useApp()
+  const updatedAt = markets.find((m) => m.market.code === marketCode)?.updatedAt
   const [revisions, setRevisions] = useState<MarketRevision[] | null>(null)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    setLoading(true)
     setError(null)
     try {
       setRevisions(await api.revisions(marketCode))
     } catch (e) {
       setError((e as Error).message)
-    } finally {
-      setLoading(false)
     }
   }, [marketCode])
 
-  const inEnv = useMemo(
-    () => revisions?.filter((r) => r.envs.includes(env)),
-    [revisions, env],
-  )
+  useEffect(() => {
+    void load()
+  }, [load, updatedAt])
+
+  const shown = useMemo(() => (env ? revisions?.filter((r) => r.envs.includes(env)) : revisions), [revisions, env])
 
   return (
-    <details
-      className="revisions"
-      onToggle={(e) => {
-        // Re-fetch on every open: promoting or editing while the section sits
-        // collapsed would otherwise leave a stale list behind it.
-        if ((e.currentTarget as HTMLDetailsElement).open) void load()
-      }}
-    >
-      <summary>
-        Revision history
-        {inEnv && <span className="rev-count">{inEnv.length}</span>}
-      </summary>
-
-      <div className="revisions-body">
-        <ErrorNote message={error} />
-        {loading && revisions === null && <p className="muted">Loading history…</p>}
-        {inEnv?.length === 0 && (
-          <p className="muted">Nothing has been changed in {ENV_LABELS[env]} yet.</p>
-        )}
-        {inEnv?.map((rev) => (
-          <RevisionRow key={rev.id} revision={rev} />
-        ))}
-      </div>
-    </details>
+    <div className="revisions card">
+      <ErrorNote message={error} />
+      {revisions === null && !error && <p className="muted">Loading history…</p>}
+      {shown?.length === 0 && <p className="muted">Nothing has happened {env ? `in ${ENV_LABELS[env]} ` : ''}yet.</p>}
+      {shown?.map((rev) => (
+        <RevisionRow key={rev.id} revision={rev} />
+      ))}
+    </div>
   )
 }
 

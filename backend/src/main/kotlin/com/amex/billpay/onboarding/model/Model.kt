@@ -56,8 +56,6 @@ enum class EnvStage {
     }
 }
 
-enum class CustomBehaviorType { BOOLEAN, ENUM, TEXT }
-
 /** A behavior's setting. [BOTH] means required for some journeys and not others; the Router resolves it per payment. */
 enum class BehaviorValue {
     Y,
@@ -94,15 +92,6 @@ data class Behavior(
     val requiresMandateAuthorization: BehaviorValue = BehaviorValue.N,
     /** Consumer only for now: corporate never takes it, and business travel waits until it is turned on (spec). */
     val requiresBankConfirmation: BehaviorValue = BehaviorValue.N,
-)
-
-/** Admin-defined, market-scoped custom behavior definition. */
-data class CustomBehaviorDef(
-    val key: String,
-    val label: String,
-    val type: CustomBehaviorType,
-    val allowedValues: List<String> = emptyList(),
-    val description: String? = null,
 )
 
 // ---- Operations settings (wiki, "Operations settings"; each becomes a release JSON key) ----
@@ -169,9 +158,10 @@ data class OperationsSettings(
  * One market and account type: its API selection, behaviors and Operations settings. This is the draft; a release
  * freezes it as vN, and later edits become vN+1.
  *
- * `dimensions` and `customDimensions` stay as JSON keys: they are persisted in every stored document, and only the
- * concept's name changed. [status] is the furthest environment a release of this profile has been sent to; a profile
- * starts in E1, where its first release goes.
+ * `dimensions` stays as the JSON key: it is persisted in every stored document, and only the concept's name changed.
+ * Stored documents may still carry `customDimensions`, from market-specific custom behaviors, which no release key
+ * ever carried to billpay-core; they are ignored on read. [status] is the furthest environment a release of this
+ * profile has been sent to; a profile starts in E1, where its first release goes.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MarketProfile(
@@ -180,17 +170,14 @@ data class MarketProfile(
     val status: EnvStage = EnvStage.E1,
     val apis: List<String> = emptyList(),
     val dimensions: Behavior = Behavior(),
-    val customDimensions: Map<String, String> = emptyMap(),
     val operations: OperationsSettings = OperationsSettings(),
     /** Who last changed the draft: the author when it is next frozen (maker-checker). */
     val editedBy: String? = null,
 )
 
-/** The part of a market that is persisted as a JSON document. */
+/** The part of a market that is persisted as a JSON document. Older documents' `customDimensionDefs` are ignored. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MarketConfig(
-    /** JSON key predates the behavior rename; kept so stored documents still read. */
-    val customDimensionDefs: List<CustomBehaviorDef> = emptyList(),
     val profiles: List<MarketProfile> = emptyList(),
 )
 
@@ -328,15 +315,20 @@ data class ProfileReadiness(
     val latestVersion: Int? = null,
     /** The draft differs from [latestVersion], so the next release freezes a new version. */
     val draftChanged: Boolean = true,
+    /** The furthest environment a version of this profile is live in, or null when none is. */
+    val liveIn: EnvStage? = null,
     val environments: List<EnvReadiness> = emptyList(),
 )
 
-/** Full market document exchanged with the UI. Market status is derived from its profiles. */
+/**
+ * Full market document exchanged with the UI. [status] is the furthest environment any profile's release was sent to;
+ * [liveIn] the furthest one a version is live in, which is what "live" means everywhere in the UI.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class MarketDocument(
     val market: MarketInfo,
     val status: EnvStage = EnvStage.E1,
-    /** JSON key predates the behavior rename; kept so stored documents still read. */
-    val customDimensionDefs: List<CustomBehaviorDef> = emptyList(),
+    val liveIn: EnvStage? = null,
     val profiles: List<MarketProfile> = emptyList(),
     /**
      * Derived on read; never written back. Nullable because it is output-only: clients POST and PUT documents without

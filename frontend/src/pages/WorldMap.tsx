@@ -7,7 +7,7 @@ import worldData from 'world-atlas/countries-110m.json'
 import { useApp } from '../appState'
 import { StatusSeal } from '../components'
 import { Flag } from '../icons'
-import { ACCOUNT_TYPE_LABELS, BEHAVIOR_SHORT, yn } from '../lib'
+import { ACCOUNT_TYPE_LABELS, BEHAVIOR_SHORT, profileLive, stageClass, yn } from '../lib'
 import { BEHAVIOR_KEYS } from '../types'
 import type { CuratedMarket, MarketDocument } from '../types'
 
@@ -59,7 +59,7 @@ type MarketState = 'live' | 'progress' | 'pending'
 
 function stateOf(doc: MarketDocument | undefined): MarketState {
   if (!doc) return 'pending'
-  return doc.status === 'E3' ? 'live' : 'progress'
+  return doc.liveIn === 'E3' ? 'live' : 'progress'
 }
 
 interface Hover {
@@ -283,7 +283,7 @@ export function WorldMap({
                       ? 'pending'
                       : state === 'live'
                         ? 'live in e3'
-                        : `in progress, ${doc!.status.toLowerCase()}`
+                        : `in progress, ${doc!.liveIn ? `live in ${doc!.liveIn.toLowerCase()}` : 'draft'}`
                   }`}
                   onMouseMove={(e) => moveTooltip(e, cm)}
                   onMouseLeave={() => setHover(null)}
@@ -351,7 +351,7 @@ export function WorldMap({
             {hover.doc ? (
               <>
                 <div className="map-tip-status">
-                  <StatusSeal status={hover.doc.status} small />
+                  <StatusSeal stage={hover.doc.liveIn ?? null} small />
                   <span className="map-tip-completeness">
                     {hover.doc.profiles.length}/{hover.curated.allowedAccountTypes.length} account
                     types
@@ -361,7 +361,7 @@ export function WorldMap({
                   {hover.doc.profiles.map((p) => (
                     <div key={p.accountType} className="map-tip-row">
                       <i
-                        className={`dot dot-${p.status.toLowerCase()}`}
+                        className={`dot dot-${stageClass(profileLive(hover.doc!, p))}`}
                         aria-hidden="true"
                       />
                       <span>{ACCOUNT_TYPE_LABELS[p.accountType]}</span>

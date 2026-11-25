@@ -2,9 +2,9 @@
 export type AccountType = 'CONSUMER' | 'CORPORATE' | 'BUSINESS_TRAVEL_ACCOUNT'
 /** Deployment environment. Strictly linear: a release is promoted one stage at a time; e3 is production. */
 export type EnvStage = 'E1' | 'E2' | 'E3'
-export type CustomBehaviorType = 'BOOLEAN' | 'ENUM' | 'TEXT'
 export type ApiCategory = 'CORE' | 'COMPOSITE' | 'EVENT_HANDLER'
-export type Role = 'OPERATOR' | 'ADMIN'
+/** Maker and checker: an Operator authors a profile, and an Approver releases what someone else authored. */
+export type Role = 'OPERATOR' | 'APPROVER'
 
 /** The persisted behavior keys, which are also the release JSON's (billpay-core's Router reads them). */
 export type BehaviorKey =
@@ -17,14 +17,6 @@ export type BehaviorKey =
 export type BehaviorValue = 'Y' | 'N' | 'BOTH'
 
 export type Behavior = Record<BehaviorKey, BehaviorValue>
-
-export interface CustomBehaviorDef {
-  key: string
-  label: string
-  type: CustomBehaviorType
-  allowedValues: string[]
-  description?: string | null
-}
 
 // ---- Operations settings: each field is the release key of the same name ----
 
@@ -83,8 +75,6 @@ export interface MarketProfile {
   apis: string[]
   /** Wire key predates the behavior rename. */
   dimensions: Behavior
-  /** Wire key predates the behavior rename. */
-  customDimensions: Record<string, string>
   operations: OperationsSettings
   /** Who last changed the draft: the author when it is next frozen. */
   editedBy?: string | null
@@ -204,6 +194,8 @@ export interface ProfileReadiness {
   latestVersion?: number | null
   /** The draft differs from the newest frozen version. */
   draftChanged: boolean
+  /** The furthest environment a version of this profile is live in; null when none is. */
+  liveIn?: EnvStage | null
   environments: EnvReadiness[]
 }
 
@@ -263,19 +255,15 @@ export interface MarketRevision {
 
 export interface MarketDocument {
   market: MarketInfo
+  /** The furthest environment a release was sent to. */
   status: EnvStage
-  /** Wire key predates the behavior rename. */
-  customDimensionDefs: CustomBehaviorDef[]
+  /** The furthest environment a version is live in, which is what "live" means in the UI; null when none is. */
+  liveIn?: EnvStage | null
   profiles: MarketProfile[]
   /** Derived from the deployment rows; absent on documents we send back up. */
   readiness?: ProfileReadiness[]
   createdAt?: string
   updatedAt?: string
-}
-
-/** A market document narrowed to a single environment: what that environment holds. */
-export interface EnvMarketDocument extends Omit<MarketDocument, 'status'> {
-  environment: EnvStage
 }
 
 export interface ApiSpec {

@@ -9,8 +9,10 @@ import {
   CATEGORY_ORDER,
   ENV_LABELS,
   ENV_ORDER,
+  profileLive,
   REGION_NAMES,
   REGION_ORDER,
+  stageClass,
 } from '../lib'
 import type { EnvStage, MarketDocument } from '../types'
 import { WorldMap } from './WorldMap'
@@ -46,9 +48,9 @@ export function Ledger() {
     setParams(next === 'grid' ? {} : { view: next }, { replace: true })
   }
 
-  // The hero speaks in plain terms: e3 is live, anything earlier is still in flight.
-  const activeMarkets = markets.filter((m) => m.status === 'E3')
-  const inProgressMarkets = markets.filter((m) => m.status !== 'E3')
+  // The hero speaks in plain terms: live in e3 is active, anything short of it is still in flight.
+  const activeMarkets = markets.filter((m) => m.liveIn === 'E3')
+  const inProgressMarkets = markets.filter((m) => m.liveIn !== 'E3')
   const availableMarkets = (catalog?.markets ?? []).filter(
     (cm) => !markets.some((m) => m.market.code === cm.code),
   )
@@ -124,7 +126,7 @@ export function Ledger() {
                 </h2>
                 <span className="region-stat">
                   <span className="rs-seg rs-act">
-                    Active: {regionMarkets.filter((m) => m.status === 'E3').length}
+                    Live in e3: {regionMarkets.filter((m) => m.liveIn === 'E3').length}
                   </span>
                 </span>
               </div>
@@ -192,7 +194,7 @@ function StatusOverview({
   })
 
   const rows: { dot: string; count: number; label: string; list: MarketRef[] }[] = [
-    { dot: 'ldot-active', count: active.length, label: 'Active', list: active },
+    { dot: 'ldot-active', count: active.length, label: 'Live in e3', list: active },
     { dot: 'ldot-progress', count: inProgress.length, label: 'In progress', list: inProgress },
     { dot: 'ldot-off', count: pending.length, label: 'Pending', list: pending },
   ]
@@ -223,7 +225,7 @@ function StatusOverview({
           {active.length}
         </text>
         <text x="50" y="64" className="donut-sub">
-          active
+          live in e3
         </text>
       </svg>
       <div className="status-legend">
@@ -266,7 +268,7 @@ function StatusOverview({
 function MarketCard({ market }: { market: MarketDocument }) {
   return (
     <Link
-      className={`market-card st-${market.status.toLowerCase()} region-${market.market.region.toLowerCase()}`}
+      className={`market-card st-${stageClass(market.liveIn)} region-${market.market.region.toLowerCase()}`}
       to={`/markets/${market.market.code}`}
       aria-label={`${market.market.name} market details`}
     >
@@ -278,14 +280,14 @@ function MarketCard({ market }: { market: MarketDocument }) {
             {market.market.code} · {market.market.currency}
           </span>
         </div>
-        <StatusSeal status={market.status} small />
+        <StatusSeal stage={market.liveIn ?? null} small />
       </div>
 
       {/* Each account type carries its own behavior — shown per profile. */}
       <div className="profile-rows">
         {market.profiles.map((p) => (
           <div key={p.accountType} className="profile-row">
-            <i className={`dot dot-${p.status.toLowerCase()}`} aria-hidden="true" />
+            <i className={`dot dot-${stageClass(profileLive(market, p))}`} aria-hidden="true" />
             <span className="profile-row-name">{ACCOUNT_TYPE_LABELS[p.accountType]}</span>
           </div>
         ))}
@@ -318,13 +320,13 @@ function ApiDirectory() {
                   .map((m) => {
                     const profiles = m.profiles.filter((p) => p.apis.includes(api.name))
                     if (profiles.length === 0) return null
-                    // The furthest environment this API has reached in this market.
+                    // The furthest environment a profile taking this API is live in, in this market.
                     const env = profiles
-                      .map((p) => p.status)
-                      .reduce((a, b) => (ENV_ORDER.indexOf(b) > ENV_ORDER.indexOf(a) ? b : a))
+                      .map((p) => profileLive(m, p))
+                      .reduce<EnvStage | null>((a, b) => (b && (!a || ENV_ORDER.indexOf(b) > ENV_ORDER.indexOf(a)) ? b : a), null)
                     return { m, env }
                   })
-                  .filter((x): x is { m: MarketDocument; env: EnvStage } => x !== null)
+                  .filter((x): x is { m: MarketDocument; env: EnvStage | null } => x !== null)
                   // group by region (AMER → EMEA → APAC), then by code
                   .sort((a, b) => {
                     const r =
@@ -368,9 +370,9 @@ function ApiDirectory() {
                           <span
                             key={m.market.code}
                             className={`api-mkt-chip region-${m.market.region.toLowerCase()} ${env === 'E3' ? 'active' : 'draft'}`}
-                            title={`${m.market.name} (${m.market.region}) — ${ENV_LABELS[env]}`}
+                            title={`${m.market.name} (${m.market.region}), ${env ? `live in ${ENV_LABELS[env]}` : 'draft'}`}
                           >
-                            <i className={`dot dot-${env.toLowerCase()}`} aria-hidden="true" />
+                            <i className={`dot dot-${stageClass(env)}`} aria-hidden="true" />
                             <Flag code={m.market.code} size={15} />
                             {m.market.code}
                           </span>

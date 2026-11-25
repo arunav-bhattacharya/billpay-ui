@@ -29,16 +29,20 @@ object Readiness {
         modes: (EnvStage) -> EnvMode,
         latestVersion: Int?,
         draftChanged: Boolean,
-    ): ProfileReadiness = ProfileReadiness(
-        profileId = profile.id,
-        accountType = profile.accountType,
-        latestVersion = latestVersion,
-        draftChanged = draftChanged,
-        environments = EnvStage.entries.map { env ->
+    ): ProfileReadiness {
+        val environments = EnvStage.entries.map { env ->
             val rows = deployments.filter { it.env == env }.sortedByDescending { it.version }.map(::view)
             forEnv(env, modes(env), rows, controls[env])
-        },
-    )
+        }
+        return ProfileReadiness(
+            profileId = profile.id,
+            accountType = profile.accountType,
+            latestVersion = latestVersion,
+            draftChanged = draftChanged,
+            liveIn = environments.lastOrNull { it.live != null }?.env,
+            environments = environments,
+        )
+    }
 
     private fun forEnv(env: EnvStage, mode: EnvMode, rows: List<DeploymentView>, control: MarketControlEntity?): EnvReadiness {
         val current = rows.firstOrNull()

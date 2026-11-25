@@ -35,7 +35,7 @@ object RevisionSummary {
     fun profileDeleted(profile: MarketProfile): String =
         "${accountTypeLabel(profile.accountType)} profile removed"
 
-    /** Diffs profiles and custom-behavior definitions; falls back to a generic line. */
+    /** Diffs the profiles; falls back to a generic line. */
     fun updated(before: MarketConfig, after: MarketConfig): String {
         val parts = mutableListOf<String>()
 
@@ -50,11 +50,6 @@ object RevisionSummary {
             }
         }
 
-        val beforeDefs = before.customDimensionDefs.map { it.key }.toSet()
-        val afterDefs = after.customDimensionDefs.map { it.key }.toSet()
-        (afterDefs - beforeDefs).forEach { parts += "custom behavior '$it' defined" }
-        (beforeDefs - afterDefs).forEach { parts += "custom behavior '$it' removed" }
-
         return parts.joinToString("; ").ifBlank { "Market updated" }
     }
 
@@ -67,13 +62,6 @@ object RevisionSummary {
         if (removedApis.isNotEmpty()) parts += "removed ${removedApis.joinToString()}"
 
         behaviorDiff(before.dimensions, after.dimensions).forEach { parts += it }
-
-        val keys = before.customDimensions.keys + after.customDimensions.keys
-        keys.forEach { key ->
-            val old = before.customDimensions[key]
-            val new = after.customDimensions[key]
-            if (old != new) parts += "$key ${old ?: "unset"} → ${new ?: "unset"}"
-        }
 
         operationsDiff(before.operations, after.operations).takeIf { it.isNotEmpty() }?.let {
             parts += "operations: ${it.joinToString()}"

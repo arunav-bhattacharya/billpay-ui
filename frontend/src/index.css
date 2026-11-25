@@ -1801,30 +1801,6 @@ textarea:focus {
   padding-top: 16px;
 }
 
-/* ---------- defining a custom behavior (wizard + profile editor) ---------- */
-
-.def-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-  align-items: center;
-}
-
-/* The action sits at the far edge of its row, away from the fields it acts
-   on — wherever this form appears. */
-.def-form .btn {
-  margin-left: auto;
-}
-
-.def-form input {
-  min-width: 150px;
-}
-
-.def-form select {
-  min-width: 132px;
-}
-
 /* ---------- step 4: review ---------- */
 
 .review-grid {
@@ -1957,51 +1933,36 @@ textarea:focus {
   margin-top: 3px;
 }
 
+/* Code blocks in the house style: a white body under a solid navy title bar with the file name in white mono. */
 .json-block {
-  border-top: 1px solid var(--line);
-  background: #000000;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-btn);
 }
 
 .json-head {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 8px 14px;
+  background: var(--navy);
 }
 
 .json-dots {
-  display: inline-flex;
-  gap: 5px;
-}
-
-.json-dots i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.json-dots i:first-child {
-  background: #e0655f;
-}
-
-.json-dots i:nth-child(2) {
-  background: #e5b567;
-}
-
-.json-dots i:nth-child(3) {
-  background: #78c286;
+  display: none;
 }
 
 .json-name {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: #9fc4ea;
+  color: #fff;
 }
 
 .json-meta {
   font-size: 11.5px;
-  color: #5f83ad;
+  color: #a9cdf5;
   margin-left: auto;
 }
 
@@ -2012,10 +1973,10 @@ textarea:focus {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid rgba(120, 176, 230, 0.35);
-  background: rgba(120, 176, 230, 0.08);
-  color: #cfe4f8;
-  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 7px;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -2026,18 +1987,17 @@ textarea:focus {
 
 .json-copy.copied {
   color: #7ee2b0;
-  border-color: rgba(126, 226, 176, 0.45);
-  background: rgba(126, 226, 176, 0.12);
+  border-color: rgba(126, 226, 176, 0.5);
 }
 
 .json-copy:hover {
-  background: rgba(0, 111, 207, 0.4);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .json-block pre {
   margin: 0;
-  padding: 16px 20px;
-  color: #b4cbe8;
+  padding: 14px 18px;
+  color: #3c4350;
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.7;
@@ -2045,25 +2005,25 @@ textarea:focus {
   max-height: 460px;
 }
 
-/* JSON tokens */
+/* JSON tokens, for a light ground */
 .json-block .jk {
-  color: #7cc0ff;
+  color: #00175a;
 }
 
 .json-block .js {
-  color: #9ce8b4;
+  color: #22653b;
 }
 
 .json-block .jn {
-  color: #ffce7a;
+  color: #9a5b00;
 }
 
 .json-block .jb {
-  color: #ff9ea1;
+  color: #b13a2e;
 }
 
 .json-block .j0 {
-  color: #c9a5f1;
+  color: #6a44c0;
 }
 
 /* ---------- modal ---------- */
@@ -2239,9 +2199,16 @@ textarea:focus {
 }
 
 .seal-e1 {
+  color: var(--iris-deep);
+  background: var(--iris-wash);
+  border: 1px solid var(--iris-border);
+}
+
+/* Live nowhere yet: a draft, drawn hollow. */
+.seal-draft {
   color: var(--grey);
-  background: var(--grey-wash);
-  border: 1px solid var(--grey-border);
+  background: transparent;
+  border: 1px dashed var(--grey-border);
 }
 
 .seal-sm {
@@ -2451,8 +2418,13 @@ textarea:focus {
 }
 
 .dot-e1 {
-  background: var(--grey);
-  box-shadow: 0 0 0 3px var(--grey-wash);
+  background: var(--iris);
+  box-shadow: 0 0 0 3px var(--iris-wash);
+}
+
+.dot-draft {
+  background: transparent;
+  border: 1.5px dashed var(--grey);
 }
 
 .profile-row-name {
@@ -2551,8 +2523,7 @@ textarea:focus {
 /* The market page's two section names, set to match the region codes on the
    ledger. Medium is the heaviest face shipped — anything above it would be a
    browser-synthesised bold. */
-.profiles-head h2,
-.env-record-head h2 {
+.profiles-head h2 {
   font-size: 26px;
   font-weight: 500;
   margin: 0;
@@ -2799,13 +2770,6 @@ textarea:focus {
   margin-top: 48px;
 }
 
-/* No rule above it — the space is enough to separate the add form from the
-   behaviors listed above, and a line across the card reads as a division the
-   card does not actually have. */
-.pe-bhv-group .def-form {
-  margin-top: 18px;
-}
-
 /* One row for a behavior, core or custom: name and description on the left,
    the control on the right. One shape for both surfaces — the wizard takes it
    as-is, the market page editor adds `.compact`. */
@@ -2874,87 +2838,11 @@ textarea:focus {
   color: var(--amber);
 }
 
-/* Sits outside the card now — it describes what happens to the market, not
-   any one behavior in the list above it. */
-.bhv-scope-note {
-  margin: 12px 0 0;
-  font-size: 12.5px;
-  color: var(--muted);
-  max-width: 78ch;
-}
-
-/* A custom behavior is a request, so it stacks: the definition and its value
-   on one line, then the requirement it was asked for underneath. */
-.bhv-row-custom {
-  display: block;
-}
-
 .bhv-row-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-}
-
-.bhv-detail {
-  margin-top: 10px;
-}
-
-.bhv-detail label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.bhv-detail textarea {
-  display: block;
-  width: 100%;
-  max-width: 78ch;
-  padding: 9px 11px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  font: inherit;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--ink);
-  resize: vertical;
-}
-
-.bhv-detail textarea::placeholder {
-  color: var(--muted);
-}
-
-.bhv-detail textarea:focus-visible {
-  outline: 2px solid var(--iris);
-  outline-offset: 1px;
-  border-color: var(--iris);
-}
-
-/* Already agreed before this wizard opened, so it reads rather than edits. */
-.bhv-detail-text {
-  margin: 0;
-  max-width: 78ch;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--muted);
-}
-
-/* A custom behavior left unset stays quiet, the same way an off core flag does. */
-.chip.chip-custom {
-  border-color: var(--line);
-  background: var(--surface-alt);
-  color: var(--muted);
-}
-
-.chip.chip-custom.on {
-  border-color: var(--iris-border);
-  background: var(--iris-wash);
-  color: var(--iris-deep);
 }
 
 /* One row shape for both APIs and Behavior: the grouping label holds a fixed
@@ -3516,179 +3404,11 @@ textarea:focus {
   margin-bottom: 22px;
 }
 
-/* ---------- environment record ----------
-   Configuration is stored once, but each environment holds only the profiles
-   promoted into it and only the changes made at that stage. One selector
-   governs both cards below it — they answer the same question about the same
-   environment, and letting them disagree would be a trap. */
-
-/* One card, like the account-type sections above it, holding the two things
-   an environment carries as flush rows. */
-.env-record {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-1);
-  overflow: hidden;
-}
-
-/* Heading set like Profiles, then what it holds, then the control that scopes
-   it — each on its own line, reading down into the card it governs. */
-.env-record-head {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  margin: 36px 0 14px;
-}
-
-.env-record-head .env-tabs {
-  margin-top: 8px;
-}
-
-.env-record-lede {
-  margin: 0;
-  font-size: 15px;
-  color: var(--muted);
-}
-
-/* Three two-character labels; the control should take exactly the room they
-   need and no more. */
-.env-tabs {
-  display: inline-flex;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
-  overflow: hidden;
-}
-
-.env-tab {
-  min-width: 44px;
-  padding: 5px 12px;
-  border: 0;
-  border-right: 1px solid var(--line);
-  background: transparent;
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.env-tab:last-child {
-  border-right: 0;
-}
-
-.env-tab:hover:not(.on) {
-  background: var(--iris-wash);
-  color: var(--iris);
-}
-
-/* Navy is where you are, as everywhere else in the app. */
-.env-tab.on {
-  background: var(--navy);
-  color: #fff;
-}
-
-/* An environment nothing has reached yet is still worth opening — it says so
-   rather than leaving a dead tab — but it should not invite the click. */
-.env-tab.empty:not(.on) {
-  color: var(--muted);
-}
-
-.env-record-empty {
-  margin: 0;
-  padding: 18px 22px;
-  background: var(--surface-alt);
-  font-size: 14px;
-}
-
-/* Both disclosures are rows of the card now, not cards of their own: the
-   surrounding border is the card's, so they keep only the hairline that
-   separates them. */
-.env-record > .revisions,
-.env-record > .json-view {
-  margin: 0;
-  border: 0;
-  border-top: 1px solid var(--line);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-/* The card's own border already draws the top edge. */
-.env-record > :first-child {
-  border-top: 0;
-}
-
-.env-record > .revisions > summary,
-.env-record > .json-view > summary {
-  padding: 13px 22px;
-}
-
 /* ---------- revision history ---------- */
 
-/* The same disclosure card as Market Json below it — two collapsed panels at
-   the foot of the page should not be two different shapes. */
+/* The market's history: a card of rows, each with its before and after a click away. */
 .revisions {
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
   overflow: hidden;
-}
-
-.revisions > summary {
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 12px 16px;
-  font-weight: 400;
-  font-size: 14.5px;
-  color: var(--iris);
-}
-
-.revisions[open] > summary {
-  border-bottom: 1px solid var(--line);
-}
-
-.revisions > summary::-webkit-details-marker {
-  display: none;
-}
-
-/* The same chevron Market Json draws, on the same side — a printed ▸ came
-   from the system fallback and matched nothing else. */
-.revisions > summary::after {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  border-radius: 1px;
-  transform: rotate(45deg);
-  margin-bottom: 3px;
-  transition: transform 0.15s ease;
-}
-
-.revisions[open] > summary::after {
-  transform: rotate(-135deg);
-  margin-bottom: 0;
-  margin-top: 3px;
-}
-
-.rev-count {
-  background: var(--iris-wash);
-  border: 1px solid var(--iris-border);
-  border-radius: 999px;
-  padding: 1px 9px;
-  font-size: 11.5px;
-  color: var(--iris-deep);
-}
-
-.revisions-body {
-  padding: 4px 20px 16px;
 }
 
 .rev-row {
@@ -3826,31 +3546,33 @@ textarea:focus {
   display: inline-block;
   width: 22px;
   padding-left: 8px;
-  color: rgba(255, 255, 255, 0.35);
+  color: #b2bac7;
   user-select: none;
 }
 
 .jd-add {
-  background: rgba(0, 135, 103, 0.22);
+  background: var(--green-wash);
+  color: #22653b;
 }
 
 .jd-add .jd-sign {
-  color: #4ad395;
+  color: var(--green);
 }
 
 .jd-del {
-  background: rgba(192, 52, 52, 0.22);
+  background: var(--red-wash);
+  color: #8e3127;
 }
 
 .jd-del .jd-sign {
-  color: #f08a8a;
+  color: var(--red);
 }
 
 /* Elided run of unchanged lines. */
 .jd-gap {
   display: block;
   padding: 2px 0 2px 8px;
-  color: rgba(255, 255, 255, 0.3);
+  color: #b2bac7;
   letter-spacing: 0.3em;
   user-select: none;
 }
@@ -4841,7 +4563,7 @@ i.k.paused { background: repeating-linear-gradient(-45deg, rgba(91, 101, 118, 0.
 
 .acct-board {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 18px;
   align-items: start;
 }
@@ -5561,7 +5283,7 @@ i.k.paused { background: repeating-linear-gradient(-45deg, rgba(91, 101, 118, 0.
   width: 100%;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1180px) {
   .acct-board {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -5586,4 +5308,44 @@ i.k.paused { background: repeating-linear-gradient(-45deg, rgba(91, 101, 118, 0.
   font-size: 13px;
   font-weight: 600;
   color: var(--navy);
+}
+
+/* ---------- History: everything done to the market ---------- */
+
+.history {
+  margin-top: 40px;
+}
+
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.history-head h2 {
+  font-size: 24px;
+}
+
+.revisions.card {
+  padding: 6px 20px;
+}
+
+.ver-json {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+.ver-links .link-btn {
+  margin-left: 0;
+}
+
+.release-preview {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.review-grid + .step-hint {
+  margin-top: 18px;
 }

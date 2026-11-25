@@ -6,8 +6,6 @@ import com.amex.billpay.onboarding.model.BankConfirmationSettings
 import com.amex.billpay.onboarding.model.Behavior
 import com.amex.billpay.onboarding.model.BehaviorValue
 import com.amex.billpay.onboarding.model.CardAuthenticationSettings
-import com.amex.billpay.onboarding.model.CustomBehaviorDef
-import com.amex.billpay.onboarding.model.CustomBehaviorType
 import com.amex.billpay.onboarding.model.EnvStage
 import com.amex.billpay.onboarding.model.MarketDocument
 import com.amex.billpay.onboarding.model.MarketInfo
@@ -55,15 +53,6 @@ class SeedData(
         val us = service.create(
             MarketDocument(
                 market = MarketInfo(code = "US"),
-                customDimensionDefs = listOf(
-                    CustomBehaviorDef(
-                        key = "settlementWindow",
-                        label = "Settlement Window",
-                        type = CustomBehaviorType.ENUM,
-                        allowedValues = listOf("T+0", "T+1", "T+2"),
-                        description = "How quickly cleared funds settle to the AR ledger.",
-                    ),
-                ),
                 profiles = listOf(
                     MarketProfile(
                         accountType = AccountType.CONSUMER,
@@ -76,7 +65,6 @@ class SeedData(
                             "CreateAccountsReceivableTransactionEventHandler.v1",
                         ),
                         dimensions = Behavior(requiresArPosting = BehaviorValue.Y),
-                        customDimensions = mapOf("settlementWindow" to "T+1"),
                         operations = OperationsSettings(
                             timeZone = "America/New_York",
                             executionTime = "00:00",
@@ -97,7 +85,6 @@ class SeedData(
                             "CreateAccountsReceivableTransactionEventHandler.v1",
                         ),
                         dimensions = Behavior(requiresArPosting = BehaviorValue.Y, requiresMandateAuthorization = BehaviorValue.Y),
-                        customDimensions = mapOf("settlementWindow" to "T+0"),
                         operations = OperationsSettings(
                             timeZone = "America/New_York",
                             executionTime = "00:00",

@@ -40,12 +40,13 @@ class MarketService(
         val config = readConfig(entity)
         // Stored order is whatever order the profiles were added in; every reader wants account-type order.
         val profiles = config.profiles.sortedBy { it.accountType }
+        val readiness = releases.readiness(entity.code, profiles)
         return MarketDocument(
             market = MarketInfo(code = entity.code, name = entity.name, currency = entity.currency, region = entity.region),
             status = profiles.maxOfOrNull { it.status } ?: EnvStage.E1,
-            customDimensionDefs = config.customDimensionDefs,
+            liveIn = readiness.mapNotNull { it.liveIn }.maxOrNull(),
             profiles = profiles,
-            readiness = releases.readiness(entity.code, profiles),
+            readiness = readiness,
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt,
         )
@@ -73,8 +74,7 @@ class MarketService(
 
     /**
      * Which environments a change belongs to: the stages of the profiles it touched, so each environment's history is
-     * its own. A change with no profile of its own, such as defining a custom behavior, lands in every stage the
-     * market occupies.
+     * its own. A change with no profile of its own lands in every stage the market occupies.
      */
     private fun envsOf(touched: Collection<MarketProfile>, whole: MarketConfig? = null): List<EnvStage> =
         touched.map { it.status }.ifEmpty { whole?.profiles.orEmpty().map { it.status } }.distinct().sorted()
@@ -129,7 +129,6 @@ class MarketService(
         val now = Instant.now()
         // Every profile starts in e1, where its first release goes; only promotion moves it on.
         val config = MarketConfig(
-            customDimensionDefs = document.customDimensionDefs,
             profiles = document.profiles.map { it.copy(status = EnvStage.E1, apis = Catalog.currentApiNames(it.apis), editedBy = actor.uppercase()) },
         )
         val entity = MarketEntity().apply {
@@ -163,7 +162,6 @@ class MarketService(
         // A profile's stage is the release pipeline's to move, never an edit's: an existing profile keeps its own,
         // and a new one starts in e1.
         val edited = MarketConfig(
-            customDimensionDefs = document.customDimensionDefs,
             profiles = document.profiles.map {
                 it.copy(
                     status = stored[it.id]?.status ?: EnvStage.E1,
@@ -339,11 +337,6 @@ class MarketService(
             )
         }
         document.profiles.forEach { validateProfile(it) }
-        val definedKeys = document.customDimensionDefs.map { it.key }.toSet()
-        val undefinedUse = document.profiles.flatMap { it.customDimensions.keys }.filter { it !in definedKeys }
-        if (undefinedUse.isNotEmpty()) {
-            bad("Custom behavior value(s) without a definition: ${undefinedUse.distinct().joinToString()}")
-        }
     }
 
     /** The behaviors' account-type rules and the Operations settings' formats; the UI holds the same rules. */

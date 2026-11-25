@@ -43,7 +43,7 @@ class ReleaseFlowTest {
 
     private fun profileId(code: String, i: Int = 0): String = market(code).getString("profiles[$i].id")
 
-    private fun act(code: String, path: String, body: Any? = null, role: String = "ADMIN") =
+    private fun act(code: String, path: String, body: Any? = null, role: String = "APPROVER") =
         given().contentType(ContentType.JSON).header("X-Billpay-Role", role)
             .body(body ?: emptyMap<String, Any>())
             .post("/api/markets/$code/profiles/${profileId(code)}/$path")
@@ -68,6 +68,7 @@ class ReleaseFlowTest {
     @Test
     fun `a release goes live in e1, a second version takes over, and a rollback restores the first`() {
         onboard("DE", profile())
+        assertEquals(null, market("DE").getString("liveIn"), "a draft is live nowhere")
         act("DE", "release", role = "OPERATOR").then().statusCode(409).body("error", org.hamcrest.Matchers.containsString("someone else approves"))
         assertTrue(FakeOnboardingApi.calls.isEmpty(), "an author's own release never leaves billpay-ui")
         act("DE", "release").then().statusCode(200)
@@ -78,7 +79,7 @@ class ReleaseFlowTest {
         assertEquals(1, send["version"].asInt())
         assertTrue(send["checksum"].asText().startsWith("sha256:"))
         assertEquals("OPERATOR", send["author"].asText(), "the author is who last edited the draft")
-        assertEquals("ADMIN", send["approver"].asText(), "the approver is who released it")
+        assertEquals("APPROVER", send["approver"].asText(), "the approver is who released it")
         val config = send["config"]
         assertEquals("Y", config["behaviors"]["requiresArPosting"]["value"].asText())
         assertEquals("BOTH", config["behaviors"]["requiresRealtimeClearing"]["value"].asText())
@@ -91,7 +92,9 @@ class ReleaseFlowTest {
         act("DE", "release").then().statusCode(409)
         act("DE", "environments/E1/sign-off").then().statusCode(200)
         awaitStatus("DE", "E1", "ACTIVE")
-        assertEquals("ADMIN", current("DE", "E1", "signedOffBy"))
+        assertEquals("APPROVER", current("DE", "E1", "signedOffBy"))
+        assertEquals("E1", market("DE").getString("liveIn"), "live means a version is active there")
+        assertEquals("E1", market("DE").getString("readiness[0].liveIn"))
         act("DE", "environments/E1/sign-off").then().statusCode(409)
         act("DE", "environments/E1/rollback", mapOf("reason" to "nothing to go back to")).then().statusCode(409)
         assertFalse(market("DE").getBoolean("readiness[0].draftChanged"))
@@ -117,7 +120,7 @@ class ReleaseFlowTest {
         assertEquals("the 02:00 run clashes", sent("/releases/DE/CONSUMER/2/rollback").single().third!!["reason"].asText())
 
         act("DE", "environments/E1/pause", mapOf("reason" to "bank holiday")).then().statusCode(200)
-        assertEquals("ADMIN", sent("/markets/DE/CONSUMER/pause").single().third!!["requestedBy"].asText())
+        assertEquals("APPROVER", sent("/markets/DE/CONSUMER/pause").single().third!!["requestedBy"].asText())
         assertTrue(market("DE").getBoolean("readiness[0].environments.find { it.env == 'E1' }.control.paused"))
         act("DE", "environments/E1/resume").then().statusCode(200)
         assertFalse(market("DE").getBoolean("readiness[0].environments.find { it.env == 'E1' }.control.paused"))
@@ -195,7 +198,7 @@ class ReleaseFlowTest {
         assertEquals("CORPORATE", first["accountType"].asText())
         assertEquals("PT2H", first["config"]["allocationFetchBefore"].asText())
         val bt = profileId("SE", 1)
-        given().contentType(ContentType.JSON).header("X-Billpay-Role", "ADMIN").body("{}").post("/api/markets/SE/profiles/$bt/release").then().statusCode(200)
+        given().contentType(ContentType.JSON).header("X-Billpay-Role", "APPROVER").body("{}").post("/api/markets/SE/profiles/$bt/release").then().statusCode(200)
         val second = sent("/releases").last().third!!
         assertEquals("BUSINESS_TRAVEL", second["accountType"].asText())
         assertFalse(second["config"].has("allocationFetchBefore"))
@@ -236,5 +239,12 @@ class ReleaseFlowTest {
             profile() + ("apis" to listOf("CreatePayment.v3", "MoneyMovementEventHandler.v1", "CreatePaymentIntent.v1")),
         ).then().statusCode(201)
         assertEquals(listOf("CreatePayment.v3", "CreateMoneyMovementEventHandler.v1"), market("AT").getList<String>("profiles[0].apis"))
+
+        // The wizard's review shows what billpay-core would receive, before anything is saved.
+        val preview = given().contentType(ContentType.JSON).body(profile("CORPORATE", extra = mapOf("allocationFetchBefore" to "PT2H")))
+            .post("/api/release-preview").then().statusCode(200).extract().jsonPath()
+        assertEquals("Y", preview.getString("behaviors.requiresArPosting.value"))
+        assertEquals("PT2H", preview.getString("allocationFetchBefore"))
+        assertEquals(null, preview.get<Any>("customDimensions"))
     }
 }

@@ -20,8 +20,8 @@ function moving(markets: MarketDocument[]): boolean {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  // Admin by default: it is the fuller view, and an operator-only session silently hides the custom-behavior tooling.
-  const [role, setRole] = useState<Role>('ADMIN')
+  // Operator by default: onboarding starts with an author; an Approver releases what they wrote.
+  const [role, setRole] = useState<Role>('OPERATOR')
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [environments, setEnvironments] = useState<EnvironmentInfo[]>([])
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null)

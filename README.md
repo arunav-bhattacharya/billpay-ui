@@ -8,7 +8,9 @@ A market is one or more **profiles**, one per account type. A profile picks the 
 four behavior questions (`requiresArPosting`, `requiresRealtimeClearing`, `requiresMandateAuthorization`,
 `requiresBankConfirmation`) and carries its **Operations settings** (time zone, execution time, cancellation window,
 cutoff and floor, representment, Raven statuses, bank confirmation, card authentication, MR Points, instrument
-statuses, pending sweep, test accounts, and the BOTH rules).
+statuses, pending sweep, test accounts, and the BOTH rules). Everything a profile holds becomes a key in the release
+JSON billpay-core's Router reads; a market's own variation beyond that is code in a build, which the capability
+manifest shows. "Live" everywhere means a version is active in that environment.
 
 ## From draft to live
 
@@ -24,7 +26,7 @@ Once live, a profile can be **rolled back** one level, to the version it replace
 
 **Maker-checker.** Whoever last edited a profile can't release it: the release review names the author and the
 approver, and the backend refuses an author's own release. With no SSO yet the two are the UI's roles, so the
-demo path is to edit as **Operator** and release as **Admin** (the role menu is in the top bar).
+demo path is to edit as **Operator** and release as **Approver** (the role menu is in the top bar).
 
 ## What's in the console
 
@@ -40,14 +42,20 @@ demo path is to edit as **Operator** and release as **Admin** (the role menu is 
 ## Demo path
 
 1. Onboard a market from **Markets → Onboard** (say Germany, Consumer) as **Operator**: APIs, behaviors (BOTH rules,
-   the manifest pre-check), Operations settings. Saving creates the draft in e1.
-2. Switch to **Admin**, open the market, **Review and release v1**: the review shows what will be frozen.
+   the manifest pre-check), Operations settings; the review shows the release JSON e1 will receive. Saving creates
+   the draft in e1.
+2. Switch to **Approver**, open the market, **Review and release v1**: the review shows what will be frozen.
 3. Watch e1's lane: check, save, test (billpay-core's 30 s test step), then **Sign off v1**: it activates.
-4. Edit the profile as Operator (a later execution time), release v2 as Admin, sign off: v2 takes over, v1 is
+4. Edit the profile as Operator (a later execution time), release v2 as Approver, sign off: v2 takes over, v1 is
    superseded. **Roll back to v1**: the pre-check runs, and v1 is live again.
 5. **Pause runs** shows what the pause holds; resume it. **Promote** v1 to e2 and e3 (simulated); e3 asks for the
    change request before its sign-off.
 6. **Versions**, **Runs** and **Build** show the same releases across every market.
+
+**Recording at 1440p.** Capture a 1280×720 browser viewport at device scale 2, which gives 2560×1440 frames with text
+large enough to read (the layout is tuned for it: lanes and the activity rail side by side). A 2560×1440 viewport at
+scale 1 also works but renders the console small in a wide frame. With headless Chrome, for example:
+`--window-size=1280,720 --force-device-scale-factor=2`.
 
 ## Layout
 
@@ -58,7 +66,7 @@ demo path is to edit as **Operator** and release as **Admin** (the role menu is 
 
 ## Run
 
-Each part is one command. JDK 25 (or 21) and Node 22+.
+Each part is one command. JDK 25 (as billpay-core) and Node 22+.
 
 **1. billpay-core** (for a real e1), from its checkout, as its README says:
 

@@ -6,6 +6,7 @@ import type {
   EnvStage,
   LiveRelease,
   MarketDocument,
+  MarketProfile,
   MarketRevision,
   ReleaseConfig,
   ReleaseView,
@@ -61,6 +62,9 @@ export const api = {
     request<MarketDocument>(profilePath(code, profileId), { method: 'DELETE' }),
   clone: (code: string, targetCode: string, accountTypes?: AccountType[]) =>
     post<MarketDocument>(`/api/markets/${code}/clone`, { targetCode, accountTypes: accountTypes ?? null }),
+
+  /** The release JSON a profile would freeze as, before it is saved. */
+  releasePreview: (profile: MarketProfile) => post<ReleaseConfig>('/api/release-preview', profile),
 
   // ---- releases ----
   releases: (code: string, profileId: string) =>
