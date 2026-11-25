@@ -5,13 +5,12 @@ import com.amex.billpay.onboarding.model.AccountType
 import com.amex.billpay.onboarding.model.Behavior
 import com.amex.billpay.onboarding.model.MarketConfig
 import com.amex.billpay.onboarding.model.MarketProfile
+import com.amex.billpay.onboarding.model.OperationsSettings
+import kotlin.reflect.full.memberProperties
 
 /**
- * Turns a config-to-config change into one line a person can read.
- *
- * The stored document is an opaque JSON blob, so the before/after pair is kept
- * verbatim on the revision for anyone who wants the detail; this is the part
- * that makes the history scannable without opening it.
+ * Turns a config-to-config change into one line a person can read. The before/after pair is kept verbatim on the
+ * revision for anyone who wants the detail; this is the part that makes the history scannable.
  */
 object RevisionSummary {
 
@@ -36,16 +35,6 @@ object RevisionSummary {
     fun profileDeleted(profile: MarketProfile): String =
         "${accountTypeLabel(profile.accountType)} profile removed"
 
-    fun verified(profile: MarketProfile): String =
-        "${accountTypeLabel(profile.accountType)} verified in ${profile.status.name.lowercase()}"
-
-    fun rfcRecorded(profile: MarketProfile, rfcNumber: String): String =
-        "${accountTypeLabel(profile.accountType)} — change request $rfcNumber approved"
-
-    /** [promoted] already carries the stage it arrived in, not the one it left. */
-    fun promoted(promoted: MarketProfile): String =
-        "${accountTypeLabel(promoted.accountType)} promoted to ${promoted.status.name.lowercase()}"
-
     /** Diffs profiles and custom-behavior definitions; falls back to a generic line. */
     fun updated(before: MarketConfig, after: MarketConfig): String {
         val parts = mutableListOf<String>()
@@ -53,12 +42,8 @@ object RevisionSummary {
         val beforeByType = before.profiles.associateBy { it.accountType }
         val afterByType = after.profiles.associateBy { it.accountType }
 
-        (afterByType.keys - beforeByType.keys).forEach {
-            parts += "${accountTypeLabel(it)} profile added"
-        }
-        (beforeByType.keys - afterByType.keys).forEach {
-            parts += "${accountTypeLabel(it)} profile removed"
-        }
+        (afterByType.keys - beforeByType.keys).forEach { parts += "${accountTypeLabel(it)} profile added" }
+        (beforeByType.keys - afterByType.keys).forEach { parts += "${accountTypeLabel(it)} profile removed" }
         (beforeByType.keys intersect afterByType.keys).forEach { type ->
             profileDiff(beforeByType.getValue(type), afterByType.getValue(type))?.let {
                 parts += "${accountTypeLabel(type)} — $it"
@@ -90,19 +75,21 @@ object RevisionSummary {
             if (old != new) parts += "$key ${old ?: "unset"} → ${new ?: "unset"}"
         }
 
-        if (before.status != after.status) {
-            parts += "moved to ${after.status.name.lowercase()}"
+        operationsDiff(before.operations, after.operations).takeIf { it.isNotEmpty() }?.let {
+            parts += "operations: ${it.joinToString()}"
         }
         return parts.joinToString(", ").ifBlank { null }
     }
 
-    private fun behaviorDiff(before: Behavior, after: Behavior): List<String> = buildList {
-        fun compare(key: String, old: Enum<*>, new: Enum<*>) {
-            if (old != new) add("${behaviorLabel(key)} ${old.name} → ${new.name}")
-        }
-        compare("requiresArPosting", before.requiresArPosting, after.requiresArPosting)
-        compare("requiresRealtimeClearing", before.requiresRealtimeClearing, after.requiresRealtimeClearing)
-        compare("requiresMandateAuthorization", before.requiresMandateAuthorization, after.requiresMandateAuthorization)
-        compare("requiresRepresentableReturn", before.requiresRepresentableReturn, after.requiresRepresentableReturn)
-    }
+    private fun behaviorDiff(before: Behavior, after: Behavior): List<String> =
+        listOf(
+            Triple("requiresArPosting", before.requiresArPosting, after.requiresArPosting),
+            Triple("requiresRealtimeClearing", before.requiresRealtimeClearing, after.requiresRealtimeClearing),
+            Triple("requiresMandateAuthorization", before.requiresMandateAuthorization, after.requiresMandateAuthorization),
+            Triple("requiresBankConfirmation", before.requiresBankConfirmation, after.requiresBankConfirmation),
+        ).mapNotNull { (key, old, new) -> if (old != new) "${behaviorLabel(key)} $old → $new" else null }
+
+    /** The Operations settings' keys that changed, by name; the revision's JSON holds the values. */
+    private fun operationsDiff(before: OperationsSettings, after: OperationsSettings): List<String> =
+        OperationsSettings::class.memberProperties.filter { it.get(before) != it.get(after) }.map { it.name }.sorted()
 }

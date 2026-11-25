@@ -10,9 +10,9 @@ repositories {
     mavenCentral()
 }
 
-val quarkusPlatformGroupId: String by project
-val quarkusPlatformArtifactId: String by project
-val quarkusPlatformVersion: String by project
+val quarkusPlatformGroupId = providers.gradleProperty("quarkusPlatformGroupId").get()
+val quarkusPlatformArtifactId = providers.gradleProperty("quarkusPlatformArtifactId").get()
+val quarkusPlatformVersion = providers.gradleProperty("quarkusPlatformVersion").get()
 
 dependencies {
     implementation(enforcedPlatform("$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion"))
@@ -21,11 +21,13 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-orm-panache-kotlin")
     implementation("io.quarkus:quarkus-jdbc-h2")
     implementation("io.quarkus:quarkus-arc")
+    implementation("io.quarkus:quarkus-scheduler")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
+    testImplementation("org.awaitility:awaitility")
 }
 
 group = "com.amex.billpay"

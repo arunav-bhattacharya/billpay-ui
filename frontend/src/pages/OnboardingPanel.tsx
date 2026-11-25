@@ -8,12 +8,16 @@ import type { SelectionState } from '../icons'
 import {
   ACCOUNT_TYPE_LABELS,
   BEHAVIOR_VALUE_LABELS,
+  behaviorFor,
   byAccountType,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
+  missingCombinations,
+  operationsSummary,
   yn,
 } from '../lib'
-import { BEHAVIOR_KEYS, DEFAULT_BEHAVIOR } from '../types'
+import { OperationsEditor } from '../operations'
+import { BEHAVIOR_KEYS, DEFAULT_BEHAVIOR, DEFAULT_OPERATIONS } from '../types'
 import type {
   AccountType,
   ApiSpec,
@@ -21,9 +25,11 @@ import type {
   CustomBehaviorDef,
   MarketDocument,
   MarketProfile,
+  OperationsSettings,
 } from '../types'
 
-const STEPS = ['Market & account type', 'APIs', 'Behavior', 'Review & save']
+const STEPS = ['Market & account type', 'APIs', 'Behavior', 'Operations', 'Review & save']
+const REVIEW = STEPS.length - 1
 
 /**
  * The set every market so far has taken: full payment CRUD plus the event
@@ -40,8 +46,8 @@ const DEFAULT_APIS = [
   'DeletePayment.v1',
   'ReadPayments.v1',
   'ReadPaymentEventsById.v1',
-  'MoneyMovementEventHandler.v1',
-  'AccountsReceivableTransactionEventHandler.v1',
+  'CreateMoneyMovementEventHandler.v1',
+  'CreateAccountsReceivableTransactionEventHandler.v1',
 ]
 
 export function OnboardingPanel({
@@ -64,6 +70,7 @@ export function OnboardingPanel({
   // Once the operator has touched the list it is theirs; stop re-seeding it.
   const [apisTouched, setApisTouched] = useState(false)
   const [behavior, setBehaviorState] = useState<Behavior>({ ...DEFAULT_BEHAVIOR })
+  const [operations, setOperations] = useState<OperationsSettings>({ ...DEFAULT_OPERATIONS })
   const [newDefs, setNewDefs] = useState<CustomBehaviorDef[]>([])
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
@@ -88,6 +95,7 @@ export function OnboardingPanel({
       accountTypes.length > 0 &&
       accountTypes.every((t) => !takenTypes.includes(t)),
     selectedApis.length > 0,
+    true,
     true,
     true,
   ]
@@ -127,6 +135,8 @@ export function OnboardingPanel({
         if (set > 0) parts.push(`${set} custom`)
         return parts.join(' · ')
       }
+      case 3:
+        return [operations.timeZone, operations.executionTime].filter(Boolean).join(' · ')
       default:
         return ''
     }
@@ -139,13 +149,15 @@ export function OnboardingPanel({
         ([k, v]) => v !== '' && allDefs.some((d) => d.key === k),
       ),
     )
+    // A behavior an account type can't take is N on its profile, such as Corporate's bank confirmation.
     const profiles: MarketProfile[] = accountTypes.map((t) => ({
       accountType: t,
-      // Everything starts in e1 and is promoted a stage at a time from the market card.
+      // Every profile starts in e1, where its first release goes.
       status: 'E1',
       apis: selectedApis,
-      dimensions: behavior,
+      dimensions: behaviorFor(behavior, t, catalog?.behaviors ?? []),
       customDimensions,
+      operations,
     }))
     if (existing) {
       return {
@@ -269,6 +281,9 @@ export function OnboardingPanel({
                   )}
                   {i === 2 && (
                     <StepBehavior
+                      accountTypes={accountTypes}
+                      operations={operations}
+                      setOperations={setOperations}
                       behavior={behavior}
                       setBehaviorState={setBehaviorState}
                       isAdmin={role === 'ADMIN'}
@@ -280,17 +295,27 @@ export function OnboardingPanel({
                     />
                   )}
                   {i === 3 && (
+                    <OperationsEditor
+                      value={operations}
+                      onChange={setOperations}
+                      accountTypes={accountTypes}
+                      behavior={behavior}
+                      currency={selectedCurated?.currency ?? existing?.market.currency ?? ''}
+                    />
+                  )}
+                  {i === REVIEW && (
                     <StepReview
                       document={buildDocument()}
                       accountTypes={accountTypes}
                       selectedApis={selectedApis}
                       behavior={behavior}
+                      operations={operations}
                       customValues={customValues}
                       allDefs={allDefs}
                     />
                   )}
 
-                  <ErrorNote message={i === 3 ? saveError : null} />
+                  <ErrorNote message={i === REVIEW ? saveError : null} />
 
                   <div className="acc-actions">
                     {i > 0 && (
@@ -299,13 +324,13 @@ export function OnboardingPanel({
                       </button>
                     )}
                     <span className="spacer" />
-                    {i < 3 ? (
+                    {i < REVIEW ? (
                       <button className="btn primary" disabled={!stepValid[i]} onClick={advance}>
                         Continue
                       </button>
                     ) : (
                       <button className="btn primary" disabled={saving} onClick={() => save()}>
-                        {saving ? 'Saving…' : 'Onboard in e1'}
+                        {saving ? 'Saving…' : 'Save the profile'}
                       </button>
                     )}
                   </div>
@@ -547,6 +572,9 @@ function StepApis({
 /* ================= Step 3: behavior (always manual) ================= */
 
 function StepBehavior({
+  accountTypes,
+  operations,
+  setOperations,
   behavior,
   setBehaviorState,
   isAdmin,
@@ -556,6 +584,9 @@ function StepBehavior({
   customValues,
   setCustomValues,
 }: {
+  accountTypes: AccountType[]
+  operations: OperationsSettings
+  setOperations: (o: OperationsSettings) => void
   behavior: Behavior
   setBehaviorState: (d: Behavior) => void
   isAdmin: boolean
@@ -565,7 +596,7 @@ function StepBehavior({
   customValues: Record<string, string>
   setCustomValues: (v: Record<string, string>) => void
 }) {
-  const { catalog } = useApp()
+  const { catalog, capabilities, capabilitiesError } = useApp()
   const allDefs = [...existingDefs, ...newDefs]
   if (!catalog) return null
 
@@ -575,12 +606,27 @@ function StepBehavior({
         Behavior is always set manually, and each account type can carry a different set.
       </p>
 
+      <ManifestCheck
+        accountTypes={accountTypes}
+        behavior={behavior}
+        error={capabilitiesError}
+        capabilities={capabilities}
+      />
+
       {/* Same bounded groups the market page uses, so a behavior looks the
           same whether you are onboarding it or editing it later. */}
       <div className="pe-bhv-group">
         <span className="pe-cat">Core</span>
-        {catalog.dimensions.map((d) => (
-          <BehaviorRow key={d.key} meta={d} behavior={behavior} onChange={setBehaviorState} />
+        {catalog.behaviors.map((d) => (
+          <BehaviorRow
+            key={d.key}
+            meta={d}
+            behavior={behavior}
+            accountTypes={accountTypes}
+            journeys={operations.bothRules?.[d.key] ?? []}
+            onChange={setBehaviorState}
+            onJourneys={(journeys) => setOperations({ ...operations, bothRules: { ...operations.bothRules, [d.key]: journeys } })}
+          />
         ))}
       </div>
 
@@ -603,6 +649,53 @@ function StepBehavior({
           </div>
         )
       )}
+    </div>
+  )
+}
+
+/**
+ * Authoring checks each combination against e1's capability manifest, so a combination the build lacks is flagged
+ * while it is authored rather than at the release's step 1. A pre-check only: step 1 is the full check.
+ */
+function ManifestCheck({
+  accountTypes,
+  behavior,
+  capabilities,
+  error,
+}: {
+  accountTypes: AccountType[]
+  behavior: Behavior
+  capabilities: ReturnType<typeof useApp>['capabilities']
+  error: string | null
+}) {
+  const { catalog } = useApp()
+  if (!capabilities) {
+    return error ? <p className="manifest-check unknown">Couldn't read e1's capability manifest: {error}</p> : null
+  }
+  const missing = accountTypes.flatMap((t) =>
+    missingCombinations(t, behaviorFor(behavior, t, catalog?.behaviors ?? []), capabilities).map((c) => ({ t, c })),
+  )
+  if (missing.length === 0) {
+    return (
+      <p className="manifest-check ok">
+        <TickIcon /> e1's build {capabilities.buildVersion} runs every combination these settings need.
+      </p>
+    )
+  }
+  return (
+    <div className="manifest-check gap">
+      <p>
+        e1's build {capabilities.buildVersion} lacks {missing.length} combination{missing.length > 1 ? 's' : ''}: a
+        release with these settings would stop at its check, needing a build.
+      </p>
+      <ul>
+        {missing.map(({ t, c }, i) => (
+          <li key={i} className="mono-tag">
+            {ACCOUNT_TYPE_LABELS[t]} · GC {c.requiresArPosting} · RT {c.requiresRealtimeClearing} · MA{' '}
+            {c.requiresMandateAuthorization} · BC {c.requiresBankConfirmation}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -671,6 +764,7 @@ function StepReview({
   accountTypes,
   selectedApis,
   behavior,
+  operations,
   customValues,
   allDefs,
 }: {
@@ -678,6 +772,7 @@ function StepReview({
   accountTypes: AccountType[]
   selectedApis: string[]
   behavior: Behavior
+  operations: OperationsSettings
   customValues: Record<string, string>
   allDefs: CustomBehaviorDef[]
 }) {
@@ -716,12 +811,23 @@ function StepReview({
         <div className="review-block">
           <h4>Behavior</h4>
           <div className="review-chips">
-            {catalog.dimensions.map((d) => (
+            {catalog.behaviors.map((d) => (
               <span key={d.key} className="chip chip-bhv">
                 {d.label}: {BEHAVIOR_VALUE_LABELS[behavior[d.key]]}
               </span>
             ))}
           </div>
+        </div>
+        <div className="review-block">
+          <h4>Operations</h4>
+          <dl className="ops-summary">
+            {operationsSummary(operations, accountTypes.length === 1 ? accountTypes[0] : undefined).map(([k, v]) => (
+              <div key={k} className="ops-summary-row">
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
         {setCustom.length > 0 && (
           <div className="review-block">
@@ -739,6 +845,11 @@ function StepReview({
           </div>
         )}
       </div>
+
+      <p className="step-hint">
+        Saving creates the draft in e1. From the market page, release it: that freezes it as v1 and sends it to
+        e1's Market Onboarding API.
+      </p>
 
       {/* Onboarding only ever writes e1; the file is named for it so a saved
           copy is not mistaken for the market's whole record. */}

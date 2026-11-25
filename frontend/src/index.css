@@ -3017,45 +3017,6 @@ select:focus {
   stroke: var(--line-strong);
 }
 
-/* The verify step fans out over the profile's own APIs. */
-.step-apis {
-  list-style: none;
-  margin: 10px 0 0;
-  padding: 0 0 0 2px;
-  border-left: 2px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* One line per API now that the identifier has gone — the verify step can
-   run to a dozen rows, so each one earns its height. */
-.step-api {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-left: 12px;
-  min-width: 0;
-}
-
-.step-api-title {
-  font-size: 12.5px;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.step-api.waiting .step-api-title {
-  color: var(--muted);
-}
-
-.step-api-count {
-  padding-left: 12px;
-  margin-top: 2px;
-  font-size: 11.5px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
 .profile-block + .profile-block {
   margin-top: 20px;
 }
@@ -3099,10 +3060,7 @@ select:focus {
    the control on the right. One shape for both surfaces — the wizard takes it
    as-is, the market page editor adds `.compact`. */
 .bhv-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
+  display: block;
   padding: 13px 0;
 }
 
@@ -3114,10 +3072,13 @@ select:focus {
    the description and lock note move into the row's tooltip and what is left
    sits on one line. */
 .bhv-row.compact {
-  align-items: center;
-  gap: 16px;
   padding: 6px 0;
   font-size: 14px;
+}
+
+.bhv-row.compact .bhv-row-head {
+  align-items: center;
+  gap: 16px;
 }
 
 /* Core behaviors there are a two-up grid rather than a stack, so the rule that
@@ -4320,3 +4281,490 @@ select:focus {
     scroll-behavior: auto;
   }
 }
+
+/* ============================================================
+   Releases through e1, e2 and e3 (the Market Onboarding API)
+   ============================================================ */
+
+/* ---- a BOTH rule: which journeys get Y ---- */
+
+.bhv-rule {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+}
+
+.bhv-rule-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.bhv-rule-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rule-chip {
+  padding: 3px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--card);
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.rule-chip.on {
+  border-color: var(--iris);
+  background: var(--iris-wash);
+  color: var(--iris-deep);
+}
+
+/* ---- the manifest pre-check ---- */
+
+.manifest-check {
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.manifest-check svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.manifest-check.ok {
+  background: var(--green-wash);
+  color: var(--green);
+}
+
+.manifest-check.unknown {
+  background: var(--grey-wash);
+  color: var(--muted);
+}
+
+.manifest-check.gap {
+  display: block;
+  background: var(--amber-wash);
+  border: 1px solid var(--amber-border);
+  color: var(--ink);
+}
+
+.manifest-check.gap p {
+  margin: 0 0 6px;
+}
+
+.manifest-check.gap ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* ---- the Operations step ---- */
+
+.ops {
+  display: grid;
+  gap: 14px;
+}
+
+.ops-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  background: var(--card);
+}
+
+.ops-section-head h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--navy);
+}
+
+.ops-section-head p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.ops-fields {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px 20px;
+}
+
+.ops-field {
+  min-width: 0;
+}
+
+.ops-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.ops-control input,
+.ops-control select {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+  max-width: 100%;
+}
+
+.ops-control input[type='number'] {
+  width: 96px;
+}
+
+.ops-hint,
+.ops-note {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.ops-duration {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ops-iso {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.ops-warn {
+  flex-basis: 100%;
+  font-size: 11.5px;
+  color: var(--amber);
+}
+
+.ops-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  cursor: pointer;
+  grid-column: 1 / -1;
+}
+
+.ops-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ops-switch {
+  width: 30px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  position: relative;
+  flex: none;
+  transition: background 0.15s ease;
+}
+
+.ops-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 23, 90, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.ops-toggle.on .ops-switch {
+  background: var(--iris);
+}
+
+.ops-toggle.on .ops-switch::after {
+  transform: translateX(12px);
+}
+
+.ops-toggle input:focus-visible + .ops-switch {
+  outline: 2px solid var(--iris);
+  outline-offset: 2px;
+}
+
+.ops-checks {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.ops-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.ops-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.ops-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 999px;
+  background: var(--iris-wash);
+  color: var(--iris-deep);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.ops-tag button {
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 3px;
+}
+
+.ops-tags input {
+  min-width: 180px;
+  flex: 1;
+}
+
+.ops-summary {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 6px 20px;
+}
+
+.ops-summary-row {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.ops-summary-row dt {
+  color: var(--muted);
+  flex: none;
+}
+
+.ops-summary-row dd {
+  margin: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* ---- releases in each environment ---- */
+
+.env-failed {
+  --env-tone: var(--red);
+  --env-wash: var(--red-wash);
+}
+
+.env-mode {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.env-mode.mode-connected {
+  color: var(--green);
+  border-color: var(--green-border);
+  background: var(--green-wash);
+}
+
+.env-mode + .env-toggle {
+  margin-left: 0;
+}
+
+.env-version {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--navy);
+}
+
+.env-paused {
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: var(--amber-wash);
+  color: var(--amber);
+}
+
+.env-card.moving .env-status-dot {
+  animation: env-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes env-pulse {
+  50% {
+    box-shadow: 0 0 0 6px var(--env-wash);
+  }
+}
+
+.env-warn,
+.env-error,
+.env-control-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.env-warn {
+  color: var(--amber);
+}
+
+.env-error {
+  color: var(--red);
+}
+
+.env-control-note {
+  color: var(--muted);
+}
+
+.env-needs-build {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+}
+
+.env-card .step-list {
+  margin-top: 12px;
+}
+
+.mark-failed circle {
+  fill: var(--red);
+}
+
+.mark-failed path {
+  stroke: #fff;
+}
+
+.step-failed .step-name {
+  color: var(--red);
+}
+
+.env-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.env-actions:empty {
+  display: none;
+}
+
+.env-live-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 12.5px;
+}
+
+.env-confirm {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.env-confirm label {
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.env-confirm input {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.env-confirm-row {
+  display: flex;
+  gap: 8px;
+}
+
+.env-history {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 3px;
+}
+
+.env-history-row {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.env-history-row.st-active {
+  color: var(--green);
+}
+
+.env-history-row.st-failed {
+  color: var(--red);
+}
+
+.release-note {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.acct-block > .block-head .btn {
+  margin-left: auto;
+}
+
+.acct-block > .block-head .block-title {
+  margin-bottom: 0;
+}
+
+.acct-block > .block-head {
+  margin-bottom: 14px;
+}
+

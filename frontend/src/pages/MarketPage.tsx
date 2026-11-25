@@ -17,12 +17,13 @@ import {
   ENV_LABELS,
   ENV_NAMES,
   ENV_ORDER,
-  isSignedOff,
-  nextEnv,
+  missingCombinations,
+  operationsSummary,
   projectToEnv,
   reaches,
   yn,
 } from '../lib'
+import { OperationsEditor } from '../operations'
 import type {
   AccountType,
   Behavior,
@@ -30,6 +31,8 @@ import type {
   EnvStage,
   MarketDocument,
   MarketProfile,
+  OperationsSettings,
+  ProfileReadiness,
 } from '../types'
 import { EnvironmentReadiness } from './EnvironmentReadiness'
 import { RevisionHistory } from './RevisionHistory'
@@ -207,7 +210,6 @@ export function MarketPage() {
           profile={p}
           busy={busy}
           run={run}
-          onPromote={() => p.id && run(() => api.promoteProfile(market.market.code, p.id!))}
           onDelete={() => p.id && run(() => api.deleteProfile(market.market.code, p.id!))}
         />
       ))}
@@ -302,17 +304,15 @@ function AccountTypeSection({
   profile,
   busy,
   run,
-  onPromote,
   onDelete,
 }: {
   market: MarketDocument
   profile: MarketProfile
   busy: boolean
   run: (a: () => Promise<unknown>) => Promise<void>
-  onPromote: () => void
   onDelete: () => void
 }) {
-  const { catalog } = useApp()
+  const { catalog, environments, capabilities } = useApp()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showCloneTargets, setShowCloneTargets] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -332,12 +332,14 @@ function AccountTypeSection({
 
   function cloneTo(target: AccountType) {
     setShowCloneTargets(false)
+    // The test accounts are this profile's own mock accounts, so they stay behind.
     const copy: MarketProfile = {
       accountType: target,
       status: 'E1',
       apis: [...profile.apis],
       dimensions: { ...profile.dimensions },
       customDimensions: { ...profile.customDimensions },
+      operations: { ...profile.operations, testAccounts: [] },
     }
     run(() =>
       api.updateMarket(market.market.code, { ...market, profiles: [...market.profiles, copy] }),
@@ -351,8 +353,10 @@ function AccountTypeSection({
     ),
   })).filter((g) => g.apis.length > 0)
 
-  const behaviors = catalog?.dimensions ?? []
-  const signedOff = isSignedOff(profile)
+  const behaviors = catalog?.behaviors ?? []
+  const code = market.market.code
+  const id = profile.id!
+  const missing = capabilities ? missingCombinations(profile.accountType, profile.dimensions, capabilities) : []
 
   // Editing always shows the profile — hiding what you are changing is no help.
   const profileVisible = profileOpen || editing
@@ -403,41 +407,38 @@ function AccountTypeSection({
       )}
 
       <div className="acct-block">
-        <h3 className="block-title">Environment</h3>
+        <div className="block-head">
+          <h3 className="block-title">Environment</h3>
+          {readiness && (
+            <ReleaseButton
+              readiness={readiness}
+              busy={busy}
+              onRelease={() => run(() => api.release(code, id))}
+            />
+          )}
+        </div>
+        {missing.length > 0 && (
+          <p className="hint-warn">
+            e1's build ({capabilities?.buildVersion}) lacks {missing.length} of the combinations this profile needs, so
+            its check would stop the release as needing a build.
+          </p>
+        )}
         {readiness ? (
           <EnvironmentReadiness
-            environments={readiness.environments}
-            profile={profile}
-            busy={busy}
-            onVerify={() =>
-              profile.id && run(() => api.verifyProfile(market.market.code, profile.id!))
-            }
-            onRecordRfc={(rfcNumber) =>
-              profile.id && run(() => api.recordRfc(market.market.code, profile.id!, rfcNumber))
-            }
+            readiness={readiness}
+            environments={environments}
+            actions={{
+              busy,
+              onSignOff: (env) => run(() => api.signOff(code, id, env)),
+              onRecordRfc: (rfcNumber) => run(() => api.recordRfc(code, id, rfcNumber)),
+              onPromote: (env) => run(() => api.promote(code, id, env)),
+              onRollback: (env, reason) => run(() => api.rollback(code, id, env, reason)),
+              onPause: (env, reason) => run(() => api.pause(code, id, env, reason)),
+              onResume: (env, reason) => run(() => api.resume(code, id, env, reason)),
+            }}
           />
         ) : (
           <p className="muted">Readiness is unavailable for this profile.</p>
-        )}
-
-        {/* Under the environments it acts on: sign-off happens inside the card
-            for the stage you are in, and this moves the whole profile on. */}
-        {nextEnv(profile.status) && (
-          <div className="env-promote">
-            <button
-              className="btn navy"
-              /* An environment has to be signed off before anything leaves it.
-                 The server enforces this too; saying so here saves a round trip
-                 into an error the operator can do nothing about. */
-              disabled={busy || !signedOff}
-              title={
-                signedOff ? undefined : `Verify ${ENV_LABELS[profile.status]} before promoting`
-              }
-              onClick={onPromote}
-            >
-              Promote to {ENV_LABELS[nextEnv(profile.status)!]}
-            </button>
-          </div>
         )}
       </div>
 
@@ -575,6 +576,21 @@ function AccountTypeSection({
                   </div>
                 </div>
 
+                {Object.entries(profile.operations?.bothRules ?? {}).some(([, j]) => j && j.length > 0) && (
+                  <div className="profile-group">
+                    <span className="profile-group-label">BOTH rules</span>
+                    <div className="review-chips">
+                      {Object.entries(profile.operations.bothRules ?? {}).map(([key, journeys]) =>
+                        profile.dimensions[key as keyof Behavior] === 'BOTH' && journeys?.length ? (
+                          <span key={key} className="chip chip-bhv" title={journeys.join(', ')}>
+                            {behaviors.find((b) => b.key === key)?.label}: Y for {journeys.length}
+                          </span>
+                        ) : null,
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {market.customDimensionDefs.length > 0 && (
                   <div className="profile-group">
                     <span className="profile-group-label">Custom</span>
@@ -597,10 +613,57 @@ function AccountTypeSection({
                 )}
                 </div>
               </div>
+
+              <div className="profile-block">
+                <h4 className="profile-block-title">Operations</h4>
+                <dl className="ops-summary">
+                  {operationsSummary(profile.operations ?? {}, profile.accountType).map(([k, v]) => (
+                    <div key={k} className="ops-summary-row">
+                      <dt>{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
           ))}
       </div>
     </section>
+  )
+}
+
+/**
+ * Freezes the draft and sends it to e1: a new version when the draft has changed or the last one can't run again,
+ * the newest version when it hasn't been to e1 yet, and nothing while e1 already has it under way or live.
+ */
+function ReleaseButton({
+  readiness,
+  busy,
+  onRelease,
+}: {
+  readiness: ProfileReadiness
+  busy: boolean
+  onRelease: () => void
+}) {
+  const latest = readiness.latestVersion ?? null
+  const e1 = readiness.environments.find((e) => e.env === 'E1')
+  const inE1 = latest != null ? e1?.history.find((d) => d.version === latest) : undefined
+  const underWay = e1?.current && ['REQUESTED', 'RUNNING', 'WAITING_FOR_SIGN_OFF'].includes(e1.current.status)
+  let version: number | null
+  if (latest == null) version = 1
+  else if (readiness.draftChanged || (inE1 && inE1.status !== 'ACTIVE')) version = latest + 1
+  else if (!inE1) version = latest
+  else version = null
+  if (version === null) return <span className="release-note">v{latest} is live in e1; edit the profile to release another</span>
+  return (
+    <button
+      className="btn navy"
+      disabled={busy || !!underWay}
+      title={underWay ? `v${e1!.current!.version} is still under way in e1` : 'Freeze the profile as this version and send it to e1'}
+      onClick={onRelease}
+    >
+      Release v{version} to e1
+    </button>
   )
 }
 
@@ -622,6 +685,7 @@ function ProfileEditor({
   const { catalog, role } = useApp()
   const [apis, setApis] = useState<string[]>(profile.apis)
   const [behavior, setBehaviorState] = useState<Behavior>({ ...profile.dimensions })
+  const [operations, setOperations] = useState<OperationsSettings>({ ...profile.operations })
   const [customValues, setCustomValues] = useState<Record<string, string>>({
     ...profile.customDimensions,
   })
@@ -673,13 +737,16 @@ function ProfileEditor({
           {/* Two-up grid rather than the wizard's stack: these are settings
               being adjusted, not explained. */}
           <div className="pe-behavior">
-            {(catalog?.dimensions ?? []).map((b) => (
+            {(catalog?.behaviors ?? []).map((b) => (
               <BehaviorRow
                 key={b.key}
                 meta={b}
                 behavior={behavior}
+                accountTypes={[profile.accountType]}
+                journeys={operations.bothRules?.[b.key] ?? []}
                 compact
                 onChange={setBehaviorState}
+                onJourneys={(journeys) => setOperations({ ...operations, bothRules: { ...operations.bothRules, [b.key]: journeys } })}
               />
             ))}
           </div>
@@ -715,6 +782,17 @@ function ProfileEditor({
         )}
       </div>
 
+      <div className="pe-section">
+        <h5>Operations</h5>
+        <OperationsEditor
+          value={operations}
+          onChange={setOperations}
+          accountTypes={[profile.accountType]}
+          behavior={behavior}
+          currency={market.market.currency}
+        />
+      </div>
+
       {!canSave && <p className="hint-warn">Select at least one API.</p>}
 
       <div className="pe-actions">
@@ -730,6 +808,7 @@ function ProfileEditor({
                 ...profile,
                 apis,
                 dimensions: behavior,
+                operations,
                 customDimensions: Object.fromEntries(
                   Object.entries(customValues).filter(
                     // A value whose definition was just removed must not

@@ -7,9 +7,15 @@ import type { EnvStage, MarketRevision, RevisionAction } from '../types'
 const ACTION_LABELS: Record<RevisionAction, string> = {
   CREATED: 'Onboarded',
   UPDATED: 'Updated',
+  RELEASED: 'Released',
   PROMOTED: 'Promoted',
-  VERIFIED: 'Verified',
+  VERIFIED: 'Signed off',
   RFC_RECORDED: 'Change request',
+  ACTIVATED: 'Activated',
+  FAILED: 'Failed',
+  ROLLED_BACK: 'Rolled back',
+  PAUSED: 'Paused',
+  RESUMED: 'Resumed',
   PROFILE_DELETED: 'Profile removed',
   CLONED: 'Cloned',
 }

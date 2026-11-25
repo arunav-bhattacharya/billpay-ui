@@ -4,9 +4,9 @@
     {
       "name": "backend",
       "runtimeExecutable": "./gradlew",
-      "runtimeArgs": ["quarkusDev"],
+      "runtimeArgs": ["quarkusDev", "-Dquarkus.console.enabled=false"],
       "cwd": "backend",
-      "port": 8080
+      "port": 8090
     },
     {
       "name": "frontend",

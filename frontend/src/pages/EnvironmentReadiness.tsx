@@ -1,50 +1,56 @@
 import { useId, useState } from 'react'
 import { TickIcon } from '../icons'
-import { ENV_NAMES, formatDateTime } from '../lib'
+import { ENV_LABELS, ENV_NAMES, RELEASE_STATUS_LABELS, formatDateTime, formatRelative, nextEnv } from '../lib'
 import type {
+  DeploymentView,
+  EnvironmentInfo,
   EnvOnboardingState,
   EnvReadiness,
-  MarketProfile,
+  EnvStage,
+  ProfileReadiness,
   ReadinessStep,
 } from '../types'
 
 const STATE_LABELS: Record<EnvOnboardingState, string> = {
-  NOT_CONFIGURED: 'Not configured',
+  NOT_CONFIGURED: 'Nothing released yet',
   ONBOARDING_IN_PROGRESS: 'Onboarding in progress',
-  ONBOARDED: 'Onboarded',
+  ONBOARDED: 'Live',
+  FAILED: 'Failed',
+}
+
+export interface ReadinessActions {
+  busy: boolean
+  onSignOff: (env: EnvStage) => void
+  onRecordRfc: (rfcNumber: string) => void
+  onPromote: (from: EnvStage) => void
+  onRollback: (env: EnvStage, reason: string) => void
+  onPause: (env: EnvStage, reason: string) => void
+  onResume: (env: EnvStage, reason: string) => void
 }
 
 /**
- * How far one account-type profile has got in each environment.
- *
- * Every state here follows from the profile — its stage, its sign-off and its
- * change request — so the only writable things are the two that close an
- * environment out: verifying it, and supplying the change request production
- * needs.
+ * How far one profile's releases have got in each environment, read from the deployment rows billpay-ui keeps for
+ * every release it sends. The only things written here are the ones that move a release on: a sign-off, e3's change
+ * request, a promotion, a rollback, and pause or resume.
  */
 export function EnvironmentReadiness({
+  readiness,
   environments,
-  profile,
-  busy,
-  onVerify,
-  onRecordRfc,
+  actions,
 }: {
-  environments: EnvReadiness[]
-  profile: MarketProfile
-  busy: boolean
-  onVerify: () => void
-  onRecordRfc: (rfcNumber: string) => void
+  readiness: ProfileReadiness
+  environments: EnvironmentInfo[]
+  actions: ReadinessActions
 }) {
   return (
     <div className="readiness-envs">
-      {environments.map((env) => (
+      {readiness.environments.map((env) => (
         <EnvCard
           key={env.env}
           env={env}
-          profile={profile}
-          busy={busy}
-          onVerify={onVerify}
-          onRecordRfc={onRecordRfc}
+          info={environments.find((e) => e.env === env.env)}
+          next={readiness.environments.find((e) => e.env === nextEnv(env.env))}
+          actions={actions}
         />
       ))}
     </div>
@@ -53,38 +59,49 @@ export function EnvironmentReadiness({
 
 function EnvCard({
   env,
-  profile,
-  busy,
-  onVerify,
-  onRecordRfc,
+  info,
+  next,
+  actions,
 }: {
   env: EnvReadiness
-  profile: MarketProfile
-  busy: boolean
-  onVerify: () => void
-  onRecordRfc: (rfcNumber: string) => void
+  info?: EnvironmentInfo
+  next?: EnvReadiness
+  actions: ReadinessActions
 }) {
-  const [open, setOpen] = useState(false)
-  const hasSteps = env.steps.length > 0
-  const done = env.steps.filter((s) => s.state === 'COMPLETE').length
-
-  // Only the environment the profile is actually sitting in can be worked on:
-  // the ones below it are closed, the ones above hold nothing yet.
-  const current = env.env === profile.status
-  const needsRfc = current && env.steps.some((s) => s.key === 'RFC')
+  const current = env.current
+  const live = env.live
+  const moving = !!current && (current.status === 'REQUESTED' || current.status === 'RUNNING')
+  const [open, setOpen] = useState(true)
+  const waiting = current?.status === 'WAITING_FOR_SIGN_OFF'
+  const needsRfc = env.env === 'E3' && waiting && !current?.rfc
+  const to = nextEnv(env.env)
+  const nextBusy = next?.current && (next.current.status === 'REQUESTED' || next.current.status === 'RUNNING' || next.current.status === 'WAITING_FOR_SIGN_OFF')
+  const promotable =
+    !!live && !!to && !nextBusy && next?.live?.version !== live.version && !next?.history.some((d) => d.version === live.version && d.status !== 'FAILED')
+  const paused = !!env.control?.paused
 
   return (
-    <section className={`env-card env-${env.state.toLowerCase().replace(/_/g, '-')}`}>
+    <section className={`env-card env-${env.state.toLowerCase().replace(/_/g, '-')} ${moving ? 'moving' : ''}`}>
       <header className="env-card-head">
         <div className="env-id">
           <span className="env-key">{env.env}</span>
           <span className="env-name">{ENV_NAMES[env.env]}</span>
         </div>
-        {hasSteps && (
+        <span
+          className={`env-mode mode-${env.mode.toLowerCase()}`}
+          title={
+            env.mode === 'CONNECTED'
+              ? `Calls the Market Onboarding API at ${info?.url ?? 'its billpay-offline'}`
+              : 'No Market Onboarding API is configured for this environment: billpay-ui walks its releases through the same steps itself'
+          }
+        >
+          {env.mode === 'CONNECTED' ? 'Connected' : 'Simulated'}
+        </span>
+        {env.steps.length > 0 && (
           <button
             className={`env-toggle ${open ? 'open' : ''}`}
             aria-expanded={open}
-            aria-label={`${open ? 'Hide' : 'Show'} ${ENV_NAMES[env.env]} onboarding steps`}
+            aria-label={`${open ? 'Hide' : 'Show'} ${ENV_NAMES[env.env]} steps`}
             onClick={() => setOpen((v) => !v)}
           >
             <span className="chevron" aria-hidden="true" />
@@ -95,75 +112,168 @@ function EnvCard({
       <p className="env-status">
         <i className="env-status-dot" aria-hidden="true" />
         {STATE_LABELS[env.state]}
+        {paused && <span className="env-paused">Paused</span>}
       </p>
 
-      {hasSteps ? (
+      {current ? (
         <p className="env-meta">
-          {done} of {env.steps.length} {env.steps.length === 1 ? 'step' : 'steps'}
-          {env.state === 'ONBOARDED' && env.completedAt && (
-            <> · {formatDateTime(env.completedAt)}</>
-          )}
+          <span className="env-version">v{current.version}</span> {RELEASE_STATUS_LABELS[current.status].toLowerCase()}
+          {current.step && current.status === 'RUNNING' && <> · {current.step.toLowerCase()}</>}
+          {live && live.version !== current.version && <> · v{live.version} live</>}
+          {current.simulated && env.mode === 'CONNECTED' && <> · seeded</>}
         </p>
       ) : (
-        <p className="env-meta">Nothing has been deployed here yet.</p>
+        <p className="env-meta">
+          {env.env === 'E1'
+            ? 'Release the profile to send its first version here.'
+            : `Promote a version here once it is live in ${env.env === 'E2' ? 'e1' : 'e2'}.`}
+        </p>
       )}
 
-      {needsRfc && (
-        <RfcField
-          rfcNumber={profile.rfcNumber}
-          busy={busy}
-          onSubmit={onRecordRfc}
+      {current?.lastError && <p className="env-warn">{current.lastError}</p>}
+      {current?.status === 'FAILED' && current.reason && (
+        <p className="env-error">
+          {current.needsBuild && <span className="env-needs-build">Needs a build</span>}
+          {current.reason}
+        </p>
+      )}
+      {env.control && (
+        <p className="env-control-note">
+          {env.control.paused ? 'Paused' : 'Resumed'} by {env.control.by} {formatRelative(env.control.at)}
+          {env.control.reason && <>: {env.control.reason}</>}
+        </p>
+      )}
+
+      {open && env.steps.length > 0 && (
+        <ol className="step-list">
+          {env.steps.map((step) => (
+            <StepRow key={step.key} step={step} deployment={current!} />
+          ))}
+        </ol>
+      )}
+
+      {needsRfc && <RfcField busy={actions.busy} onSubmit={actions.onRecordRfc} />}
+
+      <div className="env-actions">
+        {waiting && (
+          <button
+            className="btn sm primary"
+            disabled={actions.busy || needsRfc}
+            title={needsRfc ? 'Record the change request first' : undefined}
+            onClick={() => actions.onSignOff(env.env)}
+          >
+            Sign off v{current!.version}
+          </button>
+        )}
+        {promotable && (
+          <button className="btn sm navy" disabled={actions.busy} onClick={() => actions.onPromote(env.env)}>
+            Promote v{live!.version} to {ENV_LABELS[to!]}
+          </button>
+        )}
+      </div>
+
+      {live && (
+        <LiveControls
+          live={live}
+          paused={paused}
+          busy={actions.busy || moving}
+          onRollback={(reason) => actions.onRollback(env.env, reason)}
+          onPause={(reason) => actions.onPause(env.env, reason)}
+          onResume={(reason) => actions.onResume(env.env, reason)}
         />
       )}
 
-      {open && (
-        <ol className="step-list">
-          {env.steps.map((step) => (
-            <StepRow
-              key={step.key}
-              step={step}
-              rfcNumber={profile.rfcNumber}
-              /* Sign-off is the last step and the only one a person closes, so
-                 its control lives in the step itself — and only on the
-                 environment the profile is actually sitting in. */
-              onSignOff={current && step.key === 'SIGN_OFF' ? onVerify : undefined}
-              busy={busy}
-            />
+      {env.history.length > 1 && (
+        <ul className="env-history" aria-label={`Versions in ${ENV_LABELS[env.env]}`}>
+          {env.history.map((d) => (
+            <li key={d.version} className={`env-history-row st-${d.status.toLowerCase().replace(/_/g, '-')}`} title={d.reason ?? undefined}>
+              <span className="env-version">v{d.version}</span>
+              <span>{RELEASE_STATUS_LABELS[d.status]}</span>
+              <time dateTime={d.updatedAt}>{formatRelative(d.updatedAt)}</time>
+            </li>
           ))}
-        </ol>
+        </ul>
       )}
     </section>
   )
 }
 
-/**
- * The change request production runs under. ServiceNow is the authority on
- * whether it holds, so the number is submitted rather than merely typed, and
- * only an approved one comes back recorded.
- */
-function RfcField({
-  rfcNumber,
+/** Rollback, pause and resume act on the live version without a new release; each asks why first. */
+function LiveControls({
+  live,
+  paused,
   busy,
-  onSubmit,
+  onRollback,
+  onPause,
+  onResume,
 }: {
-  rfcNumber?: string | null
+  live: DeploymentView
+  paused: boolean
   busy: boolean
-  onSubmit: (rfcNumber: string) => void
+  onRollback: (reason: string) => void
+  onPause: (reason: string) => void
+  onResume: (reason: string) => void
 }) {
-  const [value, setValue] = useState('')
-  // A market can have more than one profile in production, so the field is
-  // rendered more than once; a fixed id would tie every label to the first.
-  const inputId = useId()
+  const [asking, setAsking] = useState<'rollback' | 'pause' | 'resume' | null>(null)
+  const [reason, setReason] = useState('')
+  const id = useId()
 
-  if (rfcNumber) {
+  function confirm() {
+    const why = reason.trim()
+    if (asking === 'rollback') onRollback(why)
+    if (asking === 'pause') onPause(why)
+    if (asking === 'resume') onResume(why)
+    setAsking(null)
+    setReason('')
+  }
+
+  if (asking) {
+    const what =
+      asking === 'rollback'
+        ? `Roll back to v${live.replacedVersion}`
+        : asking === 'pause'
+          ? 'Pause this market'
+          : 'Resume this market'
     return (
-      <p className="env-rfc-done">
-        <TickIcon className="mark mark-done mark-sm" />
-        <span className="mono-tag">{rfcNumber}</span>
-      </p>
+      <div className="env-confirm" role="group" aria-label={what}>
+        <label htmlFor={id}>{what}: why?</label>
+        {asking === 'pause' && (
+          <p className="ops-note">Pausing holds every account type's runs in this market: the execution rate is the market's.</p>
+        )}
+        <input id={id} value={reason} autoFocus placeholder="Reason, for the audit trail" onChange={(e) => setReason(e.target.value)} />
+        <div className="env-confirm-row">
+          <button className={`btn sm ${asking === 'resume' ? 'primary' : 'danger'}`} disabled={busy} onClick={confirm}>
+            {asking === 'rollback' ? 'Roll back' : asking === 'pause' ? 'Pause' : 'Resume'}
+          </button>
+          <button className="btn sm ghost" onClick={() => setAsking(null)}>
+            Cancel
+          </button>
+        </div>
+      </div>
     )
   }
 
+  return (
+    <div className="env-live-actions">
+      {live.replacedVersion != null && (
+        <button className="link-btn danger" disabled={busy} onClick={() => setAsking('rollback')}>
+          Roll back to v{live.replacedVersion}
+        </button>
+      )}
+      <button className="link-btn" disabled={busy} onClick={() => setAsking(paused ? 'resume' : 'pause')}>
+        {paused ? 'Resume' : 'Pause'}
+      </button>
+    </div>
+  )
+}
+
+/**
+ * The change request production runs under. ServiceNow is the authority on whether it holds, so the number is
+ * submitted rather than merely typed, and only an approved one comes back recorded.
+ */
+function RfcField({ busy, onSubmit }: { busy: boolean; onSubmit: (rfcNumber: string) => void }) {
+  const [value, setValue] = useState('')
+  const inputId = useId()
   return (
     <form
       className="env-rfc"
@@ -172,7 +282,7 @@ function RfcField({
         onSubmit(value)
       }}
     >
-      <label htmlFor={inputId}>Change request</label>
+      <label htmlFor={inputId}>Change request, before the e3 sign-off</label>
       <div className="env-rfc-row">
         <input
           id={inputId}
@@ -190,18 +300,13 @@ function RfcField({
   )
 }
 
-function StepRow({
-  step,
-  rfcNumber,
-  onSignOff,
-  busy,
-}: {
-  step: ReadinessStep
-  rfcNumber?: string | null
-  onSignOff?: () => void
-  busy?: boolean
-}) {
-  const verified = step.apis.filter((a) => a.verified).length
+function StepRow({ step, deployment }: { step: ReadinessStep; deployment: DeploymentView }) {
+  const detail =
+    step.key === 'RFC' && deployment.rfc
+      ? deployment.rfc
+      : step.key === 'WAIT' && deployment.signedOffBy
+        ? `by ${deployment.signedOffBy}${deployment.signedOffAt ? ` · ${formatDateTime(deployment.signedOffAt)}` : ''}`
+        : null
   return (
     <li className={`step step-${step.state.toLowerCase().replace(/_/g, '-')}`}>
       <StepMark state={step.state} />
@@ -209,55 +314,34 @@ function StepRow({
         <span className="step-name">{step.name}</span>
         <p className="step-desc">
           {step.description}
-          {step.key === 'RFC' && rfcNumber && <> · <span className="mono-tag">{rfcNumber}</span></>}
+          {detail && <> · <span className="mono-tag">{detail}</span></>}
         </p>
-
-        {onSignOff && step.state !== 'COMPLETE' && (
-          <button className="btn sm primary step-action" disabled={busy} onClick={onSignOff}>
-            Sign off
-          </button>
-        )}
-
-        {step.apis.length > 0 && (
-          <ul className="step-apis">
-            {step.apis.map((api) => (
-              // The plain-language name is enough here; the versioned
-              // identifier is one hover away and would double the row count.
-              <li
-                key={api.name}
-                className={`step-api ${api.verified ? 'ok' : 'waiting'}`}
-                title={api.name}
-              >
-                <StepMark state={api.verified ? 'COMPLETE' : 'PENDING'} small />
-                <span className="step-api-title">{api.title}</span>
-              </li>
-            ))}
-            <li className="step-api-count">
-              {verified} of {step.apis.length} APIs verified
-            </li>
-          </ul>
-        )}
       </div>
     </li>
   )
 }
 
-/** Tick when done, half-filled while running, hollow while waiting. */
-function StepMark({ state, small }: { state: ReadinessStep['state']; small?: boolean }) {
-  if (state === 'COMPLETE') {
-    // The shared check disc, so a completed step matches every other tick.
-    return <TickIcon className={`mark mark-done ${small ? 'mark-sm' : ''}`} />
-  }
+/** Tick when done, half-filled while running, a cross when it failed, hollow while waiting. */
+function StepMark({ state }: { state: ReadinessStep['state'] }) {
+  if (state === 'COMPLETE') return <TickIcon className="mark mark-done" />
   if (state === 'IN_PROGRESS') {
     return (
-      <svg className={`mark mark-running ${small ? 'mark-sm' : ''}`} viewBox="0 0 20 20" aria-label="In progress">
+      <svg className="mark mark-running" viewBox="0 0 20 20" aria-label="In progress">
         <circle cx="10" cy="10" r="8.2" fill="none" strokeWidth="1.6" />
         <path d="M10 1.8a8.2 8.2 0 0 1 0 16.4z" />
       </svg>
     )
   }
+  if (state === 'FAILED') {
+    return (
+      <svg className="mark mark-failed" viewBox="0 0 20 20" aria-label="Failed">
+        <circle cx="10" cy="10" r="9" />
+        <path d="M6.6 6.6l6.8 6.8M13.4 6.6l-6.8 6.8" fill="none" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    )
+  }
   return (
-    <svg className={`mark mark-waiting ${small ? 'mark-sm' : ''}`} viewBox="0 0 20 20" aria-label="Not started">
+    <svg className="mark mark-waiting" viewBox="0 0 20 20" aria-label="Not started">
       <circle cx="10" cy="10" r="8.2" fill="none" strokeWidth="1.6" strokeDasharray="2.6 2.6" />
     </svg>
   )
