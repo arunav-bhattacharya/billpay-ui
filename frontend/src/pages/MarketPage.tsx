@@ -1,13 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
-import { useApp } from '../AppContext'
-import {
-  BehaviorRow,
-  CustomBehaviorDefForm,
-  CustomBehaviorRow,
-} from '../behavior'
-import { ApiIdentity, CloneDialog, ErrorNote, JsonView, StatusSeal } from '../components'
+import { useApp } from '../appState'
+import { BehaviorRow } from '../behavior'
+import { ApiIdentity, CloneDialog, ErrorNote, StatusSeal } from '../components'
 import { Arrow, CopyIcon, Flag, PencilIcon, TrashIcon } from '../icons'
 import {
   ACCOUNT_TYPE_LABELS,
@@ -17,21 +13,24 @@ import {
   ENV_LABELS,
   ENV_NAMES,
   ENV_ORDER,
-  isSignedOff,
-  nextEnv,
-  projectToEnv,
-  reaches,
-  yn,
+  behaviorFor,
+  formatRelative,
+  missingCombinations,
+  operationsSummary,
 } from '../lib'
+import { OperationsEditor } from '../operations'
 import type {
   AccountType,
   Behavior,
-  CustomBehaviorDef,
   EnvStage,
   MarketDocument,
   MarketProfile,
+  MarketRevision,
+  OperationsSettings,
+  ProfileReadiness,
 } from '../types'
 import { EnvironmentReadiness } from './EnvironmentReadiness'
+import { ReleaseReview } from './ReleaseReview'
 import { RevisionHistory } from './RevisionHistory'
 
 /** One market, in full: each account type carries its own readiness and profile. */
@@ -125,7 +124,7 @@ export function MarketPage() {
             {market.market.code} · {market.market.currency} · {market.market.region}
           </span>
         </div>
-        <StatusSeal status={market.status} onDark />
+        <StatusSeal stage={market.liveIn ?? null} onDark />
       </header>
 
       {confirmDeleteMarket && (
@@ -207,12 +206,11 @@ export function MarketPage() {
           profile={p}
           busy={busy}
           run={run}
-          onPromote={() => p.id && run(() => api.promoteProfile(market.market.code, p.id!))}
           onDelete={() => p.id && run(() => api.deleteProfile(market.market.code, p.id!))}
         />
       ))}
 
-      <EnvironmentRecord market={market} />
+      <MarketHistory market={market} />
 
       {showClone && (
         <CloneDialog
@@ -229,67 +227,26 @@ export function MarketPage() {
 }
 
 /**
- * The market as a single environment holds it — what is configured there, and
- * what has been done to it.
- *
- * One selector rather than one per card: both answer the same question about
- * the same environment, and reading them against different ones would be a
- * trap rather than a feature.
+ * Everything done to the market, newest first, each change with its before and after: releases, sign-offs, edits,
+ * pauses. One list, narrowed to an environment when that is the question; each version's own release JSON sits on its
+ * card in the rollout board, since that is what an environment actually holds.
  */
-function EnvironmentRecord({ market }: { market: MarketDocument }) {
-  // Opens on the furthest environment the market has reached — where the work
-  // most recently happened, and where anyone arriving is most likely headed.
-  const [env, setEnv] = useState<EnvStage>(market.status)
-
-  const document = projectToEnv(market, env)
-  const present = document.profiles.length
-
+function MarketHistory({ market }: { market: MarketDocument }) {
+  const [env, setEnv] = useState<EnvStage | null>(null)
   return (
-    <>
-      {/* Named in the page like the Profiles heading above it, with what it
-          holds and the control that scopes it stacked underneath. */}
-      <div className="env-record-head">
-        <h2>Environment record</h2>
-        <p className="env-record-lede">
-          Each environment holds its own configuration and history.
-        </p>
-        <div className="env-tabs" role="tablist" aria-label="Environment">
-          {ENV_ORDER.map((e) => {
-            const count = market.profiles.filter((p) => reaches(p.status, e)).length
-            return (
-              <button
-                key={e}
-                role="tab"
-                aria-selected={e === env}
-                className={`env-tab ${e === env ? 'on' : ''} ${count === 0 ? 'empty' : ''}`}
-                /* The readiness columns above spell the environments out, so
-                   the selector only has to name them. */
-                title={ENV_NAMES[e]}
-                onClick={() => setEnv(e)}
-              >
-                {e}
-              </button>
-            )
-          })}
+    <section className="history">
+      <div className="history-head">
+        <h2>History</h2>
+        <div className="seg" role="tablist" aria-label="Environment">
+          {([null, ...ENV_ORDER] as (EnvStage | null)[]).map((e) => (
+            <button key={e ?? 'all'} role="tab" aria-selected={env === e} className={env === e ? 'on' : ''} title={e ? ENV_NAMES[e] : undefined} onClick={() => setEnv(e)}>
+              {e ? ENV_LABELS[e] : 'All'}
+            </button>
+          ))}
         </div>
       </div>
-
-      <section className="env-record">
-        {present === 0 ? (
-          <p className="muted env-record-empty">
-            Nothing has reached {ENV_LABELS[env]} yet — promote a profile to open its record here.
-          </p>
-        ) : (
-          <>
-            <RevisionHistory marketCode={market.market.code} env={env} />
-            <JsonView
-              data={document}
-              filename={`${market.market.code.toLowerCase()}-${ENV_LABELS[env]}.json`}
-            />
-          </>
-        )}
-      </section>
-    </>
+      <RevisionHistory marketCode={market.market.code} env={env} />
+    </section>
   )
 }
 
@@ -302,17 +259,15 @@ function AccountTypeSection({
   profile,
   busy,
   run,
-  onPromote,
   onDelete,
 }: {
   market: MarketDocument
   profile: MarketProfile
   busy: boolean
   run: (a: () => Promise<unknown>) => Promise<void>
-  onPromote: () => void
   onDelete: () => void
 }) {
-  const { catalog } = useApp()
+  const { catalog, environments, capabilities, refreshMarkets } = useApp()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showCloneTargets, setShowCloneTargets] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -332,12 +287,14 @@ function AccountTypeSection({
 
   function cloneTo(target: AccountType) {
     setShowCloneTargets(false)
+    // The test accounts are this profile's own mock accounts, so they stay behind.
     const copy: MarketProfile = {
       accountType: target,
       status: 'E1',
       apis: [...profile.apis],
-      dimensions: { ...profile.dimensions },
-      customDimensions: { ...profile.customDimensions },
+      // A behavior the target account type can't take is N there, such as Corporate's bank confirmation.
+      dimensions: behaviorFor(profile.dimensions, target, catalog?.behaviors ?? []),
+      operations: { ...profile.operations, testAccounts: [] },
     }
     run(() =>
       api.updateMarket(market.market.code, { ...market, profiles: [...market.profiles, copy] }),
@@ -351,8 +308,10 @@ function AccountTypeSection({
     ),
   })).filter((g) => g.apis.length > 0)
 
-  const behaviors = catalog?.dimensions ?? []
-  const signedOff = isSignedOff(profile)
+  const behaviors = catalog?.behaviors ?? []
+  const code = market.market.code
+  const id = profile.id!
+  const missing = capabilities ? missingCombinations(profile.accountType, profile.dimensions, capabilities) : []
 
   // Editing always shows the profile — hiding what you are changing is no help.
   const profileVisible = profileOpen || editing
@@ -361,7 +320,7 @@ function AccountTypeSection({
     <section className="acct-section">
       <header className="acct-head">
         <h2>{ACCOUNT_TYPE_LABELS[profile.accountType]}</h2>
-        <StatusSeal status={profile.status} small />
+        <StatusSeal stage={readiness?.liveIn ?? null} small />
       </header>
 
       {showCloneTargets && (
@@ -403,42 +362,39 @@ function AccountTypeSection({
       )}
 
       <div className="acct-block">
-        <h3 className="block-title">Environment</h3>
-        {readiness ? (
-          <EnvironmentReadiness
-            environments={readiness.environments}
+        <h3 className="block-title">Environments</h3>
+        {readiness && (
+          <DraftBar
+            market={market}
             profile={profile}
+            readiness={readiness}
             busy={busy}
-            onVerify={() =>
-              profile.id && run(() => api.verifyProfile(market.market.code, profile.id!))
-            }
-            onRecordRfc={(rfcNumber) =>
-              profile.id && run(() => api.recordRfc(market.market.code, profile.id!, rfcNumber))
-            }
+            missing={missing.length}
+            onRelease={() => api.release(code, id).then(() => refreshMarkets())}
           />
-        ) : (
-          <p className="muted">Readiness is unavailable for this profile.</p>
         )}
-
-        {/* Under the environments it acts on: sign-off happens inside the card
-            for the stage you are in, and this moves the whole profile on. */}
-        {nextEnv(profile.status) && (
-          <div className="env-promote">
-            <button
-              className="btn navy"
-              /* An environment has to be signed off before anything leaves it.
-                 The server enforces this too; saying so here saves a round trip
-                 into an error the operator can do nothing about. */
-              disabled={busy || !signedOff}
-              title={
-                signedOff ? undefined : `Verify ${ENV_LABELS[profile.status]} before promoting`
-              }
-              onClick={onPromote}
-            >
-              Promote to {ENV_LABELS[nextEnv(profile.status)!]}
-            </button>
-          </div>
-        )}
+        <div className="acct-board">
+          {readiness ? (
+            <EnvironmentReadiness
+              market={market}
+              profile={profile}
+              readiness={readiness}
+              environments={environments}
+              actions={{
+                busy,
+                onSignOff: (env) => run(() => api.signOff(code, id, env)),
+                onRecordRfc: (rfcNumber) => run(() => api.recordRfc(code, id, rfcNumber)),
+                onPromote: (env) => run(() => api.promote(code, id, env)),
+                onRollback: (env, reason) => run(() => api.rollback(code, id, env, reason)),
+                onPause: (env, reason) => run(() => api.pause(code, id, env, reason)),
+                onResume: (env, reason) => run(() => api.resume(code, id, env, reason)),
+              }}
+            />
+          ) : (
+            <p className="muted">Readiness is unavailable for this profile.</p>
+          )}
+          <Activity market={market} profile={profile} />
+        </div>
       </div>
 
       <div className="acct-block">
@@ -497,32 +453,9 @@ function AccountTypeSection({
               profile={profile}
               busy={busy}
               onCancel={() => setEditing(false)}
-              onSave={async (updated, defs) => {
-                // Removing a definition has to clear that value everywhere, not
-                // just on the profile being edited — the server rejects a value
-                // with no definition behind it.
-                const dropped = market.customDimensionDefs
-                  .filter((d) => !defs.some((n) => n.key === d.key))
-                  .map((d) => d.key)
-                const profiles = market.profiles.map((p) => {
-                  const next = p.id === profile.id ? updated : p
-                  if (dropped.length === 0) return next
-                  return {
-                    ...next,
-                    customDimensions: Object.fromEntries(
-                      Object.entries(next.customDimensions).filter(
-                        ([k]) => !dropped.includes(k),
-                      ),
-                    ),
-                  }
-                })
-                await run(() =>
-                  api.updateMarket(market.market.code, {
-                    ...market,
-                    customDimensionDefs: defs,
-                    profiles,
-                  }),
-                )
+              onSave={async (updated) => {
+                const profiles = market.profiles.map((p) => (p.id === profile.id ? updated : p))
+                await run(() => api.updateMarket(market.market.code, { ...market, profiles }))
                 setEditing(false)
               }}
             />
@@ -575,33 +508,187 @@ function AccountTypeSection({
                   </div>
                 </div>
 
-                {market.customDimensionDefs.length > 0 && (
+                {Object.entries(profile.operations?.bothRules ?? {}).some(([, j]) => j && j.length > 0) && (
                   <div className="profile-group">
-                    <span className="profile-group-label">Custom</span>
+                    <span className="profile-group-label">BOTH rules</span>
                     <div className="review-chips">
-                      {market.customDimensionDefs.map((def) => {
-                        const value = profile.customDimensions[def.key]
-                        return (
-                          <span
-                            key={def.key}
-                            className={`chip chip-custom ${value ? 'on' : ''}`}
-                            title={def.description ?? def.key}
-                          >
-                            {def.label}:{' '}
-                            {value ? (def.type === 'BOOLEAN' ? yn(value) : value) : 'Not set'}
+                      {Object.entries(profile.operations.bothRules ?? {}).map(([key, journeys]) =>
+                        profile.dimensions[key as keyof Behavior] === 'BOTH' && journeys?.length ? (
+                          <span key={key} className="chip chip-bhv" title={journeys.join(', ')}>
+                            {behaviors.find((b) => b.key === key)?.label}: Y for {journeys.length}
                           </span>
-                        )
-                      })}
+                        ) : null,
+                      )}
                     </div>
                   </div>
                 )}
                 </div>
+              </div>
+
+              <div className="profile-block">
+                <h4 className="profile-block-title">Operations</h4>
+                <dl className="ops-summary">
+                  {operationsSummary(profile.operations ?? {}, profile.accountType).map(([k, v]) => (
+                    <div key={k} className="ops-summary-row">
+                      <dt>{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
             </div>
           ))}
       </div>
     </section>
   )
+}
+
+/**
+ * The draft against what has been released: a new version when the draft has changed or the last one can't run again,
+ * the newest version when it hasn't been to e1 yet, and nothing while e1 already has it under way or live. Releasing
+ * goes through the review, which shows the diff and names the approver.
+ */
+function DraftBar({
+  market,
+  profile,
+  readiness,
+  busy,
+  missing,
+  onRelease,
+}: {
+  market: MarketDocument
+  profile: MarketProfile
+  readiness: ProfileReadiness
+  busy: boolean
+  missing: number
+  onRelease: () => Promise<void>
+}) {
+  const [reviewing, setReviewing] = useState(false)
+  const latest = readiness.latestVersion ?? null
+  const e1 = readiness.environments.find((e) => e.env === 'E1')
+  const inE1 = latest != null ? e1?.history.find((d) => d.version === latest) : undefined
+  const underWay = !!e1?.current && ['REQUESTED', 'RUNNING', 'WAITING_FOR_SIGN_OFF'].includes(e1.current.status)
+  // A version that failed, was rolled back or was superseded never runs again, so the same content goes out as the
+  // next version.
+  const spent = !!inE1 && ['FAILED', 'ROLLED_BACK', 'SUPERSEDED'].includes(inE1.status)
+  let version: number | null
+  if (latest == null) version = 1
+  else if (readiness.draftChanged || spent) version = latest + 1
+  else if (!inE1) version = latest
+  else version = null
+
+  const title =
+    latest == null
+      ? 'Not released yet'
+      : readiness.draftChanged
+        ? `Draft changed since v${latest}`
+        : version === null
+          ? `No changes since v${latest}`
+          : `v${latest} is ready to go again`
+  const sub =
+    latest == null
+      ? `Releasing freezes the profile as v1 and sends it to e1${profile.editedBy ? `; last edited by ${profile.editedBy}` : ''}.`
+      : readiness.draftChanged
+        ? `Edited by ${profile.editedBy ?? 'someone'} after v${latest} was frozen. Review the changes, then a second person releases them.`
+        : underWay
+          ? `v${e1!.current!.version} is under way in e1; finish it before releasing another.`
+          : version === null
+            ? `v${latest} is live in e1. Edit the profile to release another version.`
+            : `v${latest} can't run again in e1, so its content goes out as v${version}.`
+
+  return (
+    <div className={`draft-bar card ${version !== null && !underWay ? 'ready' : ''}`}>
+      <span className="draft-ic" aria-hidden="true">
+        Δ
+      </span>
+      <div>
+        <div className="draft-t">{title}</div>
+        <div className="draft-s">
+          {sub}
+          {missing > 0 && <span className="note-red"> e1's build lacks {missing} combination{missing > 1 ? 's' : ''} this draft needs.</span>}
+        </div>
+      </div>
+      {version !== null && (
+        <button className="btn primary" disabled={busy || underWay} onClick={() => setReviewing(true)}>
+          Review and release v{version}
+        </button>
+      )}
+      {reviewing && version !== null && (
+        <ReleaseReview
+          market={market}
+          profile={profile}
+          readiness={readiness}
+          version={version}
+          onClose={() => setReviewing(false)}
+          onRelease={onRelease}
+        />
+      )}
+    </div>
+  )
+}
+
+/**
+ * What happened to this profile, newest first, across every environment: releases, sign-offs, activations, refusals,
+ * rollbacks, pauses and resumes, each with who and why. Read again whenever a release moves.
+ */
+function Activity({ market, profile }: { market: MarketDocument; profile: MarketProfile }) {
+  const [rows, setRows] = useState<MarketRevision[] | null>(null)
+  const label = ACCOUNT_TYPE_LABELS[profile.accountType]
+  // Changes whenever any of this profile's deployments moves, which is when the history has something new.
+  const signature = JSON.stringify(
+    market.readiness?.find((r) => r.profileId === profile.id)?.environments.map((e) => [e.current?.status, e.current?.version, e.control?.at]) ?? [],
+  )
+  useEffect(() => {
+    api
+      .revisions(market.market.code)
+      .then(setRows)
+      .catch(() => setRows([]))
+  }, [market.market.code, market.updatedAt, signature])
+  const mine = (rows ?? []).filter((r) => !r.profileLabel || r.profileLabel === label).slice(0, 9)
+  return (
+    <aside className="activity card" aria-label={`${label} activity`}>
+      <h4>Activity</h4>
+      <p className="activity-sub">{label} · every environment · newest first</p>
+      {rows === null && <p className="muted">Loading…</p>}
+      {mine.map((r) => (
+        <div key={r.id} className={`act act-${r.action.toLowerCase().replace(/_/g, '-')}`}>
+          <i className="act-i" aria-hidden="true">
+            {ACTION_MARKS[r.action] ?? '·'}
+          </i>
+          <div>
+            <div className="act-w">
+              {r.summary.replace(`${label} — `, '').replace(`${label} `, '')}
+              {r.envs.map((e) => (
+                <span key={e} className="act-env">
+                  {e.toLowerCase()}
+                </span>
+              ))}
+            </div>
+            <div className="act-when">
+              {r.actor} · {formatRelative(r.at)}
+            </div>
+          </div>
+        </div>
+      ))}
+    </aside>
+  )
+}
+
+const ACTION_MARKS: Partial<Record<MarketRevision['action'], string>> = {
+  CREATED: '+',
+  UPDATED: 'Δ',
+  RELEASED: '▸',
+  PROMOTED: '»',
+  VERIFIED: '✓',
+  RFC_RECORDED: '#',
+  ACTIVATED: '●',
+  FAILED: '!',
+  REFUSED: '×',
+  ROLLED_BACK: '↶',
+  PAUSED: 'II',
+  RESUMED: '▶',
+  CLONED: '⧉',
+  PROFILE_DELETED: '−',
 }
 
 /* ---------- Inline profile editor: APIs, behavior, custom values ---------- */
@@ -617,25 +704,15 @@ function ProfileEditor({
   profile: MarketProfile
   busy: boolean
   onCancel: () => void
-  onSave: (updated: MarketProfile, defs: CustomBehaviorDef[]) => void
+  onSave: (updated: MarketProfile) => void
 }) {
-  const { catalog, role } = useApp()
+  const { catalog } = useApp()
   const [apis, setApis] = useState<string[]>(profile.apis)
   const [behavior, setBehaviorState] = useState<Behavior>({ ...profile.dimensions })
-  const [customValues, setCustomValues] = useState<Record<string, string>>({
-    ...profile.customDimensions,
-  })
-  // Definitions are market-scoped but edited here, so they travel with the
-  // save rather than needing a second trip.
-  const [defs, setDefs] = useState<CustomBehaviorDef[]>(market.customDimensionDefs)
+  const [operations, setOperations] = useState<OperationsSettings>({ ...profile.operations })
 
   function toggleApi(name: string) {
     setApis((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]))
-  }
-
-  function removeDef(key: string) {
-    setDefs(defs.filter((d) => d.key !== key))
-    setCustomValues(Object.fromEntries(Object.entries(customValues).filter(([k]) => k !== key)))
   }
 
   const canSave = apis.length > 0
@@ -669,50 +746,34 @@ function ProfileEditor({
         <h5>Behavior</h5>
 
         <div className="pe-bhv-group">
-          <span className="pe-cat">Core</span>
           {/* Two-up grid rather than the wizard's stack: these are settings
               being adjusted, not explained. */}
           <div className="pe-behavior">
-            {(catalog?.dimensions ?? []).map((b) => (
+            {(catalog?.behaviors ?? []).map((b) => (
               <BehaviorRow
                 key={b.key}
                 meta={b}
                 behavior={behavior}
+                accountTypes={[profile.accountType]}
+                journeys={operations.bothRules?.[b.key] ?? []}
                 compact
                 onChange={setBehaviorState}
+                onJourneys={(journeys) => setOperations({ ...operations, bothRules: { ...operations.bothRules, [b.key]: journeys } })}
               />
             ))}
           </div>
         </div>
+      </div>
 
-        {role === 'ADMIN' && (
-          <div className="pe-bhv-group">
-            <span className="pe-cat">Custom</span>
-            {defs.map((def) => (
-              <CustomBehaviorRow
-                key={def.key}
-                def={def}
-                value={customValues[def.key] ?? ''}
-                compact
-                onValue={(v) => setCustomValues({ ...customValues, [def.key]: v })}
-                onDescription={(description) =>
-                  setDefs(defs.map((d) => (d.key === def.key ? { ...d, description } : d)))
-                }
-                onRemove={() => removeDef(def.key)}
-              />
-            ))}
-
-            <CustomBehaviorDefForm
-              existingKeys={defs.map((d) => d.key)}
-              onAdd={(def) => setDefs([...defs, def])}
-            />
-
-            <p className="bhv-scope-note">
-              Values are set per account profile; adding or removing a behavior changes it for
-              every profile in {market.market.name}. Nothing is written until you save.
-            </p>
-          </div>
-        )}
+      <div className="pe-section">
+        <h5>Operations</h5>
+        <OperationsEditor
+          value={operations}
+          onChange={setOperations}
+          accountTypes={[profile.accountType]}
+          behavior={behavior}
+          currency={market.market.currency}
+        />
       </div>
 
       {!canSave && <p className="hint-warn">Select at least one API.</p>}
@@ -725,21 +786,7 @@ function ProfileEditor({
           className="btn sm primary"
           disabled={busy || !canSave}
           onClick={() =>
-            onSave(
-              {
-                ...profile,
-                apis,
-                dimensions: behavior,
-                customDimensions: Object.fromEntries(
-                  Object.entries(customValues).filter(
-                    // A value whose definition was just removed must not
-                    // survive the save — the server rejects orphans.
-                    ([k, v]) => v !== '' && defs.some((d) => d.key === k),
-                  ),
-                ),
-              },
-              defs,
-            )
+            onSave({ ...profile, apis, dimensions: behavior, operations })
           }
         >
           {busy ? 'Saving…' : 'Save'}

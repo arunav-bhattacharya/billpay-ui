@@ -1,28 +1,40 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { api } from './api'
-import { useApp } from './AppContext'
-import amexLogo from './assets/amex.svg'
-import { Arrow, CheckMark, CloseIcon, CopyIcon, Flag } from './icons'
+import { useApp } from './appState'
+import { Arrow, BrandMark, CheckMark, CloseIcon, CopyIcon, Flag } from './icons'
 import { ACCOUNT_TYPE_LABELS, ENV_LABELS } from './lib'
 import type { AccountType, ApiSpec, EnvStage, MarketDocument, Role } from './types'
 
 /* ---------- Masthead ---------- */
+
+const SECTIONS: { to: string; label: string; end?: boolean }[] = [
+  { to: '/', label: 'Markets', end: true },
+  { to: '/versions', label: 'Versions' },
+  { to: '/runs', label: 'Runs' },
+  { to: '/build', label: 'Build' },
+]
 
 export function Masthead() {
   return (
     <header className="masthead">
       <div className="masthead-inner">
         {/* The lockup is the way home from anywhere in the app. */}
-        <Link className="brand" to="/" aria-label="Billpay Market Onboarding — back to markets">
-          <img src={amexLogo} alt="American Express" className="brand-logo" />
-          <span className="brand-rule" aria-hidden="true" />
+        <Link className="brand" to="/" aria-label="Billpay Market Onboarding, back to markets">
+          <BrandMark className="brand-mark" />
           <span className="brand-name">
             <span className="brand-title">Billpay</span>
             <span className="brand-sub">Market Onboarding</span>
           </span>
         </Link>
+        <nav className="mast-nav" aria-label="Sections">
+          {SECTIONS.map((s) => (
+            <NavLink key={s.to} to={s.to} end={s.end} className={({ isActive }) => (isActive ? 'active' : '')}>
+              {s.label}
+            </NavLink>
+          ))}
+        </nav>
         <div className="mast-right">
           <RoleMenu />
         </div>
@@ -35,15 +47,15 @@ export function Masthead() {
 
 const ROLE_LABELS: Record<Role, string> = {
   OPERATOR: 'Operator',
-  ADMIN: 'Admin',
+  APPROVER: 'Approver',
 }
 
 const ROLE_NOTES: Record<Role, string> = {
-  OPERATOR: 'Onboards markets and edits account profiles.',
-  ADMIN: 'Also defines the custom behaviors a market carries.',
+  OPERATOR: 'Authors market profiles and their Operations settings.',
+  APPROVER: 'Releases what someone else authored. Maker-checker: nobody releases their own change.',
 }
 
-const ROLES: Role[] = ['OPERATOR', 'ADMIN']
+const ROLES: Role[] = ['OPERATOR', 'APPROVER']
 
 /**
  * Who the session is acting as. Lives in the masthead alongside the brand,
@@ -108,26 +120,26 @@ function RoleMenu() {
   )
 }
 
-/* ---------- Environment pill: e3 = green, e2 = amber, e1 = grey ---------- */
+/* ---------- Where something is live: e3 green, e2 amber, e1 grey, and draft when it is live nowhere ---------- */
 
 export function StatusSeal({
-  status,
+  stage,
   small,
   onDark,
 }: {
-  status: EnvStage
+  /** The furthest environment a version is live in, or null when none is. */
+  stage: EnvStage | null
   small?: boolean
   /** Inverted fill for the navy banner, where the light washes disappear. */
   onDark?: boolean
 }) {
   return (
     <span
-      className={`seal seal-${status.toLowerCase()} ${small ? 'seal-sm' : ''} ${
-        onDark ? 'seal-dark' : ''
-      }`}
+      className={`seal seal-${stage ? stage.toLowerCase() : 'draft'} ${small ? 'seal-sm' : ''} ${onDark ? 'seal-dark' : ''}`}
+      title={stage ? `Live in ${ENV_LABELS[stage]}` : 'Not live in any environment yet'}
     >
       <i className="seal-dot" aria-hidden="true" />
-      {ENV_LABELS[status]}
+      {stage ? `live in ${ENV_LABELS[stage]}` : 'draft'}
     </span>
   )
 }
@@ -155,10 +167,13 @@ function useEscape(onClose: () => void) {
 export function Modal({
   title,
   onClose,
+  wide,
   children,
 }: {
   title: string
   onClose: () => void
+  /** For a screen with two columns, such as the release review. */
+  wide?: boolean
   children: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -169,7 +184,7 @@ export function Modal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal"
+        className={`modal ${wide ? 'modal-wide' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -354,9 +369,9 @@ export function CloneDialog({
   return (
     <Modal title={`Clone ${source.market.code} configuration`} onClose={onClose}>
       <p className="modal-lede">
-        Copies the selected profiles — API selections, behavior and custom-behavior
-        definitions — from <strong>{source.market.name}</strong>. Cloned profiles start in
-        e1.
+        Copies the selected profiles (APIs, behaviors and Operations settings) from{' '}
+        <strong>{source.market.name}</strong>. Cloned profiles start as drafts in e1, without the source market's test
+        accounts.
       </p>
 
       <h3 className="modal-section">Profiles to include</h3>
@@ -412,4 +427,112 @@ export function CloneDialog({
       </div>
     </Modal>
   )
+}
+
+/* ---------- JSON diff (revision history, release review) ---------- */
+
+/**
+ * Only what changed. Two full documents side by side made the reader do the
+ * diffing; this does it for them and keeps a couple of lines either side so
+ * each change can still be placed in the document.
+ */
+export function JsonDiff({ before, after }: { before?: string | null; after?: string | null }) {
+  const rows = useMemo(
+    () => diffJson(pretty(before), pretty(after)),
+    [before, after],
+  )
+  if (rows.length === 0) return <p className="muted rev-diff-empty">No field-level changes.</p>
+  return (
+    <div className="json-block rev-diff-block">
+      <pre>
+        {rows.map((row, i) =>
+          row.type === 'gap' ? (
+            <span key={i} className="jd-gap">
+              ⋯
+            </span>
+          ) : (
+            <span key={i} className={`jd-line jd-${row.type}`}>
+              <span className="jd-sign" aria-hidden="true">
+                {row.type === 'add' ? '+' : row.type === 'del' ? '−' : ' '}
+              </span>
+              {row.text}
+            </span>
+          ),
+        )}
+      </pre>
+    </div>
+  )
+}
+
+type DiffRow = { type: 'add' | 'del' | 'ctx' | 'gap'; text: string }
+
+/** Lines of unchanged JSON kept either side of a change, for orientation. */
+const CONTEXT = 2
+
+function diffJson(before: string, after: string): DiffRow[] {
+  const a = before ? before.split('\n') : []
+  const b = after ? after.split('\n') : []
+
+  // Longest common subsequence over lines — the documents are tens of lines,
+  // so the quadratic table is far cheaper than pulling in a diff library.
+  const lcs: number[][] = Array.from({ length: a.length + 1 }, () =>
+    new Array<number>(b.length + 1).fill(0),
+  )
+  for (let i = a.length - 1; i >= 0; i--) {
+    for (let j = b.length - 1; j >= 0; j--) {
+      lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1])
+    }
+  }
+
+  const rows: DiffRow[] = []
+  let i = 0
+  let j = 0
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      rows.push({ type: 'ctx', text: a[i] })
+      i++
+      j++
+    } else if (lcs[i + 1][j] >= lcs[i][j + 1]) {
+      rows.push({ type: 'del', text: a[i++] })
+    } else {
+      rows.push({ type: 'add', text: b[j++] })
+    }
+  }
+  while (i < a.length) rows.push({ type: 'del', text: a[i++] })
+  while (j < b.length) rows.push({ type: 'add', text: b[j++] })
+
+  return collapse(rows)
+}
+
+/** Drop long stretches of untouched lines, marking where they were elided. */
+function collapse(rows: DiffRow[]): DiffRow[] {
+  const keep = rows.map(
+    (row, i) =>
+      row.type !== 'ctx' ||
+      rows.some((r, k) => r.type !== 'ctx' && Math.abs(k - i) <= CONTEXT),
+  )
+  if (!keep.some(Boolean)) return []
+
+  const out: DiffRow[] = []
+  let elided = false
+  rows.forEach((row, i) => {
+    if (keep[i]) {
+      if (elided) out.push({ type: 'gap', text: '' })
+      elided = false
+      out.push(row)
+    } else {
+      elided = true
+    }
+  })
+  return out
+}
+
+/** Stored compact; shown indented. Falls back to the raw string if it will not parse. */
+function pretty(json?: string | null): string {
+  if (!json) return ''
+  try {
+    return JSON.stringify(JSON.parse(json), null, 2)
+  } catch {
+    return json
+  }
 }

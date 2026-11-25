@@ -1,6 +1,6 @@
 pluginManagement {
-    val quarkusPluginVersion: String by settings
-    val kotlinVersion: String by settings
+    val quarkusPluginVersion = providers.gradleProperty("quarkusPluginVersion").get()
+    val kotlinVersion = providers.gradleProperty("kotlinVersion").get()
     repositories {
         mavenCentral()
         gradlePluginPortal()

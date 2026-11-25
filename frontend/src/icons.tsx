@@ -43,11 +43,8 @@ export function TrashIcon() {
 
 /* ---------- The check mark ----------
 
-   One geometry, drawn everywhere something is done. There used to be five:
-   three SVG paths with different angles and weights, plus two places printing
-   a literal ✓ — a character Benton Sans has no glyph for, so those fell
-   through to whatever the operating system supplies and matched nothing else
-   on the page. */
+   One geometry, drawn everywhere something is done, so every tick on the page
+   matches rather than falling back to whatever glyph a font supplies. */
 
 const CHECK_PATH = 'M5.6 12.5 10.1 17 18.4 7.8'
 
@@ -160,5 +157,27 @@ export function Flag({ code, size = 22 }: { code: string; size?: number }) {
     <span className="flag" style={{ fontSize: size }} role="img" aria-label={`${code} flag`}>
       {flagEmoji(code)}
     </span>
+  )
+}
+
+/**
+ * The console's mark: three bars stepping down, one per environment a release passes through, on the brand gradient.
+ * Drawn here so it carries no one else's logo.
+ */
+export function BrandMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 34 34" aria-hidden="true">
+      <defs>
+        <linearGradient id="brand-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#00175a" />
+          <stop offset="0.55" stopColor="#0a4fa8" />
+          <stop offset="1" stopColor="#2b8ce6" />
+        </linearGradient>
+      </defs>
+      <rect width="34" height="34" rx="9" fill="url(#brand-grad)" />
+      <rect x="8" y="9" width="18" height="3.2" rx="1.6" fill="#fff" />
+      <rect x="8" y="15.4" width="13" height="3.2" rx="1.6" fill="#fff" opacity="0.86" />
+      <rect x="8" y="21.8" width="8" height="3.2" rx="1.6" fill="#fff" opacity="0.72" />
+    </svg>
   )
 }

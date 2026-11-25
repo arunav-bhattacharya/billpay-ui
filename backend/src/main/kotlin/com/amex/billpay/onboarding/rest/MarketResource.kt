@@ -1,10 +1,14 @@
 package com.amex.billpay.onboarding.rest
 
 import com.amex.billpay.onboarding.model.CloneRequest
+import com.amex.billpay.onboarding.model.ControlRequest
+import com.amex.billpay.onboarding.model.EnvStage
 import com.amex.billpay.onboarding.model.MarketDocument
 import com.amex.billpay.onboarding.model.MarketRevision
+import com.amex.billpay.onboarding.model.ReleaseView
 import com.amex.billpay.onboarding.model.RfcRequest
 import com.amex.billpay.onboarding.service.MarketService
+import com.amex.billpay.onboarding.service.ReleaseService
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.DefaultValue
@@ -15,20 +19,20 @@ import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.WebApplicationException
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 
 /**
- * `X-Billpay-Role` names who is acting, for the revision history. The app has
- * no authentication — this is the UI's role toggle, not an identity claim, and
- * it defaults to OPERATOR when absent.
+ * `X-Billpay-Role` names who is acting, for the revision history and as a release's author, approver and signer.
+ * The app has no authentication: this is the UI's role toggle, not an identity claim, `TODO(sso)`.
  */
 private const val ROLE_HEADER = "X-Billpay-Role"
 
 @Path("/api/markets")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-class MarketResource(private val service: MarketService) {
+class MarketResource(private val service: MarketService, private val releases: ReleaseService) {
 
     @GET
     fun list(): List<MarketDocument> = service.listAll()
@@ -42,10 +46,7 @@ class MarketResource(private val service: MarketService) {
     fun revisions(@PathParam("code") code: String): List<MarketRevision> = service.revisions(code)
 
     @POST
-    fun create(
-        document: MarketDocument,
-        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
-    ): Response =
+    fun create(document: MarketDocument, @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String): Response =
         Response.status(Response.Status.CREATED).entity(service.create(document, actor)).build()
 
     @PUT
@@ -62,31 +63,6 @@ class MarketResource(private val service: MarketService) {
         service.delete(code)
         return Response.noContent().build()
     }
-
-    @POST
-    @Path("/{code}/profiles/{profileId}/promote")
-    fun promoteProfile(
-        @PathParam("code") code: String,
-        @PathParam("profileId") profileId: String,
-        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
-    ): MarketDocument = service.promote(code, profileId, actor)
-
-    @POST
-    @Path("/{code}/profiles/{profileId}/verify")
-    fun verifyProfile(
-        @PathParam("code") code: String,
-        @PathParam("profileId") profileId: String,
-        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
-    ): MarketDocument = service.verifyProfile(code, profileId, actor)
-
-    @POST
-    @Path("/{code}/profiles/{profileId}/rfc")
-    fun recordRfc(
-        @PathParam("code") code: String,
-        @PathParam("profileId") profileId: String,
-        request: RfcRequest,
-        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
-    ): MarketDocument = service.recordRfc(code, profileId, request.rfcNumber, actor)
 
     @DELETE
     @Path("/{code}/profiles/{profileId}")
@@ -106,4 +82,110 @@ class MarketResource(private val service: MarketService) {
         Response.status(Response.Status.CREATED)
             .entity(service.clone(code, request.targetCode, request.accountTypes, actor))
             .build()
+
+    // ---- releases ----
+
+    @GET
+    @Path("/{code}/profiles/{profileId}/releases")
+    fun releases(@PathParam("code") code: String, @PathParam("profileId") profileId: String): List<ReleaseView> =
+        releases.releases(code, profileId)
+
+    /** The release JSON the draft would freeze as now. */
+    @GET
+    @Path("/{code}/profiles/{profileId}/draft")
+    fun draft(@PathParam("code") code: String, @PathParam("profileId") profileId: String): Any =
+        releases.draftJson(code, profileId)
+
+    /** Freeze the draft as the next version and send it to e1. */
+    @POST
+    @Path("/{code}/profiles/{profileId}/release")
+    fun release(
+        @PathParam("code") code: String,
+        @PathParam("profileId") profileId: String,
+        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
+    ): MarketDocument {
+        releases.release(code, profileId, actor)
+        return service.getByCode(code)
+    }
+
+    /** Send the version live in {env} to the next environment. */
+    @POST
+    @Path("/{code}/profiles/{profileId}/environments/{env}/promote")
+    fun promote(
+        @PathParam("code") code: String,
+        @PathParam("profileId") profileId: String,
+        @PathParam("env") env: String,
+        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
+    ): MarketDocument {
+        releases.promote(code, profileId, env(env), actor)
+        return service.getByCode(code)
+    }
+
+    @POST
+    @Path("/{code}/profiles/{profileId}/environments/{env}/sign-off")
+    fun signOff(
+        @PathParam("code") code: String,
+        @PathParam("profileId") profileId: String,
+        @PathParam("env") env: String,
+        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
+    ): MarketDocument {
+        releases.verifyProfile(code, profileId, env(env), actor)
+        return service.getByCode(code)
+    }
+
+    /** Validates the number with ServiceNow; only an approved one is recorded on the release waiting in e3. */
+    @POST
+    @Path("/{code}/profiles/{profileId}/rfc")
+    fun recordRfc(
+        @PathParam("code") code: String,
+        @PathParam("profileId") profileId: String,
+        request: RfcRequest,
+        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
+    ): MarketDocument {
+        releases.recordRfc(code, profileId, request.rfcNumber, actor)
+        return service.getByCode(code)
+    }
+
+    @POST
+    @Path("/{code}/profiles/{profileId}/environments/{env}/rollback")
+    fun rollback(
+        @PathParam("code") code: String,
+        @PathParam("profileId") profileId: String,
+        @PathParam("env") env: String,
+        request: ControlRequest?,
+        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
+    ): MarketDocument {
+        releases.rollback(code, profileId, env(env), request?.reason, actor)
+        return service.getByCode(code)
+    }
+
+    @POST
+    @Path("/{code}/profiles/{profileId}/environments/{env}/pause")
+    fun pause(
+        @PathParam("code") code: String,
+        @PathParam("profileId") profileId: String,
+        @PathParam("env") env: String,
+        request: ControlRequest?,
+        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
+    ): MarketDocument {
+        releases.pause(code, profileId, env(env), request?.reason, actor)
+        return service.getByCode(code)
+    }
+
+    @POST
+    @Path("/{code}/profiles/{profileId}/environments/{env}/resume")
+    fun resume(
+        @PathParam("code") code: String,
+        @PathParam("profileId") profileId: String,
+        @PathParam("env") env: String,
+        request: ControlRequest?,
+        @HeaderParam(ROLE_HEADER) @DefaultValue("OPERATOR") actor: String,
+    ): MarketDocument {
+        releases.resume(code, profileId, env(env), request?.reason, actor)
+        return service.getByCode(code)
+    }
 }
+
+internal fun env(raw: String): EnvStage =
+    runCatching { EnvStage.from(raw) }.getOrNull()
+        ?: throw WebApplicationException("Unknown environment '$raw'", Response.Status.NOT_FOUND)

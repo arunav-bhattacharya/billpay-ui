@@ -1,17 +1,14 @@
 /* ============================================================
-   Billpay Market Onboarding — v3
-   One-page console styled after americanexpress.com: flat grey
-   canvas, Amex Bright Blue primary, deep-blue masthead, squarish
-   corners, drop shadows instead of gradients.
-   Type: Benton Sans Regular (400) + Benton Sans Medium (500),
-   self-hosted so it renders identically on every OS.
+   Billpay Market Onboarding: Measured Light
+   The house style: Benton Sans, one Amex-blue accent with navy titles, cool
+   greys, and subtle depth from layered shadows over faint gradient fills.
+   Colour means state: green live, amber waiting on a person, red stopped,
+   blue act here. No Amex logo or brand pattern.
    ============================================================ */
 
-/* Self-hosted Benton Sans. Only two faces ship: Regular carries all
-   normal text, Medium carries everything the design calls "bold".
-   The `font-weight` descriptor is authoritative here — the OTF
-   sources both report usWeightClass 400 with per-weight family
-   names, so the browser must be told which is which. */
+/* Self-hosted Benton Sans, as main ships it (the user, 2026-11-25: Benton Sans everywhere). Two faces: Regular carries
+   normal text, Medium everything the design calls bold. The font-weight descriptor is authoritative: the sources both
+   report usWeightClass 400, so the browser is told which is which. */
 @font-face {
   font-family: 'Benton Sans';
   src:
@@ -33,86 +30,83 @@
 }
 
 :root {
-  /* Canvas, ink and hairlines measured on global.americanexpress.com/overview. */
-  --bg: #f4f4f4;
-  --surface-alt: #f7f8f9;
+  --page: linear-gradient(165deg, #f8f9fb, #f2f4f8 60%, #f5f6f9);
+  --bg: #f4f6f9;
+  --surface-alt: #f6f8fb;
   --card: #ffffff;
-  --ink: #3d3d3d;
-  --muted: #53565a;
-  --line: #e0e0e0;
-  --line-strong: #c8c9c7;
+  --card-grad: linear-gradient(150deg, #ffffff, #f7f9fc);
+  --ink: #22262e;
+  --muted: #626b79;
+  --line: #dde2ea;
+  --line-strong: #c6cfdb;
+  --chip: #e9edf3;
 
-  /* primary = Amex Bright Blue */
+  /* One accent, Amex blue, with navy for titles and the weight of production. */
   --iris: #006fcf;
-  --iris-deep: #0066be;
-  --iris-wash: #e7f2fc;
+  --iris-deep: #005eb0;
+  --iris-bright: #2b8ce6;
+  --iris-wash: #eaf3fc;
   --iris-border: #b9d9f5;
-
-  /* Amex Deep Blue — masthead, hero, display headings */
   --navy: #00175a;
+  --brand-grad: linear-gradient(135deg, #00175a 0%, #0a4fa8 55%, #2b8ce6 100%);
+  --brand-shadow: 0 6px 16px rgba(0, 63, 160, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 
-  --green: #008767;
-  --green-wash: #e3f6ec;
-  --green-border: #bfe8d2;
+  --green: #2e7d4a;
+  --green-wash: #e6f3ea;
+  --green-border: #bcdcc6;
 
-  /* e2 = amber (e1 grey, e3 green) */
-  --amber: #a37b0a;
-  --amber-bright: #f2c14e;
-  --amber-wash: #fdf4dc;
-  --amber-border: #ecd9a3;
+  --amber: #9a7410;
+  --amber-bright: #d9aa3c;
+  --amber-wash: #faf3e1;
+  --amber-border: #e8d6a6;
 
-  --grey: #53565a;
-  --grey-wash: #edeff0;
-  --grey-border: #d3d6da;
+  --grey: #5b6576;
+  --grey-wash: #edf0f4;
+  --grey-border: #d3d9e2;
 
-  --copper: #c2703d;
-  --copper-wash: #faf0e8;
+  --copper: #b13a2e;
+  --copper-wash: #f8ebe9;
 
-  --red: #c03434;
-  --red-wash: #faecec;
+  --red: #b13a2e;
+  --red-wash: #f8ebe9;
 
-  /* Benton Sans everywhere. The system fallback is load-bearing, not
-     decoration: the shipped faces cover ASCII and Latin-1 but have no
-     glyphs for ↗ ⌂ ⋯ − , which the UI still prints as text. Do not reduce
-     this to 'Benton Sans', sans-serif.
-     Check marks and chevrons are drawn — as SVG and as borders — precisely
-     because falling through to a system face made them match nothing. */
+  --violet: #6a44c0;
+  --violet-wash: rgba(106, 68, 192, 0.1);
+
+  /* Benton Sans for every word; SF Mono stays a system stack for code and release JSON. */
   --font-display: 'Benton Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-body: 'Benton Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, 'Menlo', monospace;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 
-  /* ---- Elevation ----
-     Surfaces are defined by a hairline first and a shadow second. Every level
-     is a single short, navy-tinted drop: enough to lift a card off the canvas,
-     never enough to read as a separate physical object. */
-  --shadow-1: 0 1px 2px rgba(0, 23, 90, 0.05);
-  --shadow-2: 0 1px 3px rgba(0, 23, 90, 0.07), 0 4px 12px rgba(0, 23, 90, 0.06);
-  --shadow-card-hover: 0 2px 6px rgba(0, 23, 90, 0.09);
-  --shadow-btn: 0 1px 2px rgba(0, 23, 90, 0.08);
+  /* ---- Elevation: layered, never flat, never glowing ---- */
+  --shadow-1: 0 1px 2px rgba(45, 55, 75, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-2: 0 8px 22px rgba(45, 55, 75, 0.1), 0 1px 2px rgba(45, 55, 75, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-3: 0 18px 44px rgba(31, 42, 68, 0.14), 0 3px 8px rgba(31, 42, 68, 0.06);
+  --shadow-card-hover: 0 12px 28px rgba(45, 55, 75, 0.13), 0 2px 4px rgba(45, 55, 75, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-btn: 0 2px 6px rgba(45, 55, 75, 0.08), 0 1px 1px rgba(45, 55, 75, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 
-  /* Grid cards keep a whisper of the moulded edge — one step, not six — so the
-     hairline still catches light without the card becoming a keycap. */
   --key-face: #ffffff;
   --key-face-hover: #ffffff;
   --key-w4: #dcdcdc;
-  --key-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(0, 23, 90, 0.05);
-  --key-shadow-hover: 0 0 0 1px var(--iris-border), 0 2px 8px rgba(0, 23, 90, 0.09);
-  --key-shadow-active: 0 0 0 1px var(--iris-border), 0 1px 2px rgba(0, 23, 90, 0.06);
+  --key-shadow: 0 0 0 1px var(--line), var(--shadow-1);
+  --key-shadow-hover: 0 0 0 1px var(--iris-border), var(--shadow-card-hover);
+  --key-shadow-active: 0 0 0 1px var(--iris-border), var(--shadow-1);
 
-  --title-shadow-dark: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --title-shadow-dark: 0 1px 2px rgba(0, 0, 0, 0.25);
 
-  /* An API row is: padding, check box, gap, then text. The expanded body
-     under it has to start at the same x, so that offset is computed once
-     rather than copied as a literal that drifts. */
+  /* An API row is: padding, check box, gap, then text. The expanded body under it starts at the same x. */
   --api-row-pad: 16px;
   --api-check-w: 26px;
   --api-gap: 12px;
   --api-text-indent: calc(var(--api-row-pad) + var(--api-check-w) + var(--api-gap));
 
-  --radius: 6px;
-  --radius-sm: 3px;
-  --radius-lg: 8px;
-  --radius-xl: 14px;
+  --radius: 9px;
+  --radius-sm: 6px;
+  --radius-lg: 13px;
+  --radius-xl: 15px;
 }
 
 * {
@@ -121,65 +115,22 @@
 
 html {
   scroll-behavior: smooth;
-  /* Only Regular and Medium ship, so a browser asked for 700 would
-     smear a synthetic bold. Weight synthesis off; oblique stays on,
-     since there is no italic face either and one <em> relies on it. */
-  font-synthesis-weight: none;
 }
 
 body {
   margin: 0;
-  background-color: var(--bg);
+  background: var(--page);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
-  /* 1.47 ≈ the 15/22 ratio Amex sets, but unitless so the ~60 smaller
-     sizes in this file scale with it instead of inheriting a hard 22px. */
-  line-height: 1.47;
-  letter-spacing: normal;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  /* Bold maps to Medium, the heaviest face that ships: never a faux bold drawn by the browser. */
+  font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-}
-
-/* ---- World Service engraving ----
-   From global.americanexpress.com/overview. It lives on a pseudo-element
-   rather than as a body background so it can be blended: the tile's line art
-   is #C8C9C7 at 30% over a near-white base, which is too faint to read once
-   it sits on the canvas. `multiply` darkens the strokes against the page
-   while leaving the near-white ground almost untouched, and two stacked
-   copies square that effect on the lines only.
-
-   A mask, not a veil gradient, controls the falloff — masking removes the
-   layer entirely toward the bottom, where a translucent overlay would still
-   be lightening the canvas. Fixed, so it holds still as the page scrolls. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    url('./assets/worldservice-tile-gray.svg'),
-    url('./assets/worldservice-tile-gray.svg');
-  background-size: 460px 439px, 460px 439px;
-  background-repeat: repeat, repeat;
-  mix-blend-mode: multiply;
-  -webkit-mask-image: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 1) 38%,
-    rgba(0, 0, 0, 0.55) 62%,
-    rgba(0, 0, 0, 0.18) 84%,
-    rgba(0, 0, 0, 0) 100%
-  );
-  mask-image: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 1) 38%,
-    rgba(0, 0, 0, 0.55) 62%,
-    rgba(0, 0, 0, 0.18) 84%,
-    rgba(0, 0, 0, 0) 100%
-  );
 }
 
 h1,
@@ -187,32 +138,28 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  /* Regular, not Medium — Benton Sans at display sizes reads better light,
-     and the size carries the hierarchy instead of the weight. */
-  font-weight: 400;
-  letter-spacing: normal;
+  font-weight: 620;
+  letter-spacing: -0.01em;
   color: var(--navy);
   margin: 0;
 }
 
 h1 {
-  font-size: 42px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
+  font-size: 40px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
   line-height: 1.1;
   color: var(--navy);
 }
 
-.hero h1,
-.masthead .brand-title {
+.hero h1 {
   text-shadow: var(--title-shadow-dark);
 }
 
-/* Medium is this family's "bold" — the browser default of 700 has no face. */
 b,
 strong,
 summary {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 a {
@@ -237,19 +184,18 @@ button:disabled {
 }
 
 input,
-select {
+select,
+textarea {
   font-family: var(--font-body);
   font-size: 14px;
   padding: 8px 10px;
   border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--card);
   color: var(--ink);
 }
 
-/* Native selects render their own arrow at an inconsistent size and pad
-   unpredictably across platforms, so draw the chevron ourselves and leave
-   room for it. */
+/* Native selects draw their own arrow at an inconsistent size, so draw the chevron and leave room for it. */
 select {
   appearance: none;
   padding-right: 32px;
@@ -262,7 +208,8 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   outline: 2px solid var(--iris);
   outline-offset: 0;
   border-color: var(--iris);
@@ -528,99 +475,88 @@ select:focus {
   color: var(--red);
 }
 
-/* ---------- masthead ---------- */
+/* ---------- masthead ----------
+   A light, blurred topbar: the brand mark and name, the console's sections, and who is acting. It stays put while
+   the page scrolls under it. Overflow stays visible: the role menu hangs below the bar. */
 
-.masthead::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: var(--iris);
-}
-
-/* Overflow stays visible: the role menu hangs below the bar. The accent rule
-   above is inset to this box anyway, so it never needed clipping. */
 .masthead {
   position: sticky;
   top: 0;
   z-index: 60;
-  background: var(--navy);
-  color: #fff;
-  box-shadow: 0 2px 12px rgba(0, 23, 90, 0.28);
+  background: rgba(248, 249, 251, 0.84);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  border-bottom: 1px solid var(--line);
 }
 
 .masthead-inner {
   max-width: 1560px;
   margin: 0 auto;
-  padding: 24px 32px;
+  padding: 12px 32px;
   display: flex;
   align-items: center;
-  gap: 34px;
+  gap: 30px;
 }
 
-/* Product lockup the way Amex builds them: the blue box logo, a hairline
-   rule, then the product name — the name sits beside the mark rather than
-   stacked on it, and the descriptor is a quiet second line, not a banner. */
 /* The lockup routes home, so it behaves like a link without looking like one. */
 .brand {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   color: inherit;
   text-decoration: none;
   border-radius: var(--radius);
-  transition: opacity 0.15s ease;
 }
 
-.brand:hover {
-  opacity: 0.85;
-}
-
-.brand:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 4px;
-}
-
-.brand-logo {
-  width: 50px;
-  height: 50px;
-  border-radius: 4px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
-}
-
-.brand-rule {
-  width: 1px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.22);
+.brand-mark {
+  width: 34px;
+  height: 34px;
   flex: none;
+  filter: drop-shadow(0 4px 8px rgba(0, 63, 160, 0.22));
 }
 
 .brand-name {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  align-items: baseline;
+  gap: 9px;
   line-height: 1;
 }
 
 .brand-title {
   font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 400;
-  letter-spacing: 0.005em;
-  color: #fff;
-  line-height: 1;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--navy);
 }
 
 .brand-sub {
-  font-family: var(--font-body);
-  font-size: 12.5px;
-  font-weight: 400;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #93b4d8;
-  line-height: 1;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.mast-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.mast-nav a {
+  padding: 7px 12px;
+  border-radius: 99px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mast-nav a:hover {
+  color: var(--navy);
+  background: var(--chip);
+}
+
+.mast-nav a.active {
+  color: var(--iris-deep);
+  background: var(--iris-wash);
 }
 
 /* ---------- who you are acting as ---------- */
@@ -644,15 +580,15 @@ select:focus {
   padding: 4px 2px;
   border: none;
   background: none;
-  color: #93b4d8;
-  font-size: 15px;
+  color: var(--muted);
+  font-size: 13.5px;
   cursor: pointer;
   border-radius: var(--radius-sm);
 }
 
 .role-trigger strong {
-  font-weight: 500;
-  color: #ffffff;
+  font-weight: 600;
+  color: var(--navy);
 }
 
 .role-trigger:hover span:first-child,
@@ -662,7 +598,7 @@ select:focus {
 }
 
 .role-trigger:focus-visible {
-  outline: 2px solid #ffffff;
+  outline: 2px solid var(--iris);
   outline-offset: 3px;
 }
 
@@ -781,10 +717,6 @@ select:focus {
   letter-spacing: 0.01em;
 }
 
-.footer-legal {
-  letter-spacing: 0.02em;
-}
-
 /* ---------- hero ---------- */
 
 .hero {
@@ -794,22 +726,11 @@ select:focus {
   align-items: center;
   gap: 40px;
   flex-wrap: wrap;
-  /* Stays a dark panel — 14 `.hero .x` rules below (white h1, donut
-     fills, inverted view-toggle) are written against a dark ground. */
-  /* Moulded like the cards, in navy: a lit top edge, a darker base wall and a
-     deep contact shadow, so the hero sits proud of the page. */
-  background: linear-gradient(180deg, #03215e 0%, var(--navy) 55%, #000f3d 100%);
+  /* A navy panel: navy carries the console's weight. The text and controls below are set for a dark ground. */
+  background: linear-gradient(160deg, #0a2668 0%, var(--navy) 55%, #000f3d 100%);
   border: none;
-  border-radius: 16px;
-  box-shadow:
-    0 1px 0 #0a2a66,
-    0 2px 0 #001450,
-    0 3px 0 #001248,
-    0 4px 0 #000f3d,
-    0 6px 2px rgba(0, 12, 48, 0.4),
-    0 16px 34px rgba(0, 23, 90, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   padding: 32px 52px;
   /* Clears the hero's own moulded wall and contact shadow before anything
      below it starts. */
@@ -1903,30 +1824,6 @@ select:focus {
   padding-top: 16px;
 }
 
-/* ---------- defining a custom behavior (wizard + profile editor) ---------- */
-
-.def-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-  align-items: center;
-}
-
-/* The action sits at the far edge of its row, away from the fields it acts
-   on — wherever this form appears. */
-.def-form .btn {
-  margin-left: auto;
-}
-
-.def-form input {
-  min-width: 150px;
-}
-
-.def-form select {
-  min-width: 132px;
-}
-
 /* ---------- step 4: review ---------- */
 
 .review-grid {
@@ -2059,51 +1956,36 @@ select:focus {
   margin-top: 3px;
 }
 
+/* Code blocks in the house style: a white body under a solid navy title bar with the file name in white mono. */
 .json-block {
-  border-top: 1px solid var(--line);
-  background: #000000;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-btn);
 }
 
 .json-head {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 8px 14px;
+  background: var(--navy);
 }
 
 .json-dots {
-  display: inline-flex;
-  gap: 5px;
-}
-
-.json-dots i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.json-dots i:first-child {
-  background: #e0655f;
-}
-
-.json-dots i:nth-child(2) {
-  background: #e5b567;
-}
-
-.json-dots i:nth-child(3) {
-  background: #78c286;
+  display: none;
 }
 
 .json-name {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: #9fc4ea;
+  color: #fff;
 }
 
 .json-meta {
   font-size: 11.5px;
-  color: #5f83ad;
+  color: #a9cdf5;
   margin-left: auto;
 }
 
@@ -2114,10 +1996,10 @@ select:focus {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid rgba(120, 176, 230, 0.35);
-  background: rgba(120, 176, 230, 0.08);
-  color: #cfe4f8;
-  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 7px;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -2128,18 +2010,17 @@ select:focus {
 
 .json-copy.copied {
   color: #7ee2b0;
-  border-color: rgba(126, 226, 176, 0.45);
-  background: rgba(126, 226, 176, 0.12);
+  border-color: rgba(126, 226, 176, 0.5);
 }
 
 .json-copy:hover {
-  background: rgba(0, 111, 207, 0.4);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .json-block pre {
   margin: 0;
-  padding: 16px 20px;
-  color: #b4cbe8;
+  padding: 14px 18px;
+  color: #3c4350;
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.7;
@@ -2147,25 +2028,25 @@ select:focus {
   max-height: 460px;
 }
 
-/* JSON tokens */
+/* JSON tokens, for a light ground */
 .json-block .jk {
-  color: #7cc0ff;
+  color: #00175a;
 }
 
 .json-block .js {
-  color: #9ce8b4;
+  color: #22653b;
 }
 
 .json-block .jn {
-  color: #ffce7a;
+  color: #9a5b00;
 }
 
 .json-block .jb {
-  color: #ff9ea1;
+  color: #b13a2e;
 }
 
 .json-block .j0 {
-  color: #c9a5f1;
+  color: #6a44c0;
 }
 
 /* ---------- modal ---------- */
@@ -2341,9 +2222,16 @@ select:focus {
 }
 
 .seal-e1 {
+  color: var(--iris-deep);
+  background: var(--iris-wash);
+  border: 1px solid var(--iris-border);
+}
+
+/* Live nowhere yet: a draft, drawn hollow. */
+.seal-draft {
   color: var(--grey);
-  background: var(--grey-wash);
-  border: 1px solid var(--grey-border);
+  background: transparent;
+  border: 1px dashed var(--grey-border);
 }
 
 .seal-sm {
@@ -2553,8 +2441,13 @@ select:focus {
 }
 
 .dot-e1 {
-  background: var(--grey);
-  box-shadow: 0 0 0 3px var(--grey-wash);
+  background: var(--iris);
+  box-shadow: 0 0 0 3px var(--iris-wash);
+}
+
+.dot-draft {
+  background: transparent;
+  border: 1.5px dashed var(--grey);
 }
 
 .profile-row-name {
@@ -2573,9 +2466,9 @@ select:focus {
   gap: 18px;
   padding: 24px 28px;
   border-radius: var(--radius-xl);
-  background: var(--navy);
+  background: linear-gradient(160deg, #0a2668 0%, var(--navy) 60%, #000f3d 100%);
   color: #fff;
-  box-shadow: var(--shadow-2);
+  box-shadow: var(--shadow-3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   margin-bottom: 12px;
 }
 
@@ -2615,8 +2508,6 @@ select:focus {
   align-self: flex-start;
 }
 
-
-
 /* Names the run of account-type cards below it, the way a region head names
    the run of market cards on the ledger, and carries the action that adds to
    that run. */
@@ -2655,8 +2546,7 @@ select:focus {
 /* The market page's two section names, set to match the region codes on the
    ledger. Medium is the heaviest face shipped — anything above it would be a
    browser-synthesised bold. */
-.profiles-head h2,
-.env-record-head h2 {
+.profiles-head h2 {
   font-size: 26px;
   font-weight: 500;
   margin: 0;
@@ -2770,25 +2660,6 @@ select:focus {
   padding-top: 16px;
 }
 
-/* ---------- environment readiness ---------- */
-
-.readiness-envs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  /* Expanding one environment must not stretch the other two to match. */
-  align-items: start;
-}
-
-.env-card {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px 16px;
-  background: var(--card);
-  min-width: 0;
-  box-shadow: inset 0 2px 0 var(--env-tone);
-}
-
 /* Status colour lives in one place: the top rule above and the dot agree. */
 .env-onboarded {
   --env-tone: var(--green);
@@ -2804,100 +2675,6 @@ select:focus {
   --env-tone: var(--grey);
   --env-wash: var(--grey-wash);
   background: var(--surface-alt);
-}
-
-.env-card-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.env-id {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
-.env-key {
-  font-weight: 500;
-  font-size: 15px;
-  color: var(--navy);
-}
-
-.env-name {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.env-toggle {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: none;
-  color: var(--iris);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  align-self: center;
-  transition: background 0.15s ease;
-}
-
-.env-toggle:hover {
-  background: var(--iris-wash);
-}
-
-.env-toggle.open .chevron {
-  transform: rotate(-135deg);
-  margin-bottom: 0;
-  margin-top: 3px;
-}
-
-.env-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--env-tone);
-}
-
-.env-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--env-tone);
-  box-shadow: 0 0 0 3px var(--env-wash);
-  flex: none;
-}
-
-.env-meta {
-  margin: 0;
-  font-size: 12px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Moving the profile on is an action over the whole run of environments, so it
-   sits under them — not inside the one card it happens to be leaving. */
-.env-promote {
-  margin-top: 16px;
-}
-
-/* ---------- closing an environment out ----------
-   The one place in the readiness cards that writes anything: sign-off for the
-   lower environments, and the change request production runs under. Both only
-   ever appear on the environment the profile is actually sitting in. */
-
-/* Sign-off is a step, so its control sits in the step body under the line
-   describing it rather than floating in the card. */
-.step-action {
-  margin-top: 8px;
 }
 
 .env-rfc {
@@ -2935,35 +2712,10 @@ select:focus {
   border-color: var(--iris);
 }
 
-.env-rfc-done {
-  margin: 12px 0 0;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-}
-
-/* ---------- onboarding steps ---------- */
-
-.step-list {
-  list-style: none;
-  margin: 14px 0 0;
-  padding: 14px 0 0;
-  border-top: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .step {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-}
-
-.step-body {
-  min-width: 0;
-  flex: 1;
 }
 
 .step-name {
@@ -2971,15 +2723,7 @@ select:focus {
   font-weight: 500;
 }
 
-.step-desc {
-  margin: 2px 0 0;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--muted);
-}
-
-.step-pending .step-name,
-.step-pending .step-desc {
+.step-pending .step-name {
   color: var(--muted);
 }
 
@@ -3017,45 +2761,6 @@ select:focus {
   stroke: var(--line-strong);
 }
 
-/* The verify step fans out over the profile's own APIs. */
-.step-apis {
-  list-style: none;
-  margin: 10px 0 0;
-  padding: 0 0 0 2px;
-  border-left: 2px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* One line per API now that the identifier has gone — the verify step can
-   run to a dozen rows, so each one earns its height. */
-.step-api {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-left: 12px;
-  min-width: 0;
-}
-
-.step-api-title {
-  font-size: 12.5px;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.step-api.waiting .step-api-title {
-  color: var(--muted);
-}
-
-.step-api-count {
-  padding-left: 12px;
-  margin-top: 2px;
-  font-size: 11.5px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
 .profile-block + .profile-block {
   margin-top: 20px;
 }
@@ -3088,21 +2793,11 @@ select:focus {
   margin-top: 48px;
 }
 
-/* No rule above it — the space is enough to separate the add form from the
-   behaviors listed above, and a line across the card reads as a division the
-   card does not actually have. */
-.pe-bhv-group .def-form {
-  margin-top: 18px;
-}
-
 /* One row for a behavior, core or custom: name and description on the left,
    the control on the right. One shape for both surfaces — the wizard takes it
    as-is, the market page editor adds `.compact`. */
 .bhv-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
+  display: block;
   padding: 13px 0;
 }
 
@@ -3114,10 +2809,13 @@ select:focus {
    the description and lock note move into the row's tooltip and what is left
    sits on one line. */
 .bhv-row.compact {
-  align-items: center;
-  gap: 16px;
   padding: 6px 0;
   font-size: 14px;
+}
+
+.bhv-row.compact .bhv-row-head {
+  align-items: center;
+  gap: 16px;
 }
 
 /* Core behaviors there are a two-up grid rather than a stack, so the rule that
@@ -3163,87 +2861,11 @@ select:focus {
   color: var(--amber);
 }
 
-/* Sits outside the card now — it describes what happens to the market, not
-   any one behavior in the list above it. */
-.bhv-scope-note {
-  margin: 12px 0 0;
-  font-size: 12.5px;
-  color: var(--muted);
-  max-width: 78ch;
-}
-
-/* A custom behavior is a request, so it stacks: the definition and its value
-   on one line, then the requirement it was asked for underneath. */
-.bhv-row-custom {
-  display: block;
-}
-
 .bhv-row-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-}
-
-.bhv-detail {
-  margin-top: 10px;
-}
-
-.bhv-detail label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.bhv-detail textarea {
-  display: block;
-  width: 100%;
-  max-width: 78ch;
-  padding: 9px 11px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  font: inherit;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--ink);
-  resize: vertical;
-}
-
-.bhv-detail textarea::placeholder {
-  color: var(--muted);
-}
-
-.bhv-detail textarea:focus-visible {
-  outline: 2px solid var(--iris);
-  outline-offset: 1px;
-  border-color: var(--iris);
-}
-
-/* Already agreed before this wizard opened, so it reads rather than edits. */
-.bhv-detail-text {
-  margin: 0;
-  max-width: 78ch;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--muted);
-}
-
-/* A custom behavior left unset stays quiet, the same way an off core flag does. */
-.chip.chip-custom {
-  border-color: var(--line);
-  background: var(--surface-alt);
-  color: var(--muted);
-}
-
-.chip.chip-custom.on {
-  border-color: var(--iris-border);
-  background: var(--iris-wash);
-  color: var(--iris-deep);
 }
 
 /* One row shape for both APIs and Behavior: the grouping label holds a fixed
@@ -3330,7 +2952,6 @@ select:focus {
 .api-dir-category .api-cat-count {
   font-size: 12.5px;
 }
-
 
 .api-dir-category {
   margin-bottom: 44px;
@@ -3806,179 +3427,11 @@ select:focus {
   margin-bottom: 22px;
 }
 
-/* ---------- environment record ----------
-   Configuration is stored once, but each environment holds only the profiles
-   promoted into it and only the changes made at that stage. One selector
-   governs both cards below it — they answer the same question about the same
-   environment, and letting them disagree would be a trap. */
-
-/* One card, like the account-type sections above it, holding the two things
-   an environment carries as flush rows. */
-.env-record {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-1);
-  overflow: hidden;
-}
-
-/* Heading set like Profiles, then what it holds, then the control that scopes
-   it — each on its own line, reading down into the card it governs. */
-.env-record-head {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  margin: 36px 0 14px;
-}
-
-.env-record-head .env-tabs {
-  margin-top: 8px;
-}
-
-.env-record-lede {
-  margin: 0;
-  font-size: 15px;
-  color: var(--muted);
-}
-
-/* Three two-character labels; the control should take exactly the room they
-   need and no more. */
-.env-tabs {
-  display: inline-flex;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
-  overflow: hidden;
-}
-
-.env-tab {
-  min-width: 44px;
-  padding: 5px 12px;
-  border: 0;
-  border-right: 1px solid var(--line);
-  background: transparent;
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.env-tab:last-child {
-  border-right: 0;
-}
-
-.env-tab:hover:not(.on) {
-  background: var(--iris-wash);
-  color: var(--iris);
-}
-
-/* Navy is where you are, as everywhere else in the app. */
-.env-tab.on {
-  background: var(--navy);
-  color: #fff;
-}
-
-/* An environment nothing has reached yet is still worth opening — it says so
-   rather than leaving a dead tab — but it should not invite the click. */
-.env-tab.empty:not(.on) {
-  color: var(--muted);
-}
-
-.env-record-empty {
-  margin: 0;
-  padding: 18px 22px;
-  background: var(--surface-alt);
-  font-size: 14px;
-}
-
-/* Both disclosures are rows of the card now, not cards of their own: the
-   surrounding border is the card's, so they keep only the hairline that
-   separates them. */
-.env-record > .revisions,
-.env-record > .json-view {
-  margin: 0;
-  border: 0;
-  border-top: 1px solid var(--line);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-/* The card's own border already draws the top edge. */
-.env-record > :first-child {
-  border-top: 0;
-}
-
-.env-record > .revisions > summary,
-.env-record > .json-view > summary {
-  padding: 13px 22px;
-}
-
 /* ---------- revision history ---------- */
 
-/* The same disclosure card as Market Json below it — two collapsed panels at
-   the foot of the page should not be two different shapes. */
+/* The market's history: a card of rows, each with its before and after a click away. */
 .revisions {
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
   overflow: hidden;
-}
-
-.revisions > summary {
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 12px 16px;
-  font-weight: 400;
-  font-size: 14.5px;
-  color: var(--iris);
-}
-
-.revisions[open] > summary {
-  border-bottom: 1px solid var(--line);
-}
-
-.revisions > summary::-webkit-details-marker {
-  display: none;
-}
-
-/* The same chevron Market Json draws, on the same side — a printed ▸ came
-   from the system fallback and matched nothing else. */
-.revisions > summary::after {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  border-radius: 1px;
-  transform: rotate(45deg);
-  margin-bottom: 3px;
-  transition: transform 0.15s ease;
-}
-
-.revisions[open] > summary::after {
-  transform: rotate(-135deg);
-  margin-bottom: 0;
-  margin-top: 3px;
-}
-
-.rev-count {
-  background: var(--iris-wash);
-  border: 1px solid var(--iris-border);
-  border-radius: 999px;
-  padding: 1px 9px;
-  font-size: 11.5px;
-  color: var(--iris-deep);
-}
-
-.revisions-body {
-  padding: 4px 20px 16px;
 }
 
 .rev-row {
@@ -4116,31 +3569,33 @@ select:focus {
   display: inline-block;
   width: 22px;
   padding-left: 8px;
-  color: rgba(255, 255, 255, 0.35);
+  color: #b2bac7;
   user-select: none;
 }
 
 .jd-add {
-  background: rgba(0, 135, 103, 0.22);
+  background: var(--green-wash);
+  color: #22653b;
 }
 
 .jd-add .jd-sign {
-  color: #4ad395;
+  color: var(--green);
 }
 
 .jd-del {
-  background: rgba(192, 52, 52, 0.22);
+  background: var(--red-wash);
+  color: #8e3127;
 }
 
 .jd-del .jd-sign {
-  color: #f08a8a;
+  color: var(--red);
 }
 
 /* Elided run of unchanged lines. */
 .jd-gap {
   display: block;
   padding: 2px 0 2px 8px;
-  color: rgba(255, 255, 255, 0.3);
+  color: #b2bac7;
   letter-spacing: 0.3em;
   user-select: none;
 }
@@ -4261,7 +3716,6 @@ select:focus {
   flex: none;
 }
 
-
 .prefill-hint {
   display: flex;
   align-items: baseline;
@@ -4289,11 +3743,6 @@ select:focus {
     min-width: 240px;
   }
 
-  /* One environment per row: three columns of steps is unreadable here. */
-  .readiness-envs {
-    grid-template-columns: 1fr;
-  }
-
   .market-banner {
     flex-wrap: wrap;
     gap: 14px;
@@ -4319,4 +3768,1607 @@ select:focus {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* ============================================================
+   Releases through e1, e2 and e3 (the Market Onboarding API)
+   ============================================================ */
+
+/* ---- a BOTH rule: which journeys get Y ---- */
+
+.bhv-rule {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+}
+
+.bhv-rule-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.bhv-rule-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rule-chip {
+  padding: 3px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--card);
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.rule-chip.on {
+  border-color: var(--iris);
+  background: var(--iris-wash);
+  color: var(--iris-deep);
+}
+
+/* ---- the manifest pre-check ---- */
+
+.manifest-check {
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.manifest-check svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.manifest-check.ok {
+  background: var(--green-wash);
+  color: var(--green);
+}
+
+.manifest-check.unknown {
+  background: var(--grey-wash);
+  color: var(--muted);
+}
+
+.manifest-check.gap {
+  display: block;
+  background: var(--amber-wash);
+  border: 1px solid var(--amber-border);
+  color: var(--ink);
+}
+
+.manifest-check.gap p {
+  margin: 0 0 6px;
+}
+
+.manifest-check.gap ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* ---- the Operations step ---- */
+
+.ops {
+  display: grid;
+  gap: 14px;
+}
+
+.ops-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  background: var(--card);
+}
+
+.ops-section-head h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--navy);
+}
+
+.ops-section-head p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.ops-fields {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px 20px;
+}
+
+.ops-field {
+  min-width: 0;
+}
+
+.ops-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.ops-control input,
+.ops-control select {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+  max-width: 100%;
+}
+
+.ops-control input[type='number'] {
+  width: 96px;
+}
+
+.ops-hint,
+.ops-note {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.ops-duration {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ops-iso {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.ops-warn {
+  flex-basis: 100%;
+  font-size: 11.5px;
+  color: var(--amber);
+}
+
+.ops-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  cursor: pointer;
+  grid-column: 1 / -1;
+}
+
+.ops-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ops-switch {
+  width: 30px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  position: relative;
+  flex: none;
+  transition: background 0.15s ease;
+}
+
+.ops-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 23, 90, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.ops-toggle.on .ops-switch {
+  background: var(--iris);
+}
+
+.ops-toggle.on .ops-switch::after {
+  transform: translateX(12px);
+}
+
+.ops-toggle input:focus-visible + .ops-switch {
+  outline: 2px solid var(--iris);
+  outline-offset: 2px;
+}
+
+.ops-checks {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.ops-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.ops-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.ops-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 999px;
+  background: var(--iris-wash);
+  color: var(--iris-deep);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.ops-tag button {
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 3px;
+}
+
+.ops-tags input {
+  min-width: 180px;
+  flex: 1;
+}
+
+.ops-summary {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 6px 20px;
+}
+
+.ops-summary-row {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.ops-summary-row dt {
+  color: var(--muted);
+  flex: none;
+}
+
+.ops-summary-row dd {
+  margin: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* ---- releases in each environment ---- */
+
+.env-failed {
+  --env-tone: var(--red);
+  --env-wash: var(--red-wash);
+}
+
+.env-mode {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.env-mode.mode-connected {
+  color: var(--green);
+  border-color: var(--green-border);
+  background: var(--green-wash);
+}
+
+@keyframes env-pulse {
+  50% {
+    box-shadow: 0 0 0 6px var(--env-wash);
+  }
+}
+
+.mark-failed circle {
+  fill: var(--red);
+}
+
+.mark-failed path {
+  stroke: #fff;
+}
+
+.step-failed .step-name {
+  color: var(--red);
+}
+
+/* ============================================================
+   Measured Light primitives, shared by the newer screens
+   ============================================================ */
+
+.card {
+  background: var(--card-grad);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 565;
+  background: var(--chip);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.pill.live {
+  background: var(--green-wash);
+  color: var(--green);
+}
+
+.pill.wait {
+  background: var(--amber-wash);
+  color: var(--amber);
+}
+
+.pill.stop {
+  background: var(--red-wash);
+  color: var(--red);
+}
+
+.pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.seg {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 11px;
+  background: var(--chip);
+}
+
+.seg button {
+  border: none;
+  background: none;
+  padding: 5px 13px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.seg button.on {
+  background: #fff;
+  color: var(--navy);
+  font-weight: 600;
+  box-shadow: var(--shadow-btn);
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 22px;
+}
+
+.section-head h1 {
+  font-size: 34px;
+}
+
+.section-lede {
+  margin: 8px 0 0;
+  max-width: 78ch;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.section-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.note-red {
+  font-size: 12px;
+  color: var(--red);
+}
+
+.note-amber {
+  font-size: 12px;
+  color: var(--amber);
+}
+
+/* key swatches */
+i.k {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+i.k.live { background: var(--green-wash); border-color: var(--green-border); }
+i.k.run { background: var(--iris-wash); border-color: var(--iris-border); }
+i.k.wait { background: var(--amber-wash); border-color: var(--amber-border); }
+i.k.stop { background: var(--red-wash); border-color: rgba(177, 58, 46, 0.3); }
+i.k.ghost { background: transparent; border-style: dashed; }
+i.k.in { background: #fff; }
+i.k.used { background: linear-gradient(150deg, #eef5fd, #e3eefb); border-color: var(--iris-border); }
+i.k.gap { background: repeating-linear-gradient(-45deg, rgba(177, 58, 46, 0.25) 0 3px, #fff 3px 6px); border-color: rgba(177, 58, 46, 0.4); }
+i.k.win { background: var(--iris-wash); border-color: var(--iris-border); }
+i.k.cut { background: var(--violet-wash); border-color: rgba(106, 68, 192, 0.3); }
+i.k.paused { background: repeating-linear-gradient(-45deg, rgba(91, 101, 118, 0.25) 0 3px, transparent 3px 6px); }
+
+/* ---------- Versions: which version runs where ---------- */
+
+.vmap {
+  padding: 8px 22px 16px;
+}
+
+.vmap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vmap th {
+  text-align: left;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  padding: 14px 10px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.vmap th.vmap-env {
+  text-align: center;
+}
+
+.vmap th small {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+  margin: 0 6px 0 2px;
+}
+
+.vmap td {
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.vmap tr:last-child td {
+  border-bottom: none;
+}
+
+.vmap-market {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.vmap-cell {
+  text-align: center;
+}
+
+.vcell {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.vchip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vchip.live { background: var(--green-wash); color: var(--green); }
+.vchip.run { background: var(--iris-wash); color: var(--iris-deep); }
+.vchip.wait { background: var(--amber-wash); color: var(--amber); }
+.vchip.stop { background: var(--red-wash); color: var(--red); }
+.vchip.ghost { color: #b2bac7; font-weight: 400; background: transparent; }
+.vchip.paused { min-width: 26px; padding: 0 6px; background: var(--grey-wash); color: var(--grey); font-size: 11px; }
+
+.vmap-note {
+  white-space: nowrap;
+}
+
+.vmap-key,
+.cmx-key,
+.runs-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---------- Build: the capability manifest ---------- */
+
+.cmx {
+  padding: 22px 24px 18px;
+  margin-bottom: 20px;
+}
+
+.cmx-grid {
+  display: grid;
+  grid-template-columns: 140px repeat(16, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.cmx-group {
+  grid-column: span 4;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+  padding: 6px 0;
+  border-bottom: 2px solid var(--line);
+}
+
+.cmx-head {
+  text-align: center;
+  font-size: 10.5px;
+  line-height: 1.3;
+  color: var(--muted);
+  padding: 4px 0 6px;
+}
+
+.cmx-row {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.cmx-cell {
+  height: 70px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.cmx-cell.used {
+  background: linear-gradient(150deg, #eef5fd, #e3eefb);
+  border-color: var(--iris-border);
+  color: var(--iris-deep);
+}
+
+.cmx-cell.gap {
+  background: repeating-linear-gradient(-45deg, rgba(177, 58, 46, 0.08) 0 5px, #fff 5px 10px);
+  border-color: rgba(177, 58, 46, 0.32);
+  color: var(--red);
+}
+
+.cmx-cell .n {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.cmx-cell .who {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 3px;
+}
+
+.cmx-drafts {
+  padding: 20px 24px;
+}
+
+.cmx-drafts h2 {
+  font-size: 17px;
+  margin-bottom: 10px;
+}
+
+.cmx-drafts ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 13.5px;
+}
+
+/* ---------- Runs: the next 24 hours ---------- */
+
+.runs {
+  padding: 22px 24px 18px;
+  --runs-label: 300px;
+}
+
+.runs-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.runs-head h2 {
+  font-size: 19px;
+  margin-right: 4px;
+}
+
+.runs-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--runs-label) 1fr;
+}
+
+.runs-axis {
+  position: relative;
+  height: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.runs-axis span {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.runs-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  height: 64px;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+}
+
+.runs-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.runs-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  padding-left: 24px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.runs-lane {
+  position: relative;
+  height: 64px;
+  border-bottom: 1px solid var(--line);
+}
+
+.runs-lane.paused {
+  background: repeating-linear-gradient(-45deg, rgba(91, 101, 118, 0.07) 0 6px, transparent 6px 12px);
+}
+
+.runs-win,
+.runs-cut {
+  position: absolute;
+  top: 20px;
+  height: 24px;
+}
+
+.runs-win {
+  border-radius: 6px 0 0 6px;
+  background: var(--iris-wash);
+  border: 1px solid var(--iris-border);
+}
+
+.runs-cut {
+  border-radius: 0 6px 6px 0;
+  background: var(--violet-wash);
+  border: 1px solid rgba(106, 68, 192, 0.25);
+  border-left: none;
+}
+
+.runs-run {
+  position: absolute;
+  top: 14px;
+  width: 2px;
+  height: 36px;
+  border-radius: 2px;
+  background: var(--navy);
+}
+
+.runs-run b {
+  position: absolute;
+  left: 7px;
+  top: -3px;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.runs-lane.paused .runs-run {
+  background: var(--grey);
+}
+
+.runs-lane.paused .runs-run b {
+  color: var(--grey);
+}
+
+.runs-now {
+  position: absolute;
+  top: 28px;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--red);
+  pointer-events: none;
+}
+
+.runs-now span {
+  position: absolute;
+  bottom: -22px;
+  left: -46px;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red);
+}
+
+.runs-key {
+  margin-top: 24px;
+}
+
+/* ---------- The rollout board: lanes per environment, a card per version ---------- */
+
+.acct-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+  align-items: start;
+}
+
+.lanes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 26px minmax(0, 1fr) 26px minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.lane {
+  padding: 14px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 220px;
+}
+
+.lane-arrow {
+  display: grid;
+  place-items: center;
+}
+
+.lane-arrow svg {
+  width: 22px;
+  height: 22px;
+  stroke: #b8c1cf;
+}
+
+.lane-h {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 2px 9px;
+  border-bottom: 1px solid var(--line);
+}
+
+.lane-k {
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--navy);
+}
+
+.lane-name {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.lane-h .env-mode {
+  margin-left: auto;
+}
+
+.lane-empty {
+  margin: 6px 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.ver {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--card);
+  padding: 12px 13px;
+  box-shadow: var(--shadow-btn);
+}
+
+.ver.moving {
+  border-color: var(--iris-border);
+}
+
+.ver.live-under {
+  background: var(--surface-alt);
+  box-shadow: none;
+}
+
+.ver-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ver-v {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--navy);
+}
+
+.ver-h .pill {
+  margin-left: auto;
+}
+
+.pill.run {
+  background: var(--iris-wash);
+  color: var(--iris-deep);
+}
+
+.pill.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.ver.moving .pill .dot {
+  animation: env-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes env-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.ver-by {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.paused-tag {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.ver-warn,
+.ver-error {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.ver-warn {
+  color: var(--amber);
+}
+
+.ver-error {
+  color: var(--red);
+}
+
+.needs-build {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 7px;
+  border-radius: 99px;
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.steps {
+  list-style: none;
+  margin: 11px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.steps .step {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.steps .mark {
+  width: 17px;
+  height: 17px;
+}
+
+.steps .step-name {
+  color: var(--ink);
+}
+
+.steps .step-pending .step-name {
+  color: var(--muted);
+}
+
+.steps .step-failed .step-name {
+  color: var(--red);
+}
+
+.step-detail {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.ver-done {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ver-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ver-links {
+  display: flex;
+  gap: 16px;
+  margin-top: 11px;
+  font-size: 12.5px;
+}
+
+.lane-note {
+  margin: 0 2px;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.ver-older {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  opacity: 0.72;
+}
+
+.ver-older li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.ver-older .ver-v {
+  font-size: 13.5px;
+}
+
+/* ---- confirm panels: rollback, pause, resume ---- */
+
+.confirm-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  display: grid;
+  gap: 8px;
+}
+
+.confirm-panel h4 {
+  font-size: 13.5px;
+}
+
+.confirm-panel label {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.confirm-panel input {
+  font-size: 13px;
+  padding: 7px 9px;
+}
+
+.confirm-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.scope {
+  display: grid;
+  gap: 8px;
+}
+
+.scope-lede,
+.scope-foot {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.scope-foot {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.scope ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--card);
+}
+
+.scope li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+}
+
+.scope li:first-child {
+  border-top: none;
+}
+
+.scope li small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 1px;
+}
+
+.scope .held {
+  color: var(--amber);
+  font-weight: 600;
+  font-size: 11.5px;
+  align-self: center;
+}
+
+.scope .freed {
+  color: var(--green);
+  font-weight: 600;
+  font-size: 11.5px;
+  align-self: center;
+}
+
+.check {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.check.ok {
+  background: var(--green-wash);
+  color: var(--green);
+}
+
+.check.bad {
+  background: var(--red-wash);
+  color: var(--red);
+}
+
+.check.unknown {
+  background: var(--grey-wash);
+  color: var(--muted);
+}
+
+.btn.slate {
+  background: linear-gradient(135deg, #5b6576, #3f4757);
+  color: #fff;
+}
+
+.btn.danger-solid {
+  background: var(--red);
+  color: #fff;
+}
+
+/* ---- the draft against what has been released ---- */
+
+.draft-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  margin-bottom: 16px;
+}
+
+.draft-bar.ready {
+  border-color: var(--iris-border);
+}
+
+.draft-ic {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: var(--iris-wash);
+  color: var(--iris);
+  font-weight: 650;
+}
+
+.draft-t {
+  font-size: 14px;
+  font-weight: 620;
+  color: var(--navy);
+}
+
+.draft-s {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+.draft-bar > .btn {
+  margin-left: auto;
+  flex: none;
+}
+
+/* ---- activity rail ---- */
+
+.activity {
+  padding: 16px 16px 8px;
+}
+
+.activity h4 {
+  font-size: 14px;
+}
+
+.activity-sub {
+  margin: 2px 0 10px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.act {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+
+.act-i {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--chip);
+  color: var(--grey);
+}
+
+.act-activated .act-i,
+.act-verified .act-i {
+  background: var(--green-wash);
+  color: var(--green);
+}
+
+.act-released .act-i,
+.act-promoted .act-i,
+.act-updated .act-i {
+  background: var(--iris-wash);
+  color: var(--iris);
+}
+
+.act-paused .act-i,
+.act-rfc-recorded .act-i {
+  background: var(--amber-wash);
+  color: var(--amber);
+}
+
+.act-failed .act-i,
+.act-refused .act-i,
+.act-rolled-back .act-i {
+  background: var(--red-wash);
+  color: var(--red);
+}
+
+.act-w {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.act-env {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: var(--chip);
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.act-when {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---- the release review ---- */
+
+.modal.modal-wide {
+  width: min(1120px, calc(100vw - 48px));
+  max-width: none;
+}
+
+.review {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 22px;
+}
+
+.review-against {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.diff-group h4 {
+  margin-top: 14px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.diff-group h4 span {
+  margin-left: 8px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.diff-row {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.diff-k {
+  font-weight: 565;
+  color: var(--ink);
+  min-width: 0;
+}
+
+.diff-k small {
+  display: block;
+  font-weight: 400;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diff-was,
+.diff-now {
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+.diff-was {
+  background: var(--red-wash);
+  color: #8e3127;
+  text-decoration: line-through;
+  text-decoration-color: rgba(177, 58, 46, 0.45);
+}
+
+.diff-now {
+  background: var(--green-wash);
+  color: #22653b;
+  font-weight: 565;
+}
+
+.diff-was.none,
+.diff-now.none {
+  background: var(--chip);
+  color: var(--muted);
+  text-decoration: none;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.diff-to {
+  color: #b8c1cf;
+  text-align: center;
+}
+
+.review-json {
+  margin-top: 16px;
+}
+
+.review-json summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--iris-deep);
+}
+
+.review-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.review-side section {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--card-grad);
+}
+
+.review-side h4 {
+  font-size: 13.5px;
+  margin-bottom: 8px;
+}
+
+.chk {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 9px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.chk:first-of-type {
+  border-top: none;
+}
+
+.chk small {
+  display: block;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.chk i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.chk i svg {
+  width: 18px;
+  height: 18px;
+}
+
+.chk i.ok {
+  background: none;
+  color: var(--green);
+}
+
+.chk i.no {
+  background: var(--amber);
+}
+
+.chk i.q {
+  background: var(--grey);
+}
+
+.people {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.person {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 8px 10px;
+  background: var(--card);
+}
+
+.person .role {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.person b {
+  font-size: 13px;
+  color: var(--navy);
+}
+
+.rule {
+  margin: 10px 0;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--iris-wash);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.rule.blocked {
+  background: var(--amber-wash);
+  color: #6f5409;
+}
+
+.review-go {
+  width: 100%;
+}
+
+@media (max-width: 1180px) {
+  .acct-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1000px) {
+  .lanes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lane-arrow {
+    transform: rotate(90deg);
+    height: 26px;
+  }
+  .review {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.vmap th.vmap-env {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+/* ---------- History: everything done to the market ---------- */
+
+.history {
+  margin-top: 40px;
+}
+
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.history-head h2 {
+  font-size: 24px;
+}
+
+.revisions.card {
+  padding: 6px 20px;
+}
+
+.ver-json {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+.ver-links .link-btn {
+  margin-left: 0;
+}
+
+.release-preview {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.review-grid + .step-hint {
+  margin-top: 18px;
 }
