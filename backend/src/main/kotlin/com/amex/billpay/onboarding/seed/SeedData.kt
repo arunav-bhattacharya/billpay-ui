@@ -66,8 +66,8 @@ class SeedData(
                         ),
                         dimensions = Behavior(requiresArPosting = BehaviorValue.Y),
                         operations = OperationsSettings(
-                            timeZone = "America/New_York",
-                            executionTime = "00:00",
+                            timeZone = "America/Phoenix",  // MST all year, as the US run is 00:01 MST (user, 2026-11-25)
+                            executionTime = "00:01",
                             cancellationWindow = "PT1H",
                             executionFloorTps = BigDecimal(50),
                             representment = RepresentmentRules(listOf("R01", "R09"), maxRepresentments = 1, delayDays = 2),
@@ -86,8 +86,8 @@ class SeedData(
                         ),
                         dimensions = Behavior(requiresArPosting = BehaviorValue.Y, requiresMandateAuthorization = BehaviorValue.Y),
                         operations = OperationsSettings(
-                            timeZone = "America/New_York",
-                            executionTime = "00:00",
+                            timeZone = "America/Phoenix",  // MST all year, as the US run is 00:01 MST (user, 2026-11-25)
+                            executionTime = "00:01",
                             cancellationWindow = "PT1H",
                             executionFloorTps = BigDecimal(50),
                             allocationFetchBefore = "PT0S",
