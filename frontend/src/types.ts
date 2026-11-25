@@ -143,6 +143,30 @@ export interface DeploymentView {
   lastError?: string | null
 }
 
+/** A market and account type live in one environment, with the release JSON of the version it runs. */
+export interface LiveRelease {
+  market: string
+  marketName: string
+  region: string
+  accountType: AccountType
+  version: number
+  simulated: boolean
+  paused: boolean
+  since: string
+  config: ReleaseConfig
+}
+
+/** The release JSON keys the console reads back (billpay-core `ReleaseConfig`). */
+export interface ReleaseConfig {
+  apis?: string[]
+  behaviors?: Partial<Record<BehaviorKey, { value: BehaviorValue; yesForJourneys?: string[] }>>
+  timeZone?: string
+  executionTime?: string
+  cancellationWindow?: string
+  executionCutoff?: string
+  [key: string]: unknown
+}
+
 export interface ControlView {
   env: EnvStage
   paused: boolean
@@ -190,7 +214,7 @@ export interface ReleaseView {
   author?: string | null
   approver?: string | null
   createdAt: string
-  config: unknown
+  config: ReleaseConfig
 }
 
 export interface Capability {
@@ -217,6 +241,7 @@ export type RevisionAction =
   | 'RFC_RECORDED'
   | 'ACTIVATED'
   | 'FAILED'
+  | 'REFUSED'
   | 'ROLLED_BACK'
   | 'PAUSED'
   | 'RESUMED'

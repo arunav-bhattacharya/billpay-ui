@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useApp } from '../AppContext'
@@ -12,12 +12,12 @@ import { Arrow, CopyIcon, Flag, PencilIcon, TrashIcon } from '../icons'
 import {
   ACCOUNT_TYPE_LABELS,
   BEHAVIOR_VALUE_LABELS,
-  buildLabel,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
   ENV_LABELS,
   ENV_NAMES,
   ENV_ORDER,
+  formatRelative,
   missingCombinations,
   operationsSummary,
   projectToEnv,
@@ -32,10 +32,12 @@ import type {
   EnvStage,
   MarketDocument,
   MarketProfile,
+  MarketRevision,
   OperationsSettings,
   ProfileReadiness,
 } from '../types'
 import { EnvironmentReadiness } from './EnvironmentReadiness'
+import { ReleaseReview } from './ReleaseReview'
 import { RevisionHistory } from './RevisionHistory'
 
 /** One market, in full: each account type carries its own readiness and profile. */
@@ -313,7 +315,7 @@ function AccountTypeSection({
   run: (a: () => Promise<unknown>) => Promise<void>
   onDelete: () => void
 }) {
-  const { catalog, environments, capabilities } = useApp()
+  const { catalog, environments, capabilities, refreshMarkets } = useApp()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showCloneTargets, setShowCloneTargets] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -408,39 +410,39 @@ function AccountTypeSection({
       )}
 
       <div className="acct-block">
-        <div className="block-head">
-          <h3 className="block-title">Environment</h3>
-          {readiness && (
-            <ReleaseButton
-              readiness={readiness}
-              busy={busy}
-              onRelease={() => run(() => api.release(code, id))}
-            />
-          )}
-        </div>
-        {missing.length > 0 && (
-          <p className="hint-warn">
-            {buildLabel(capabilities!)} lacks {missing.length} of the combinations this profile needs, so its check would
-            stop the release as needing a build.
-          </p>
-        )}
-        {readiness ? (
-          <EnvironmentReadiness
+        <h3 className="block-title">Environments</h3>
+        {readiness && (
+          <DraftBar
+            market={market}
+            profile={profile}
             readiness={readiness}
-            environments={environments}
-            actions={{
-              busy,
-              onSignOff: (env) => run(() => api.signOff(code, id, env)),
-              onRecordRfc: (rfcNumber) => run(() => api.recordRfc(code, id, rfcNumber)),
-              onPromote: (env) => run(() => api.promote(code, id, env)),
-              onRollback: (env, reason) => run(() => api.rollback(code, id, env, reason)),
-              onPause: (env, reason) => run(() => api.pause(code, id, env, reason)),
-              onResume: (env, reason) => run(() => api.resume(code, id, env, reason)),
-            }}
+            busy={busy}
+            missing={missing.length}
+            onRelease={() => api.release(code, id).then(() => refreshMarkets())}
           />
-        ) : (
-          <p className="muted">Readiness is unavailable for this profile.</p>
         )}
+        <div className="acct-board">
+          {readiness ? (
+            <EnvironmentReadiness
+              market={market}
+              profile={profile}
+              readiness={readiness}
+              environments={environments}
+              actions={{
+                busy,
+                onSignOff: (env) => run(() => api.signOff(code, id, env)),
+                onRecordRfc: (rfcNumber) => run(() => api.recordRfc(code, id, rfcNumber)),
+                onPromote: (env) => run(() => api.promote(code, id, env)),
+                onRollback: (env, reason) => run(() => api.rollback(code, id, env, reason)),
+                onPause: (env, reason) => run(() => api.pause(code, id, env, reason)),
+                onResume: (env, reason) => run(() => api.resume(code, id, env, reason)),
+              }}
+            />
+          ) : (
+            <p className="muted">Readiness is unavailable for this profile.</p>
+          )}
+          <Activity market={market} profile={profile} />
+        </div>
       </div>
 
       <div className="acct-block">
@@ -634,22 +636,30 @@ function AccountTypeSection({
 }
 
 /**
- * Freezes the draft and sends it to e1: a new version when the draft has changed or the last one can't run again,
- * the newest version when it hasn't been to e1 yet, and nothing while e1 already has it under way or live.
+ * The draft against what has been released: a new version when the draft has changed or the last one can't run again,
+ * the newest version when it hasn't been to e1 yet, and nothing while e1 already has it under way or live. Releasing
+ * goes through the review, which shows the diff and names the approver.
  */
-function ReleaseButton({
+function DraftBar({
+  market,
+  profile,
   readiness,
   busy,
+  missing,
   onRelease,
 }: {
+  market: MarketDocument
+  profile: MarketProfile
   readiness: ProfileReadiness
   busy: boolean
-  onRelease: () => void
+  missing: number
+  onRelease: () => Promise<void>
 }) {
+  const [reviewing, setReviewing] = useState(false)
   const latest = readiness.latestVersion ?? null
   const e1 = readiness.environments.find((e) => e.env === 'E1')
   const inE1 = latest != null ? e1?.history.find((d) => d.version === latest) : undefined
-  const underWay = e1?.current && ['REQUESTED', 'RUNNING', 'WAITING_FOR_SIGN_OFF'].includes(e1.current.status)
+  const underWay = !!e1?.current && ['REQUESTED', 'RUNNING', 'WAITING_FOR_SIGN_OFF'].includes(e1.current.status)
   // A version that failed, was rolled back or was superseded never runs again, so the same content goes out as the
   // next version.
   const spent = !!inE1 && ['FAILED', 'ROLLED_BACK', 'SUPERSEDED'].includes(inE1.status)
@@ -658,23 +668,119 @@ function ReleaseButton({
   else if (readiness.draftChanged || spent) version = latest + 1
   else if (!inE1) version = latest
   else version = null
-  if (version === null) {
-    return (
-      <span className="release-note">
-        {underWay ? `v${latest} is under way in e1` : `v${latest} is live in e1; edit the profile to release another`}
-      </span>
-    )
-  }
+
+  const title =
+    latest == null
+      ? 'Not released yet'
+      : readiness.draftChanged
+        ? `Draft changed since v${latest}`
+        : version === null
+          ? `No changes since v${latest}`
+          : `v${latest} is ready to go again`
+  const sub =
+    latest == null
+      ? `Releasing freezes the profile as v1 and sends it to e1${profile.editedBy ? `; last edited by ${profile.editedBy}` : ''}.`
+      : readiness.draftChanged
+        ? `Edited by ${profile.editedBy ?? 'someone'} after v${latest} was frozen. Review the changes, then a second person releases them.`
+        : underWay
+          ? `v${e1!.current!.version} is under way in e1; finish it before releasing another.`
+          : version === null
+            ? `v${latest} is live in e1. Edit the profile to release another version.`
+            : `v${latest} can't run again in e1, so its content goes out as v${version}.`
+
   return (
-    <button
-      className="btn navy"
-      disabled={busy || !!underWay}
-      title={underWay ? `v${e1!.current!.version} is still under way in e1; finish it first` : undefined}
-      onClick={onRelease}
-    >
-      Release v{version} to e1
-    </button>
+    <div className={`draft-bar card ${version !== null && !underWay ? 'ready' : ''}`}>
+      <span className="draft-ic" aria-hidden="true">
+        Δ
+      </span>
+      <div>
+        <div className="draft-t">{title}</div>
+        <div className="draft-s">
+          {sub}
+          {missing > 0 && <span className="note-red"> e1's build lacks {missing} combination{missing > 1 ? 's' : ''} this draft needs.</span>}
+        </div>
+      </div>
+      {version !== null && (
+        <button className="btn primary" disabled={busy || underWay} onClick={() => setReviewing(true)}>
+          Review and release v{version}
+        </button>
+      )}
+      {reviewing && version !== null && (
+        <ReleaseReview
+          market={market}
+          profile={profile}
+          readiness={readiness}
+          version={version}
+          onClose={() => setReviewing(false)}
+          onRelease={onRelease}
+        />
+      )}
+    </div>
   )
+}
+
+/**
+ * What happened to this profile, newest first, across every environment: releases, sign-offs, activations, refusals,
+ * rollbacks, pauses and resumes, each with who and why. Read again whenever a release moves.
+ */
+function Activity({ market, profile }: { market: MarketDocument; profile: MarketProfile }) {
+  const [rows, setRows] = useState<MarketRevision[] | null>(null)
+  const label = ACCOUNT_TYPE_LABELS[profile.accountType]
+  // Changes whenever any of this profile's deployments moves, which is when the history has something new.
+  const signature = JSON.stringify(
+    market.readiness?.find((r) => r.profileId === profile.id)?.environments.map((e) => [e.current?.status, e.current?.version, e.control?.at]) ?? [],
+  )
+  useEffect(() => {
+    api
+      .revisions(market.market.code)
+      .then(setRows)
+      .catch(() => setRows([]))
+  }, [market.market.code, market.updatedAt, signature])
+  const mine = (rows ?? []).filter((r) => !r.profileLabel || r.profileLabel === label).slice(0, 9)
+  return (
+    <aside className="activity card" aria-label={`${label} activity`}>
+      <h4>Activity</h4>
+      <p className="activity-sub">{label} · every environment · newest first</p>
+      {rows === null && <p className="muted">Loading…</p>}
+      {mine.map((r) => (
+        <div key={r.id} className={`act act-${r.action.toLowerCase().replace(/_/g, '-')}`}>
+          <i className="act-i" aria-hidden="true">
+            {ACTION_MARKS[r.action] ?? '·'}
+          </i>
+          <div>
+            <div className="act-w">
+              {r.summary.replace(`${label} `, '').replace(`${label} — `, '')}
+              {r.envs.map((e) => (
+                <span key={e} className="act-env">
+                  {e.toLowerCase()}
+                </span>
+              ))}
+            </div>
+            <div className="act-when">
+              {r.actor} · {formatRelative(r.at)}
+            </div>
+          </div>
+        </div>
+      ))}
+    </aside>
+  )
+}
+
+const ACTION_MARKS: Partial<Record<MarketRevision['action'], string>> = {
+  CREATED: '+',
+  UPDATED: 'Δ',
+  RELEASED: '▸',
+  PROMOTED: '»',
+  VERIFIED: '✓',
+  RFC_RECORDED: '#',
+  ACTIVATED: '●',
+  FAILED: '!',
+  REFUSED: '×',
+  ROLLED_BACK: '↶',
+  PAUSED: 'II',
+  RESUMED: '▶',
+  CLONED: '⧉',
+  PROFILE_DELETED: '−',
 }
 
 /* ---------- Inline profile editor: APIs, behavior, custom values ---------- */

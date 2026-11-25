@@ -4,8 +4,10 @@ import type {
   Catalog,
   EnvironmentInfo,
   EnvStage,
+  LiveRelease,
   MarketDocument,
   MarketRevision,
+  ReleaseConfig,
   ReleaseView,
   Role,
 } from './types'
@@ -47,6 +49,8 @@ export const api = {
   catalog: () => request<Catalog>('/api/catalog'),
   environments: () => request<EnvironmentInfo[]>('/api/environments'),
   capabilities: (env: EnvStage) => request<Capabilities>(`/api/environments/${env}/capabilities`),
+  /** Every market and account type live in `env`, with the release JSON it runs. */
+  live: (env: EnvStage) => request<LiveRelease[]>(`/api/environments/${env}/live`),
   markets: () => request<MarketDocument[]>('/api/markets'),
   revisions: (code: string) => request<MarketRevision[]>(`/api/markets/${code}/revisions`),
   createMarket: (doc: MarketDocument) => post<MarketDocument>('/api/markets', doc),
@@ -62,7 +66,7 @@ export const api = {
   releases: (code: string, profileId: string) =>
     request<ReleaseView[]>(`${profilePath(code, profileId)}/releases`),
   /** The release JSON the draft would freeze as now. */
-  draft: (code: string, profileId: string) => request<unknown>(`${profilePath(code, profileId)}/draft`),
+  draft: (code: string, profileId: string) => request<ReleaseConfig>(`${profilePath(code, profileId)}/draft`),
   /** Freezes the draft as the next version and sends it to e1. */
   release: (code: string, profileId: string) =>
     post<MarketDocument>(`${profilePath(code, profileId)}/release`),
