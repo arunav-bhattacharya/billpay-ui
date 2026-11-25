@@ -89,7 +89,10 @@ export function BehaviorRow({
   const lockNote = locked
     ? `Only ${meta.accountTypes.map((t) => ACCOUNT_TYPE_LABELS[t]).join(' and ')} profiles take it.`
     : takers.length < accountTypes.length
-      ? `${accountTypes.filter((t) => !takers.includes(t)).map((t) => ACCOUNT_TYPE_LABELS[t]).join(' and ')} take N.`
+      ? (() => {
+          const others = accountTypes.filter((t) => !takers.includes(t))
+          return `${others.map((t) => ACCOUNT_TYPE_LABELS[t]).join(' and ')} ${others.length === 1 ? 'takes' : 'take'} N.`
+        })()
       : null
   const value = locked ? 'N' : behavior[meta.key]
   const showRule = value === 'BOTH' && meta.bothRuleByJourney && onJourneys

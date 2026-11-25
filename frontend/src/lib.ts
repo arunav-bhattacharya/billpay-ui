@@ -171,6 +171,12 @@ export function behaviorFor(behavior: Behavior, accountType: AccountType, metas:
   return next
 }
 
+/** "e1's build 1.4.2", or just "e1's build" when the build doesn't say which it is. */
+export function buildLabel(capabilities: Capabilities): string {
+  const v = capabilities.buildVersion
+  return v && v !== 'unspecified' && v !== 'dev' ? `e1's build ${v}` : "e1's build"
+}
+
 /** The manifest names the third account type as billpay-core does. */
 export function manifestAccountType(type: AccountType): string {
   return type === 'BUSINESS_TRAVEL_ACCOUNT' ? 'BUSINESS_TRAVEL' : type

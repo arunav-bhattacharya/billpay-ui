@@ -12,6 +12,7 @@ import { Arrow, CopyIcon, Flag, PencilIcon, TrashIcon } from '../icons'
 import {
   ACCOUNT_TYPE_LABELS,
   BEHAVIOR_VALUE_LABELS,
+  buildLabel,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
   ENV_LABELS,
@@ -419,8 +420,8 @@ function AccountTypeSection({
         </div>
         {missing.length > 0 && (
           <p className="hint-warn">
-            e1's build ({capabilities?.buildVersion}) lacks {missing.length} of the combinations this profile needs, so
-            its check would stop the release as needing a build.
+            {buildLabel(capabilities!)} lacks {missing.length} of the combinations this profile needs, so its check would
+            stop the release as needing a build.
           </p>
         )}
         {readiness ? (

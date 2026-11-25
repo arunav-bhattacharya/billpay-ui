@@ -9,6 +9,7 @@ import {
   ACCOUNT_TYPE_LABELS,
   BEHAVIOR_VALUE_LABELS,
   behaviorFor,
+  buildLabel,
   byAccountType,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
@@ -678,14 +679,14 @@ function ManifestCheck({
   if (missing.length === 0) {
     return (
       <p className="manifest-check ok">
-        <TickIcon /> e1's build {capabilities.buildVersion} runs every combination these settings need.
+        <TickIcon /> {buildLabel(capabilities)} runs every combination these settings need.
       </p>
     )
   }
   return (
     <div className="manifest-check gap">
       <p>
-        e1's build {capabilities.buildVersion} lacks {missing.length} combination{missing.length > 1 ? 's' : ''}: a
+        {buildLabel(capabilities)} lacks {missing.length} combination{missing.length > 1 ? 's' : ''}: a
         release with these settings would stop at its check, needing a build.
       </p>
       <ul>
