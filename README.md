@@ -22,6 +22,33 @@ statuses, pending sweep, test accounts, and the BOTH rules).
 
 Once live, a profile can be **rolled back** one level, to the version it replaced, and **paused** or **resumed**.
 
+**Maker-checker.** Whoever last edited a profile can't release it: the release review names the author and the
+approver, and the backend refuses an author's own release. With no SSO yet the two are the UI's roles, so the
+demo path is to edit as **Operator** and release as **Admin** (the role menu is in the top bar).
+
+## What's in the console
+
+| Section | What it shows |
+|---------|---------------|
+| **Markets** | The ledger (grid, map, APIs), each market's page with its **rollout board**: a lane per environment, a card per version with its step and next action, and an activity rail of who did what and why |
+| Release review | Opened from a profile's draft bar: the draft field by field against what e1 runs, the checks it passes (e1's capability manifest, time zone, cancellation window, bank confirmation's window), and the author and approver |
+| Rollback and pause | Rollback checks the version it restores against e1's build; pause and resume list everything they hold in the market (a pause holds every account type, since the execution rate is the market's) and need a reason |
+| **Versions** | Which version runs in each environment, for every market and account type, with drift and stopped releases flagged |
+| **Runs** | Every live market's next scheduled run on one UTC axis, from the release it runs: the cancellation window, the run, a cutoff market's deadline, and paused markets |
+| **Build** | The deployed build's capability manifest: every behavior setting per account type, the live profiles on each, and drafts the build can't run |
+
+## Demo path
+
+1. Onboard a market from **Markets → Onboard** (say Germany, Consumer) as **Operator**: APIs, behaviors (BOTH rules,
+   the manifest pre-check), Operations settings. Saving creates the draft in e1.
+2. Switch to **Admin**, open the market, **Review and release v1**: the review shows what will be frozen.
+3. Watch e1's lane: check, save, test (billpay-core's 30 s test step), then **Sign off v1**: it activates.
+4. Edit the profile as Operator (a later execution time), release v2 as Admin, sign off: v2 takes over, v1 is
+   superseded. **Roll back to v1**: the pre-check runs, and v1 is live again.
+5. **Pause runs** shows what the pause holds; resume it. **Promote** v1 to e2 and e3 (simulated); e3 asks for the
+   change request before its sign-off.
+6. **Versions**, **Runs** and **Build** show the same releases across every market.
+
 ## Layout
 
 | Path        | Description                                         |
@@ -40,7 +67,8 @@ Each part is one command. JDK 25 (or 21) and Node 22+.
 ```
 
 billpay-offline listens on http://localhost:8081. Without it, e1's releases wait and retry, and the rest of the app
-works.
+works. If billpay-core's local Oracle volume predates its current DDL, activation fails on a missing column
+(`MARKET_CONFIG_ACTIVE.IN_SERVICE_IN`); `./dev/down.sh --clean` then `./dev/up.sh` rebuilds it from the DDL.
 
 **2. Backend** (http://localhost:8090):
 
@@ -80,12 +108,13 @@ cd backend && ./gradlew test
 ```
 
 ```bash
-cd frontend && npm run build && npm run lint
+cd frontend && npm test && npm run build && npm run lint
 ```
 
 The backend tests run the whole pipeline against a fake billpay-offline that follows billpay-core's documented
-behavior: release, sign-off, a second version taking over, rollback, pause and resume, promotion through simulated
-e2 and e3 with the RFC, an outage and a refused release.
+behavior: maker-checker, release, sign-off, a second version taking over, rollback, pause and resume, promotion
+through simulated e2 and e3 with the RFC, an outage and a refused release. The frontend tests cover the time-zone
+maths behind the runs line (daylight saving included), the release diff and the manifest pre-check.
 
 ## Domain reference
 

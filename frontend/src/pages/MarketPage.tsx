@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
-import { useApp } from '../AppContext'
+import { useApp } from '../appState'
 import {
   BehaviorRow,
   CustomBehaviorDefForm,
@@ -749,7 +749,7 @@ function Activity({ market, profile }: { market: MarketDocument; profile: Market
           </i>
           <div>
             <div className="act-w">
-              {r.summary.replace(`${label} `, '').replace(`${label} — `, '')}
+              {r.summary.replace(`${label} — `, '').replace(`${label} `, '')}
               {r.envs.map((e) => (
                 <span key={e} className="act-env">
                   {e.toLowerCase()}

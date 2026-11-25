@@ -1,23 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from './api'
+import { Ctx } from './appState'
 import type { Capabilities, Catalog, EnvironmentInfo, MarketDocument, Role } from './types'
-
-interface AppState {
-  role: Role
-  setRole: (r: Role) => void
-  catalog: Catalog | null
-  environments: EnvironmentInfo[]
-  /** e1's deployed build's capability manifest; null while unknown or when e1 is simulated. */
-  capabilities: Capabilities | null
-  capabilitiesError: string | null
-  markets: MarketDocument[]
-  refreshMarkets: () => Promise<void>
-  loading: boolean
-  loadError: string | null
-}
-
-const Ctx = createContext<AppState | null>(null)
 
 /** How often the market list is read again while a release is moving through its workflow. */
 const POLL_MS = 1500
@@ -104,10 +89,4 @@ export function AppProvider({ children }: { children: ReactNode }) {
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
-}
-
-export function useApp(): AppState {
-  const ctx = useContext(Ctx)
-  if (!ctx) throw new Error('useApp outside AppProvider')
-  return ctx
 }

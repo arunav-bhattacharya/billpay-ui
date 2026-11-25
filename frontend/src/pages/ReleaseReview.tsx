@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api'
-import { useApp } from '../AppContext'
+import { useApp } from '../appState'
 import { ErrorNote, JsonDiff, Modal } from '../components'
 import { TickIcon } from '../icons'
 import { ACCOUNT_TYPE_LABELS, buildLabel, describeDuration, missingCombinations, parseDuration } from '../lib'

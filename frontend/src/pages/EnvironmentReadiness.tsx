@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import { api } from '../api'
-import { useApp } from '../AppContext'
+import { useApp } from '../appState'
 import { TickIcon } from '../icons'
 import {
   ACCOUNT_TYPE_LABELS,

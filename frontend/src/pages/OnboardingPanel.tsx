@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import { useApp } from '../AppContext'
+import { useApp } from '../appState'
 import { BehaviorRow, CustomBehaviorDefForm, CustomBehaviorRow } from '../behavior'
 import { ApiDetailBody, ApiIdentity, ErrorNote, JsonView } from '../components'
 import { CheckMark, CloseIcon, Flag, SelectionBox, TickIcon } from '../icons'

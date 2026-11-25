@@ -694,7 +694,6 @@ textarea:focus {
   letter-spacing: 0.01em;
 }
 
-
 /* ---------- hero ---------- */
 
 .hero {
@@ -704,22 +703,11 @@ textarea:focus {
   align-items: center;
   gap: 40px;
   flex-wrap: wrap;
-  /* Stays a dark panel — 14 `.hero .x` rules below (white h1, donut
-     fills, inverted view-toggle) are written against a dark ground. */
-  /* Moulded like the cards, in navy: a lit top edge, a darker base wall and a
-     deep contact shadow, so the hero sits proud of the page. */
-  background: linear-gradient(180deg, #03215e 0%, var(--navy) 55%, #000f3d 100%);
+  /* A navy panel: navy carries the console's weight. The text and controls below are set for a dark ground. */
+  background: linear-gradient(160deg, #0a2668 0%, var(--navy) 55%, #000f3d 100%);
   border: none;
-  border-radius: 16px;
-  box-shadow:
-    0 1px 0 #0a2a66,
-    0 2px 0 #001450,
-    0 3px 0 #001248,
-    0 4px 0 #000f3d,
-    0 6px 2px rgba(0, 12, 48, 0.4),
-    0 16px 34px rgba(0, 23, 90, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   padding: 32px 52px;
   /* Clears the hero's own moulded wall and contact shadow before anything
      below it starts. */
@@ -2483,9 +2471,9 @@ textarea:focus {
   gap: 18px;
   padding: 24px 28px;
   border-radius: var(--radius-xl);
-  background: var(--navy);
+  background: linear-gradient(160deg, #0a2668 0%, var(--navy) 60%, #000f3d 100%);
   color: #fff;
-  box-shadow: var(--shadow-2);
+  box-shadow: var(--shadow-3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   margin-bottom: 12px;
 }
 
@@ -2524,8 +2512,6 @@ textarea:focus {
   border-color: rgba(255, 255, 255, 0.14);
   align-self: flex-start;
 }
-
-
 
 /* Names the run of account-type cards below it, the way a region head names
    the run of market cards on the ledger, and carries the action that adds to
@@ -2680,25 +2666,6 @@ textarea:focus {
   padding-top: 16px;
 }
 
-/* ---------- environment readiness ---------- */
-
-.readiness-envs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  /* Expanding one environment must not stretch the other two to match. */
-  align-items: start;
-}
-
-.env-card {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px 16px;
-  background: var(--card);
-  min-width: 0;
-  box-shadow: inset 0 2px 0 var(--env-tone);
-}
-
 /* Status colour lives in one place: the top rule above and the dot agree. */
 .env-onboarded {
   --env-tone: var(--green);
@@ -2714,100 +2681,6 @@ textarea:focus {
   --env-tone: var(--grey);
   --env-wash: var(--grey-wash);
   background: var(--surface-alt);
-}
-
-.env-card-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.env-id {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
-.env-key {
-  font-weight: 500;
-  font-size: 15px;
-  color: var(--navy);
-}
-
-.env-name {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.env-toggle {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: none;
-  color: var(--iris);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  align-self: center;
-  transition: background 0.15s ease;
-}
-
-.env-toggle:hover {
-  background: var(--iris-wash);
-}
-
-.env-toggle.open .chevron {
-  transform: rotate(-135deg);
-  margin-bottom: 0;
-  margin-top: 3px;
-}
-
-.env-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--env-tone);
-}
-
-.env-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--env-tone);
-  box-shadow: 0 0 0 3px var(--env-wash);
-  flex: none;
-}
-
-.env-meta {
-  margin: 0;
-  font-size: 12px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Moving the profile on is an action over the whole run of environments, so it
-   sits under them — not inside the one card it happens to be leaving. */
-.env-promote {
-  margin-top: 16px;
-}
-
-/* ---------- closing an environment out ----------
-   The one place in the readiness cards that writes anything: sign-off for the
-   lower environments, and the change request production runs under. Both only
-   ever appear on the environment the profile is actually sitting in. */
-
-/* Sign-off is a step, so its control sits in the step body under the line
-   describing it rather than floating in the card. */
-.step-action {
-  margin-top: 8px;
 }
 
 .env-rfc {
@@ -2845,35 +2718,10 @@ textarea:focus {
   border-color: var(--iris);
 }
 
-.env-rfc-done {
-  margin: 12px 0 0;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-}
-
-/* ---------- onboarding steps ---------- */
-
-.step-list {
-  list-style: none;
-  margin: 14px 0 0;
-  padding: 14px 0 0;
-  border-top: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .step {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-}
-
-.step-body {
-  min-width: 0;
-  flex: 1;
 }
 
 .step-name {
@@ -2881,15 +2729,7 @@ textarea:focus {
   font-weight: 500;
 }
 
-.step-desc {
-  margin: 2px 0 0;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--muted);
-}
-
-.step-pending .step-name,
-.step-pending .step-desc {
+.step-pending .step-name {
   color: var(--muted);
 }
 
@@ -3201,7 +3041,6 @@ textarea:focus {
 .api-dir-category .api-cat-count {
   font-size: 12.5px;
 }
-
 
 .api-dir-category {
   margin-bottom: 44px;
@@ -4132,7 +3971,6 @@ textarea:focus {
   flex: none;
 }
 
-
 .prefill-hint {
   display: flex;
   align-items: baseline;
@@ -4158,11 +3996,6 @@ textarea:focus {
 
   .role-options {
     min-width: 240px;
-  }
-
-  /* One environment per row: three columns of steps is unreadable here. */
-  .readiness-envs {
-    grid-template-columns: 1fr;
   }
 
   .market-banner {
@@ -4517,68 +4350,10 @@ textarea:focus {
   background: var(--green-wash);
 }
 
-.env-mode + .env-toggle {
-  margin-left: 0;
-}
-
-.env-version {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  color: var(--navy);
-}
-
-.env-paused {
-  margin-left: 6px;
-  padding: 0 7px;
-  border-radius: 999px;
-  font-size: 11px;
-  background: var(--amber-wash);
-  color: var(--amber);
-}
-
-.env-card.moving .env-status-dot {
-  animation: env-pulse 1.4s ease-in-out infinite;
-}
-
 @keyframes env-pulse {
   50% {
     box-shadow: 0 0 0 6px var(--env-wash);
   }
-}
-
-.env-warn,
-.env-error,
-.env-control-note {
-  margin: 8px 0 0;
-  font-size: 12px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-
-.env-warn {
-  color: var(--amber);
-}
-
-.env-error {
-  color: var(--red);
-}
-
-.env-control-note {
-  color: var(--muted);
-}
-
-.env-needs-build {
-  display: inline-block;
-  margin-right: 6px;
-  padding: 0 6px;
-  border-radius: var(--radius-sm);
-  background: var(--red);
-  color: #fff;
-  font-size: 11px;
-}
-
-.env-card .step-list {
-  margin-top: 12px;
 }
 
 .mark-failed circle {
@@ -4592,92 +4367,6 @@ textarea:focus {
 .step-failed .step-name {
   color: var(--red);
 }
-
-.env-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.env-actions:empty {
-  display: none;
-}
-
-.env-live-actions {
-  display: flex;
-  gap: 14px;
-  margin-top: 10px;
-  font-size: 12.5px;
-}
-
-.env-confirm {
-  margin-top: 12px;
-  display: grid;
-  gap: 6px;
-}
-
-.env-confirm label {
-  font-size: 12px;
-  color: var(--ink);
-}
-
-.env-confirm input {
-  font: inherit;
-  font-size: 13px;
-  padding: 6px 9px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-}
-
-.env-confirm-row {
-  display: flex;
-  gap: 8px;
-}
-
-.env-history {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 8px 0 0;
-  border-top: 1px solid var(--line);
-  display: grid;
-  gap: 3px;
-}
-
-.env-history-row {
-  display: grid;
-  grid-template-columns: 34px 1fr auto;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.env-history-row.st-active {
-  color: var(--green);
-}
-
-.env-history-row.st-failed {
-  color: var(--red);
-}
-
-.release-note {
-  margin-left: auto;
-  font-size: 12.5px;
-  color: var(--muted);
-}
-
-.acct-block > .block-head .btn {
-  margin-left: auto;
-}
-
-.acct-block > .block-head .block-title {
-  margin-bottom: 0;
-}
-
-.acct-block > .block-head {
-  margin-bottom: 14px;
-}
-
 
 /* ============================================================
    Measured Light primitives, shared by the newer screens
@@ -5169,7 +4858,7 @@ i.k.paused { background: repeating-linear-gradient(-45deg, rgba(91, 101, 118, 0.
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 300px;
+  min-height: 220px;
 }
 
 .lane-arrow {
@@ -5889,4 +5578,12 @@ i.k.paused { background: repeating-linear-gradient(-45deg, rgba(91, 101, 118, 0.
   .review {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.vmap th.vmap-env {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
 }

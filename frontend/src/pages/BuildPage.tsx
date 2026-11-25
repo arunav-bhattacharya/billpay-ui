@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
-import { useApp } from '../AppContext'
+import { useApp } from '../appState'
 import { ACCOUNT_TYPE_LABELS, ACCOUNT_TYPE_ORDER, ENV_LABELS, manifestAccountType, missingCombinations } from '../lib'
 import { releaseBehavior } from '../schedule'
 import type { AccountType, Capabilities, Capability, EnvStage, LiveRelease } from '../types'

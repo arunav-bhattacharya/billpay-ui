@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useApp } from './AppContext'
+import { useApp } from './appState'
 import { DURATION_UNIT_LABELS, formatDuration, parseDuration } from './lib'
 import type { DurationUnit } from './lib'
 import type { AccountType, Behavior, OperationsSettings } from './types'

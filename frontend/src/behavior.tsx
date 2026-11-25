@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useApp } from './AppContext'
+import { useApp } from './appState'
 import { ErrorNote } from './components'
 import { ACCOUNT_TYPE_LABELS, BEHAVIOR_VALUE_LABELS, behaviorAppliesTo, setBehavior } from './lib'
 import type {
