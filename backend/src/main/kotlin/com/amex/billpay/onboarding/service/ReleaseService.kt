@@ -6,6 +6,7 @@ import com.amex.billpay.onboarding.entity.MarketEntity
 import com.amex.billpay.onboarding.entity.ReleaseEntity
 import com.amex.billpay.onboarding.model.AccountType
 import com.amex.billpay.onboarding.model.EnvStage
+import com.amex.billpay.onboarding.model.LiveRelease
 import com.amex.billpay.onboarding.model.MarketConfig
 import com.amex.billpay.onboarding.model.MarketProfile
 import com.amex.billpay.onboarding.model.ProfileReadiness
@@ -82,6 +83,26 @@ class ReleaseService(
         return guarded { client.capabilities() }
     }
 
+    /** Every market and account type live in [env], with the release it runs: what the runs line and the manifest read. */
+    fun live(env: EnvStage): List<LiveRelease> {
+        val markets = MarketEntity.listAll().associateBy { it.code }
+        return DeploymentEntity.list("env = ?1 and status = ?2", env, ReleaseStatus.ACTIVE).mapNotNull { d ->
+            val market = markets[d.marketCode] ?: return@mapNotNull null
+            val release = ReleaseEntity.find(d.marketCode, d.accountType, d.version) ?: return@mapNotNull null
+            LiveRelease(
+                market = d.marketCode,
+                marketName = market.name,
+                region = market.region,
+                accountType = d.accountType,
+                version = d.version,
+                simulated = d.simulated,
+                paused = MarketControlEntity.latest(d.marketCode, d.accountType, env)?.paused == true,
+                since = d.updatedAt,
+                config = mapper.readTree(release.configJson),
+            )
+        }.sortedWith(compareBy({ it.market }, { it.accountType }))
+    }
+
     /** Whether any profile of the market is live through a real environment, which deleting it would orphan. */
     fun liveThroughApi(code: String, accountType: AccountType? = null): DeploymentEntity? =
         DeploymentEntity.forMarket(code).firstOrNull {
@@ -93,13 +114,17 @@ class ReleaseService(
     /**
      * Freezes the draft as the next version, or reuses the newest version when nothing has changed and it hasn't been
      * to E1 yet, and sends it to E1. The approver is whoever releases it; the author whoever last edited the profile.
-     * `TODO(sso)`: with no SSO, maker-checker is a record of the two roles, not a check that they differ.
+     * Maker-checker: the author can't approve their own change (wiki: approval once, on the content). `TODO(sso)`: the
+     * two are the UI's roles until SSO names people.
      */
     fun release(code: String, profileId: String, actor: String) {
         val id = tx {
             val (entity, profile) = load(code, profileId)
             if (profile.apis.isEmpty()) conflict("Select at least one API before releasing")
             val type = profile.accountType
+            if (profile.editedBy != null && profile.editedBy.equals(actor.trim(), ignoreCase = true)) {
+                conflict("${actor.uppercase()} made the last change to this profile, so someone else approves its release")
+            }
             inFlight(entity.code, type, EnvStage.E1)?.let {
                 conflict("v${it.version} is still ${it.status.phrase} in e1; finish it before releasing another version")
             }
@@ -156,7 +181,7 @@ class ReleaseService(
         }
         if (!ref.simulated) {
             val client = environments.client(env) ?: conflict("${env.label} has no Market Onboarding API configured")
-            guarded { client.signOff(ref.market, ref.apiType, ref.version, actor, now, ref.rfc) }
+            guarded(refused(ref, actor, "sign-off of v${ref.version}")) { client.signOff(ref.market, ref.apiType, ref.version, actor, now, ref.rfc) }
         }
         tx {
             val d = DeploymentEntity.findById(ref.id)!!
@@ -259,7 +284,7 @@ class ReleaseService(
         val (d, previous) = ref
         if (!d.simulated) {
             val client = environments.client(env) ?: conflict("${env.label} has no Market Onboarding API configured")
-            guarded { client.rollback(d.market, d.apiType, d.version, actor, reason) }
+            guarded(refused(d, actor, "rollback of v${d.version}")) { client.rollback(d.market, d.apiType, d.version, actor, reason) }
         }
         tx {
             val row = DeploymentEntity.findById(d.id)!!
@@ -297,7 +322,7 @@ class ReleaseService(
         }
         if (!ref.simulated) {
             val client = environments.client(env) ?: conflict("${env.label} has no Market Onboarding API configured")
-            guarded {
+            guarded(refused(ref, actor, if (paused) "pause" else "resume")) {
                 if (paused) client.pause(ref.market, ref.apiType, actor, reason) else client.resume(ref.market, ref.apiType, actor, reason)
             }
         }
@@ -606,10 +631,14 @@ class ReleaseService(
         entity.updatedAt = Instant.now()
     }
 
-    /** An environment's refusal or outage, as the UI should hear it. */
-    private fun <T> guarded(call: () -> T): T = try {
+    /**
+     * An environment's refusal or outage, as the UI should hear it. [onRefusal] hears it first, so a refused action
+     * leaves an audit row as well as an error.
+     */
+    private fun <T> guarded(onRefusal: (OnboardingApiException) -> Unit = {}, call: () -> T): T = try {
         call()
     } catch (e: OnboardingApiException) {
+        runCatching { onRefusal(e) }
         val status = when (e.status) {
             null -> Response.Status.BAD_GATEWAY
             404 -> Response.Status.NOT_FOUND
@@ -619,6 +648,22 @@ class ReleaseService(
             else -> Response.Status.BAD_GATEWAY
         }
         throw WebApplicationException(e.detail, status)
+    }
+
+    /** Records an action the environment refused (a 4xx), so the history holds attempts as well as outcomes. */
+    private fun refused(ref: Ref, actor: String, what: String): (OnboardingApiException) -> Unit = { e ->
+        if (e.status != null && e.status in 400..499) {
+            tx {
+                revisions.record(
+                    code = ref.market,
+                    action = RevisionAction.REFUSED,
+                    actor = actor,
+                    summary = "${label(ref.accountType)} $what refused by ${ref.env.label}: ${e.detail}",
+                    envs = listOf(ref.env),
+                    profileLabel = label(ref.accountType),
+                )
+            }
+        }
     }
 
     private fun <T> tx(block: () -> T): T = QuarkusTransaction.requiringNew().call<T> { block() }

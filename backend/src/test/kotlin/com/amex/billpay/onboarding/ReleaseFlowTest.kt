@@ -68,6 +68,8 @@ class ReleaseFlowTest {
     @Test
     fun `a release goes live in e1, a second version takes over, and a rollback restores the first`() {
         onboard("DE", profile())
+        act("DE", "release", role = "OPERATOR").then().statusCode(409).body("error", org.hamcrest.Matchers.containsString("someone else approves"))
+        assertTrue(FakeOnboardingApi.calls.isEmpty(), "an author's own release never leaves billpay-ui")
         act("DE", "release").then().statusCode(200)
 
         val send = sent("/releases").single().third!!
@@ -193,7 +195,7 @@ class ReleaseFlowTest {
         assertEquals("CORPORATE", first["accountType"].asText())
         assertEquals("PT2H", first["config"]["allocationFetchBefore"].asText())
         val bt = profileId("SE", 1)
-        given().contentType(ContentType.JSON).body("{}").post("/api/markets/SE/profiles/$bt/release").then().statusCode(200)
+        given().contentType(ContentType.JSON).header("X-Billpay-Role", "ADMIN").body("{}").post("/api/markets/SE/profiles/$bt/release").then().statusCode(200)
         val second = sent("/releases").last().third!!
         assertEquals("BUSINESS_TRAVEL", second["accountType"].asText())
         assertFalse(second["config"].has("allocationFetchBefore"))
@@ -214,6 +216,9 @@ class ReleaseFlowTest {
         assertEquals("fake-1.0", manifest.getString("buildVersion"))
         assertNotNull(manifest.getList<Any>("combinations").firstOrNull())
         given().get("/api/environments/E2/capabilities").then().statusCode(404)
+        val live = given().get("/api/environments/E1/live").then().statusCode(200).extract().jsonPath()
+        assertEquals("Europe/Berlin", live.getString("find { it.market == 'BE' }.config.timeZone"))
+        assertEquals(1, live.getInt("find { it.market == 'BE' }.version"))
         val envs = given().get("/api/environments").jsonPath()
         assertEquals(listOf("CONNECTED", "SIMULATED", "SIMULATED"), envs.getList<String>("mode"))
     }

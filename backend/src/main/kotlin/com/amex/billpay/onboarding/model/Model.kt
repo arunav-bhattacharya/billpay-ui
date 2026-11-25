@@ -270,6 +270,19 @@ data class DeploymentView(
     val lastError: String?,
 )
 
+/** A market and account type live in one environment, with the release JSON of the version it runs. */
+data class LiveRelease(
+    val market: String,
+    val marketName: String,
+    val region: String,
+    val accountType: AccountType,
+    val version: Int,
+    val simulated: Boolean,
+    val paused: Boolean,
+    val since: Instant,
+    val config: Any?,
+)
+
 /** A live market and account type paused or resumed in one environment, the newest change. */
 data class ControlView(
     val env: EnvStage,
@@ -369,6 +382,7 @@ enum class RevisionAction {
     RFC_RECORDED,
     ACTIVATED,
     FAILED,
+    REFUSED,
     ROLLED_BACK,
     PAUSED,
     RESUMED,
