@@ -650,17 +650,26 @@ function ReleaseButton({
   const e1 = readiness.environments.find((e) => e.env === 'E1')
   const inE1 = latest != null ? e1?.history.find((d) => d.version === latest) : undefined
   const underWay = e1?.current && ['REQUESTED', 'RUNNING', 'WAITING_FOR_SIGN_OFF'].includes(e1.current.status)
+  // A version that failed, was rolled back or was superseded never runs again, so the same content goes out as the
+  // next version.
+  const spent = !!inE1 && ['FAILED', 'ROLLED_BACK', 'SUPERSEDED'].includes(inE1.status)
   let version: number | null
   if (latest == null) version = 1
-  else if (readiness.draftChanged || (inE1 && inE1.status !== 'ACTIVE')) version = latest + 1
+  else if (readiness.draftChanged || spent) version = latest + 1
   else if (!inE1) version = latest
   else version = null
-  if (version === null) return <span className="release-note">v{latest} is live in e1; edit the profile to release another</span>
+  if (version === null) {
+    return (
+      <span className="release-note">
+        {underWay ? `v${latest} is under way in e1` : `v${latest} is live in e1; edit the profile to release another`}
+      </span>
+    )
+  }
   return (
     <button
       className="btn navy"
       disabled={busy || !!underWay}
-      title={underWay ? `v${e1!.current!.version} is still under way in e1` : 'Freeze the profile as this version and send it to e1'}
+      title={underWay ? `v${e1!.current!.version} is still under way in e1; finish it first` : undefined}
       onClick={onRelease}
     >
       Release v{version} to e1

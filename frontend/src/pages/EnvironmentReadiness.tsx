@@ -186,7 +186,7 @@ function EnvCard({
       {env.history.length > 1 && (
         <ul className="env-history" aria-label={`Versions in ${ENV_LABELS[env.env]}`}>
           {env.history.map((d) => (
-            <li key={d.version} className={`env-history-row st-${d.status.toLowerCase().replace(/_/g, '-')}`} title={d.reason ?? undefined}>
+            <li key={d.version} className={`env-history-row st-${d.status.toLowerCase().replace(/_/g, '-')}`} title={d.status === 'ACTIVE' ? undefined : (d.reason ?? undefined)}>
               <span className="env-version">v{d.version}</span>
               <span>{RELEASE_STATUS_LABELS[d.status]}</span>
               <time dateTime={d.updatedAt}>{formatRelative(d.updatedAt)}</time>
