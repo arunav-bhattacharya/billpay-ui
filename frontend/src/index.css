@@ -1,10 +1,33 @@
 /* ============================================================
    Billpay Market Onboarding: Measured Light
-   The house style: SF Pro as system stacks, one Amex-blue accent with navy
-   titles, cool greys, and subtle depth from layered shadows over faint
-   gradient fills. Colour means state: green live, amber waiting on a person,
-   red stopped, blue act here. No Amex logo, typeface or brand pattern.
+   The house style: Benton Sans, one Amex-blue accent with navy titles, cool
+   greys, and subtle depth from layered shadows over faint gradient fills.
+   Colour means state: green live, amber waiting on a person, red stopped,
+   blue act here. No Amex logo or brand pattern.
    ============================================================ */
+
+/* Self-hosted Benton Sans, as main ships it (the user, 2026-11-25: Benton Sans everywhere). Two faces: Regular carries
+   normal text, Medium everything the design calls bold. The font-weight descriptor is authoritative: the sources both
+   report usWeightClass 400, so the browser is told which is which. */
+@font-face {
+  font-family: 'Benton Sans';
+  src:
+    url('./assets/fonts/BentonSans-Regular.woff2') format('woff2'),
+    url('./assets/fonts/BentonSans-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Benton Sans';
+  src:
+    url('./assets/fonts/BentonSans-Medium.woff2') format('woff2'),
+    url('./assets/fonts/BentonSans-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   --page: linear-gradient(165deg, #f8f9fb, #f2f4f8 60%, #f5f6f9);
@@ -50,11 +73,9 @@
   --violet: #6a44c0;
   --violet-wash: rgba(106, 68, 192, 0.1);
 
-  /* SF Pro and SF Mono are system stacks: Apple's licence doesn't allow self-hosting them. */
-  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  /* Benton Sans for every word; SF Mono stays a system stack for code and release JSON. */
+  --font-display: 'Benton Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-body: 'Benton Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 
   /* ---- Elevation: layered, never flat, never glowing ---- */
@@ -106,6 +127,8 @@ body {
   line-height: 1.5;
   letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
+  /* Bold maps to Medium, the heaviest face that ships: never a faux bold drawn by the browser. */
+  font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
